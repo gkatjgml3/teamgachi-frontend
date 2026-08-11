@@ -10,7 +10,7 @@
   <script type="module">
     import { supabase } from './supabase-client.js';
     const { data: { session } } = await supabase.auth.getSession();
-    window.location.replace(session ? './dashboard.html' : './login.html');
+    window.location.replace(session ? './html/dashboard.html' : './html/login.html');
   </script>
 </body>
 </html>
