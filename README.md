@@ -4,7 +4,7 @@
 
 통합 프로젝트의 실제 원본은 아래 팀 저장소에 있습니다.
 
-- 팀 저장소: <https://xr7qvna.github.io/AI-contest/html/login.html>
+- 팀 저장소: <https://github.com/xr7qvna/AI-contest>
 - 통합 프론트엔드 경로: `teamgachi/web/`
 - 배포 사이트: <https://teamgachi-2026.netlify.app>
 
