@@ -30,7 +30,7 @@ async function handleLogin(data) {
     password: data.get('password'),
   });
   if (error) throw error;
-  window.location.replace('./dashboard.html');
+  setStatus('로그인이 완료되었습니다.', 'success');
 }
 
 async function handleSignup(data) {
@@ -49,7 +49,8 @@ async function handleSignup(data) {
   if (error) throw error;
 
   if (result.session) {
-    window.location.replace('./dashboard.html');
+    form.reset();
+    setStatus('회원가입이 완료되었습니다.', 'success');
     return;
   }
 
@@ -76,22 +77,7 @@ form?.addEventListener('submit', async (event) => {
 document.querySelector('[data-google-login]')?.addEventListener('click', async () => {
   const { error } = await supabase.auth.signInWithOAuth({
     provider: 'google',
-    options: { redirectTo: `${window.location.origin}/dashboard.html` },
+    options: { redirectTo: `${window.location.origin}/login.html` },
   });
   if (error) setStatus(authErrorMessage(error), 'error');
-});
-
-document.querySelector('[data-forgot-password]')?.addEventListener('click', async (event) => {
-  event.preventDefault();
-  const email = form.elements.email.value.trim();
-  if (!email) {
-    setStatus('비밀번호를 재설정할 이메일을 먼저 입력해 주세요.', 'error');
-    form.elements.email.focus();
-    return;
-  }
-
-  const { error } = await supabase.auth.resetPasswordForEmail(email, {
-    redirectTo: `${window.location.origin}/reset-password.html`,
-  });
-  setStatus(error ? authErrorMessage(error) : '비밀번호 재설정 메일을 보냈습니다.', error ? 'error' : 'success');
 });
