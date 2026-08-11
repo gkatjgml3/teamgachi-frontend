@@ -24,7 +24,7 @@
 npx.cmd --yes serve . --listen 4174
 ```
 
-브라우저에서 <http://localhost:4174/html/index.html>에 접속합니다.
+브라우저에서 <http://localhost:4174>에 접속합니다.
 
 ## 보안
 
