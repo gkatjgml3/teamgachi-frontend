@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>TeamGachi - 업무 · 진척도</title>
+  
+  <script src="https://unpkg.com/lucide@latest"></script>
+  
+  <link rel="stylesheet" href="group2.css">
+</head>
+<body class="dashboard-body">
+
+  <div class="app-layout">
+    
+    <aside class="sidebar">
+      
+      <div class="sidebar-brand">
+        <div class="brand-logo-icon sm"></div>
+        <span class="brand-logo-title">TeamGachi</span>
+      </div>
+
+      <nav class="sidebar-menu">
+        <a href="#" class="menu-item">
+          <i data-lucide="layout-dashboard"></i> <span>대시보드</span>
+        </a>
+        <a href="#" class="menu-item">
+          <i data-lucide="check-square"></i> <span>할 일</span>
+        </a>
+        <a href="#" class="menu-item">
+          <i data-lucide="message-square"></i> <span>채팅 · 자료함</span>
+        </a>
+        <a href="#" class="menu-item">
+          <i data-lucide="calendar"></i> <span>캘린더</span>
+        </a>
+        <a href="#" class="menu-item active">
+          <i data-lucide="bar-chart-2"></i> <span>업무 · 진척도</span>
+        </a>
+        <a href="#" class="menu-item">
+          <i data-lucide="timer"></i> <span>집중 타이머</span>
+        </a>
+        <a href="#" class="menu-item">
+          <i data-lucide="megaphone"></i> <span>공지사항</span>
+        </a>
+      </nav>
+
+      <div class="sidebar-profile">
+        <div class="profile-avatar"></div>
+        <div class="profile-meta">
+          <div class="profile-name">박서아</div>
+          <div class="profile-role">기획 · 디자인</div>
+        </div>
+      </div>
+    </aside>
+
+    <main class="main-content">
+      
+      <header class="main-header">
+        <h2 class="header-page-name">업무 · 진척도</h2>
+        <div class="header-right-tools">
+          <div class="header-search">
+            <i data-lucide="search" class="search-ic"></i>
+            <input type="text" placeholder="검색">
+          </div>
+          <button class="header-btn-icon"><i data-lucide="bell"></i></button>
+          <div class="header-profile-avatar"></div>
+        </div>
+      </header>
+
+      <div class="progress-container">
+        
+        <div class="ui-card progress-summary-card">
+          <div class="card-header-row">
+            <h3 class="card-title">프로젝트 전체 진행률</h3>
+            <span class="dday-tag">마감 2026.08.20 · D-14</span>
+          </div>
+          
+          <div class="progress-main-row">
+            <div class="percent-big">68%</div>
+            <div class="bar-bg-lg">
+              <div class="bar-fill-lg" style="width: 68%;"></div>
+            </div>
+            <div class="status-count-group">
+              <span class="count-item"><span class="dot completed"></span> 완료 <strong>27</strong></span>
+              <span class="count-item"><span class="dot in-progress"></span> 진행 중 <strong>8</strong></span>
+              <span class="count-item"><span class="dot pending"></span> 대기 <strong>5</strong></span>
+            </div>
+          </div>
+        </div>
+
+        <div class="ui-card team-status-card">
+          <div class="card-header-row mb-16">
+            <h3 class="card-title">팀원별 업무 현황</h3>
+            <div class="card-header-actions">
+              <select class="select-period">
+                <option>전체 기간</option>
+              </select>
+              <button class="btn-assign">업무 배정</button>
+            </div>
+          </div>
+
+          <div class="team-table">
+            <div class="team-table-head">
+              <span class="th-member">팀원</span>
+              <span class="th-role">담당 영역</span>
+              <span class="th-task">주요 업무</span>
+              <span class="th-progress">진행률</span>
+              <span class="th-done">완료</span>
+              <span class="th-delay">지연</span>
+            </div>
+
+            <div class="team-table-row">
+              <div class="col-member"><span class="avatar-sm"></span> <strong>박서아</strong></div>
+              <div class="col-role">기획 · 디자인</div>
+              <div class="col-task">와이어프레임 · 기능명세 · QA</div>
+              <div class="col-progress">
+                <div class="bar-bg-sm"><div class="bar-fill-sm" style="width: 75%;"></div></div>
+                <span class="percent-txt">75%</span>
+              </div>
+              <div class="col-done">9 / 12</div>
+              <div class="col-delay"><span class="pill-zero">0건</span></div>
+            </div>
+
+            <div class="team-table-row">
+              <div class="col-member"><span class="avatar-sm"></span> <strong>이시윤</strong></div>
+              <div class="col-role">프론트엔드</div>
+              <div class="col-task">HTML/CSS 퍼블리싱 · JS 연동</div>
+              <div class="col-progress">
+                <div class="bar-bg-sm"><div class="bar-fill-sm" style="width: 55%;"></div></div>
+                <span class="percent-txt">55%</span>
+              </div>
+              <div class="col-done">6 / 11</div>
+              <div class="col-delay"><span class="pill-warning">1건</span></div>
+            </div>
+
+            <div class="team-table-row">
+              <div class="col-member"><span class="avatar-sm"></span> <strong>함서희</strong></div>
+              <div class="col-role">백엔드</div>
+              <div class="col-task">Supabase · Auth · AI 함수</div>
+              <div class="col-progress">
+                <div class="bar-bg-sm"><div class="bar-fill-sm" style="width: 70%;"></div></div>
+                <span class="percent-txt">70%</span>
+              </div>
+              <div class="col-done">12 / 17</div>
+              <div class="col-delay"><span class="pill-zero">0건</span></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="kanban-section">
+          <div class="kanban-header-row">
+            <h3 class="kanban-title">업무 분담 보드</h3>
+            <span class="kanban-guide">드래그해서 상태를 변경할 수 있습니다</span>
+          </div>
+
+          <div class="kanban-grid">
+            
+            <div class="kanban-column">
+              <div class="column-title-bar">
+                <span class="col-name">대기 <span class="badge-num">5</span></span>
+                <button class="btn-add-item">+</button>
+              </div>
+
+              <div class="kanban-card">
+                <span class="category-tag planning">기획</span>
+                <div class="card-task-title">캘린더 화면 기획</div>
+                <div class="card-footer">
+                  <div class="assignee-info"><span class="avatar-xs"></span> 박서아</div>
+                  <span class="dday-text">D-8</span>
+                </div>
+              </div>
+
+              <div class="kanban-card">
+                <span class="category-tag frontend">프론트</span>
+                <div class="card-task-title">공지사항 UI 구현</div>
+                <div class="card-footer">
+                  <div class="assignee-info"><span class="avatar-xs"></span> 이시윤</div>
+                  <span class="dday-text">D-9</span>
+                </div>
+              </div>
+
+              <div class="kanban-card">
+                <span class="category-tag backend">백엔드</span>
+                <div class="card-task-title">Storage 파일 업로드</div>
+                <div class="card-footer">
+                  <div class="assignee-info"><span class="avatar-xs"></span> 함서희</div>
+                  <span class="dday-text">D-7</span>
+                </div>
+              </div>
+            </div>
+
+            <div class="kanban-column">
+              <div class="column-title-bar">
+                <span class="col-name">진행 중 <span class="badge-num">8</span></span>
+                <button class="btn-add-item">+</button>
+              </div>
+
+              <div class="kanban-card">
+                <span class="category-tag frontend">프론트</span>
+                <div class="card-task-title">대시보드 퍼블리싱</div>
+                <div class="card-footer">
+                  <div class="assignee-info"><span class="avatar-xs"></span> 이시윤</div>
+                  <span class="dday-text">D-2</span>
+                </div>
+              </div>
+
+              <div class="kanban-card">
+                <span class="category-tag backend">백엔드</span>
+                <div class="card-task-title">DB 스키마 확정</div>
+                <div class="card-footer">
+                  <div class="assignee-info"><span class="avatar-xs"></span> 함서희</div>
+                  <span class="dday-text alert">오늘</span>
+                </div>
+              </div>
+
+              <div class="kanban-card">
+                <span class="category-tag planning">기획</span>
+                <div class="card-task-title">기능 명세서 검토</div>
+                <div class="card-footer">
+                  <div class="assignee-info"><span class="avatar-xs"></span> 박서아</div>
+                  <span class="dday-text alert">오늘</span>
+                </div>
+              </div>
+            </div>
+
+            <div class="kanban-column">
+              <div class="column-title-bar">
+                <span class="col-name">완료 <span class="badge-num">27</span></span>
+                <button class="btn-add-item">+</button>
+              </div>
+
+              <div class="kanban-card">
+                <span class="category-tag planning">기획</span>
+                <div class="card-task-title">와이어프레임 초안</div>
+                <div class="card-footer">
+                  <div class="assignee-info"><span class="avatar-xs"></span> 박서아</div>
+                  <span class="date-text">08/05</span>
+                </div>
+              </div>
+
+              <div class="kanban-card">
+                <span class="category-tag backend">백엔드</span>
+                <div class="card-task-title">Supabase 프로젝트 생성</div>
+                <div class="card-footer">
+                  <div class="assignee-info"><span class="avatar-xs"></span> 함서희</div>
+                  <span class="date-text">08/04</span>
+                </div>
+              </div>
+            </div>
+
+          </div>
+        </div>
+
+      </div>
+    </main>
+  </div>
+
+  <script>
+  </script>
+</body>
+</html>
