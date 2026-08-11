@@ -19,30 +19,30 @@
     <div class="auth-card">
       <h1 class="auth-card-title">회원가입</h1>
 
-      <form onsubmit="location.href='login.html'; return false;">
+      <form data-auth-form data-mode="signup">
         <div class="form-group">
           <label>이름</label>
-          <input type="text" placeholder="홍길동" required>
+          <input type="text" name="display_name" placeholder="홍길동" autocomplete="name" required>
         </div>
 
         <div class="form-group">
           <label>이메일</label>
-          <input type="email" placeholder="name@example.com" required>
+          <input type="email" name="email" placeholder="name@example.com" autocomplete="email" required>
         </div>
 
         <div class="form-group">
           <label>비밀번호</label>
-          <input type="password" placeholder="8자 이상, 영문+숫자 조합" required>
+          <input type="password" name="password" minlength="8" pattern="(?=.*[A-Za-z])(?=.*[0-9]).{8,}" placeholder="8자 이상, 영문+숫자 조합" autocomplete="new-password" required>
         </div>
 
         <div class="form-group">
           <label>비밀번호 확인</label>
-          <input type="password" placeholder="비밀번호를 다시 입력하세요" required>
+          <input type="password" name="password_confirm" minlength="8" placeholder="비밀번호를 다시 입력하세요" autocomplete="new-password" required>
         </div>
 
         <div class="form-group">
           <label>팀 초대 코드 (선택)</label>
-          <input type="text" placeholder="팀장에게 받은 코드를 입력하세요">
+          <input type="text" name="invite_code" placeholder="팀장에게 받은 코드를 입력하세요">
         </div>
 
         <div class="form-row mb-16">
@@ -53,6 +53,7 @@
         </div>
 
         <button type="submit" class="btn btn-primary">회원가입</button>
+        <p class="auth-status" data-auth-status aria-live="polite"></p>
       </form>
 
       <div class="auth-footer-text">
@@ -61,5 +62,6 @@
     </div>
   </div>
 
+  <script type="module" src="auth.js"></script>
 </body>
 </html>
