@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>TeamGachi - 할 일</title>
+  
+  <script src="https://unpkg.com/lucide@latest"></script>
+  
+  <link rel="stylesheet" href="group2.css">
+</head>
+<body class="dashboard-body">
+
+  <div class="app-layout">
+    
+    <aside class="sidebar">
+      
+      <div class="sidebar-brand">
+        <div class="brand-logo-icon sm"></div>
+        <span class="brand-logo-title">TeamGachi</span>
+      </div>
+
+      <nav class="sidebar-menu">
+        <a href="dashboard.html" class="menu-item">
+          <i data-lucide="layout-dashboard"></i> <span>대시보드</span>
+        </a>
+        <a href="#" class="menu-item active">
+          <i data-lucide="check-square"></i> <span>할 일</span>
+        </a>
+        <a href="#" class="menu-item">
+          <i data-lucide="message-square"></i> <span>채팅 · 자료집</span>
+        </a>
+        <a href="#" class="menu-item">
+          <i data-lucide="calendar"></i> <span>캘린더</span>
+        </a>
+        <a href="#" class="menu-item">
+          <i data-lucide="bar-chart-2"></i> <span>업무 · 진척도</span>
+        </a>
+        <a href="#" class="menu-item">
+          <i data-lucide="timer"></i> <span>집중 타이머</span>
+        </a>
+        <a href="#" class="menu-item">
+          <i data-lucide="megaphone"></i> <span>공지사항</span>
+        </a>
+      </nav>
+
+      <div class="sidebar-profile">
+        <div class="profile-avatar"></div>
+        <div class="profile-meta">
+          <div class="profile-name">박서아</div>
+          <div class="profile-role">기획 · 디자인</div>
+        </div>
+      </div>
+    </aside>
+
+    <main class="main-content">
+      
+      <header class="main-header">
+        <h2 class="header-page-name">할 일</h2>
+        <div class="header-right-tools">
+          <div class="header-search">
+            <i data-lucide="search" class="search-ic"></i>
+            <input type="text" placeholder="검색">
+          </div>
+          <button class="header-btn-icon"><i data-lucide="bell"></i></button>
+          <div class="header-profile-avatar"></div>
+        </div>
+      </header>
+
+      <div class="dashboard-inner">
+        
+        <div class="todo-top-bar">
+          <div class="todo-tabs">
+            <button class="tab-btn active">전체</button>
+            <button class="tab-btn">내 할 일</button>
+            <button class="tab-btn">팀 할 일</button>
+          </div>
+          <div class="todo-actions">
+            <select class="select-sort">
+              <option>정렬: AI 추천순</option>
+            </select>
+            <button class="btn-ai-sort">AI 우선순위 정렬</button>
+            <button class="btn-primary-add">+ 할 일 추가</button>
+          </div>
+        </div>
+
+        <div class="ai-banner">
+          <span class="ai-banner-text"><span>AI</span> 마감 임박도 · 업무 의존관계 · 담당자 업무량을 반영해 정렬했습니다. (2분 전 갱신)</span>
+          <a href="#" class="ai-reset-link">원래 순서로 되돌리기</a>
+        </div>
+
+        <div class="todo-columns-grid">
+          
+          <div class="todo-left-col">
+            <div class="ui-card todo-list-card">
+              
+              <div class="todo-table-header">
+                <span class="col-task">할 일</span>
+                <span class="col-assignee">담당자</span>
+                <span class="col-duedate">마감일</span>
+                <span class="col-priority">우선순위</span>
+                <span class="col-status">상태</span>
+              </div>
+
+              <div class="todo-group">
+                <div class="group-title">오늘 · 2건</div>
+                
+                <div class="todo-item-row">
+                  <div class="col-task">
+                    <input type="checkbox" id="t1"><label for="t1">기능 명세서 최종 검토</label>
+                  </div>
+                  <div class="col-assignee"><span class="user-chip"><span class="avatar-sm"></span> 박서아</span></div>
+                  <div class="col-duedate alert">오늘 18:00</div>
+                  <div class="col-priority"><span class="pill-priority high">높음</span></div>
+                  <div class="col-status"><span class="status-pill in-progress">진행 중</span></div>
+                </div>
+
+                <div class="todo-item-row">
+                  <div class="col-task">
+                    <input type="checkbox" id="t2"><label for="t2">Supabase 테이블 스키마 확정</label>
+                  </div>
+                  <div class="col-assignee"><span class="user-chip"><span class="avatar-sm"></span> 함서희</span></div>
+                  <div class="col-duedate alert">오늘 22:00</div>
+                  <div class="col-priority"><span class="pill-priority high">높음</span></div>
+                  <div class="col-status"><span class="status-pill in-progress">진행 중</span></div>
+                </div>
+              </div>
+
+              <div class="todo-group">
+                <div class="group-title">이번 주 · 3건</div>
+
+                <div class="todo-item-row">
+                  <div class="col-task">
+                    <input type="checkbox" id="t3"><label for="t3">대시보드 화면 퍼블리싱</label>
+                  </div>
+                  <div class="col-assignee"><span class="user-chip"><span class="avatar-sm"></span> 이시윤</span></div>
+                  <div class="col-duedate">08/08 (D-2)</div>
+                  <div class="col-priority"><span class="pill-priority mid">보통</span></div>
+                  <div class="col-status"><span class="status-pill pending">대기</span></div>
+                </div>
+
+                <div class="todo-item-row">
+                  <div class="col-task">
+                    <input type="checkbox" id="t4"><label for="t4">로그인/회원가입 UI 구현</label>
+                  </div>
+                  <div class="col-assignee"><span class="user-chip"><span class="avatar-sm"></span> 이시윤</span></div>
+                  <div class="col-duedate">08/09 (D-3)</div>
+                  <div class="col-priority"><span class="pill-priority mid">보통</span></div>
+                  <div class="col-status"><span class="status-pill pending">대기</span></div>
+                </div>
+
+                <div class="todo-item-row">
+                  <div class="col-task">
+                    <input type="checkbox" id="t5"><label for="t5">AI 요약 프롬프트 1차 테스트</label>
+                  </div>
+                  <div class="col-assignee"><span class="user-chip"><span class="avatar-sm"></span> 함서희</span></div>
+                  <div class="col-duedate">08/10 (D-4)</div>
+                  <div class="col-priority"><span class="pill-priority high">높음</span></div>
+                  <div class="col-status"><span class="status-pill pending">대기</span></div>
+                </div>
+              </div>
+
+              <div class="todo-group">
+                <div class="group-title">다음 주 이후 · 2건</div>
+
+                <div class="todo-item-row">
+                  <div class="col-task">
+                    <input type="checkbox" id="t6"><label for="t6">캘린더 월간 뷰 마크업</label>
+                  </div>
+                  <div class="col-assignee"><span class="user-chip"><span class="avatar-sm"></span> 이시윤</span></div>
+                  <div class="col-duedate">08/14 (D-8)</div>
+                  <div class="col-priority"><span class="pill-priority low">낮음</span></div>
+                  <div class="col-status"><span class="status-pill pending">대기</span></div>
+                </div>
+
+                <div class="todo-item-row">
+                  <div class="col-task">
+                    <input type="checkbox" id="t7"><label for="t7">발표 자료 초안 작성</label>
+                  </div>
+                  <div class="col-assignee"><span class="user-chip"><span class="avatar-sm"></span> 박서아</span></div>
+                  <div class="col-duedate">08/18 (D-12)</div>
+                  <div class="col-priority"><span class="pill-priority low">낮음</span></div>
+                  <div class="col-status"><span class="status-pill pending">대기</span></div>
+                </div>
+              </div>
+
+              <div class="todo-group">
+                <div class="group-title">완료 · 1건</div>
+
+                <div class="todo-item-row done">
+                  <div class="col-task">
+                    <input type="checkbox" id="t8" checked><label for="t8">와이어프레임 초안 공유</label>
+                  </div>
+                  <div class="col-assignee"><span class="user-chip"><span class="avatar-sm"></span> 박서아</span></div>
+                  <div class="col-duedate">08/05</div>
+                  <div class="col-priority"><span class="pill-priority mid">보통</span></div>
+                  <div class="col-status"><span class="status-pill completed">완료</span></div>
+                </div>
+              </div>
+
+            </div>
+          </div>
+
+          <div class="todo-right-col">
+            
+            <div class="ui-card">
+              <h3 class="ui-card-title mb-14">할 일 추가</h3>
+              <div class="add-form">
+                <input type="text" class="form-input" placeholder="할 일을 입력하세요">
+                <div class="form-flex-row">
+                  <select class="form-select">
+                    <option value="" disabled selected>담당자</option>
+                    <option>박서아</option>
+                    <option>이시윤</option>
+                    <option>함서희</option>
+                  </select>
+                  <select class="form-select">
+                    <option value="" disabled selected>마감일</option>
+                    <option>오늘</option>
+                    <option>내일</option>
+                    <option>이번 주 말</option>
+                  </select>
+                </div>
+                <button class="btn-submit-add">추가하기</button>
+              </div>
+            </div>
+
+            <div class="ui-card">
+              <h3 class="ui-card-title mb-12">우선순위 추천 기준 <span class="ai-pill">AI</span></h3>
+              <ul class="criteria-list">
+                <li>마감일까지 남은 시간</li>
+                <li>다른 업무와의 선후 관계</li>
+                <li>담당자의 현재 업무량</li>
+                <li>중요도 태그 (높음/보통/낮음)</li>
+              </ul>
+              <p class="criteria-footnote">추천 결과는 참고용이며 순서는 직접 변경할 수 있습니다.</p>
+            </div>
+
+            <div class="ui-card">
+              <div class="ui-card-header mb-12">
+                <h3 class="ui-card-title">내 완료율 <span class="sub-label">이번 주</span></h3>
+                <a href="#" class="link-action">할일 보기</a>
+              </div>
+              <div class="completion-rate-box">
+                <span class="rate-percent">75%</span>
+                <div class="bar-bg flex-1">
+                  <div class="bar-fill" style="width: 75%;"></div>
+                </div>
+                <span class="rate-fraction">9/12</span>
+              </div>
+            </div>
+
+          </div>
+
+        </div>
+      </div>
+    </main>
+  </div>
+  <script>
+  </script>
+</body>
+</html>
