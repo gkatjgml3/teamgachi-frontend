@@ -126,7 +126,8 @@ export function setupShell(context) {
 
 export function showPageError(error) {
   console.error(error);
-  const message = error instanceof Error ? error.message : '화면을 불러오지 못했습니다.';
+  const detail = typeof error?.message === 'string' ? error.message : '';
+  const message = detail || '화면을 불러오지 못했습니다.';
   const container = document.querySelector('.dashboard-inner, .chat-container, .progress-container, main');
   if (container) {
     const alert = document.createElement('div');
