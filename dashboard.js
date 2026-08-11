@@ -18,6 +18,7 @@ let todoChannel;
 function setStatus(message, type = '') {
   statusElement.textContent = message;
   statusElement.className = `connection-status ${type}`.trim();
+  statusElement.hidden = !message;
 }
 
 async function loadTodos() {
@@ -192,7 +193,7 @@ async function initialize() {
     .maybeSingle();
   profileName.textContent = profile?.display_name || user.user_metadata?.display_name || '팀가치 사용자';
 
-  setStatus('Supabase 백엔드에 연결되었습니다.', 'success');
+  setStatus('');
   await loadTeams();
   window.lucide?.createIcons();
 }

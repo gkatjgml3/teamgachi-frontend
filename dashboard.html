@@ -22,16 +22,16 @@
 
     <main class="main-content">
       <header class="main-header">
-        <span class="header-page-name">백엔드 연결 테스트</span>
+        <span class="header-page-name">대시보드</span>
         <button class="btn-small" type="button" data-logout>로그아웃</button>
       </header>
 
       <div class="dashboard-inner backend-dashboard">
         <section class="welcome-section">
-          <div><h1 class="welcome-heading">팀가치에 오신 것을 환영합니다</h1><p class="project-tag-info">Supabase 로그인·팀·할 일 기능이 연결되어 있습니다.</p></div>
+          <div><h1 class="welcome-heading">팀가치에 오신 것을 환영합니다</h1><p class="project-tag-info">함께 오늘의 할 일을 시작해 보세요.</p></div>
         </section>
 
-        <p class="connection-status" data-dashboard-status aria-live="polite"></p>
+        <p class="connection-status" data-dashboard-status aria-live="polite" hidden></p>
 
         <section class="ui-card backend-panel">
           <div class="ui-card-header"><h2 class="ui-card-title">현재 팀</h2></div>
@@ -46,7 +46,7 @@
         </section>
 
         <section class="ui-card backend-panel" data-todo-section hidden>
-          <div class="ui-card-header"><h2 class="ui-card-title">할 일</h2><span class="ai-pill">Realtime</span></div>
+          <div class="ui-card-header"><h2 class="ui-card-title">할 일</h2><span class="ai-pill">실시간 동기화</span></div>
           <form class="todo-create-form" data-todo-form>
             <input name="title" maxlength="200" placeholder="새 할 일을 입력하세요" required>
             <input name="due_at" type="datetime-local" aria-label="마감일">
