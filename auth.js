@@ -25,7 +25,6 @@ function authErrorMessage(error) {
   const message = error?.message ?? '';
   if (/invalid login credentials/i.test(message)) return '이메일 또는 비밀번호가 올바르지 않습니다.';
   if (/user already registered/i.test(message)) return '이미 가입된 이메일입니다.';
-  if (/email not confirmed/i.test(message)) return '이메일 인증을 먼저 완료해 주세요.';
   return message || '요청을 처리하지 못했습니다. 잠시 후 다시 시도해 주세요.';
 }
 
@@ -65,7 +64,6 @@ async function handleSignup(data) {
     email: String(data.get('email')).trim(),
     password,
     options: {
-      emailRedirectTo: `${window.location.origin}/dashboard.html`,
       data: {
         display_name: String(data.get('display_name')).trim(),
         invite_code: inviteCode || null,
@@ -81,7 +79,7 @@ async function handleSignup(data) {
   }
 
   form.reset();
-  setStatus('가입 확인 메일을 보냈습니다. 이메일의 인증 링크를 눌러 주세요.', 'success');
+  setStatus('회원가입이 완료되었습니다. 로그인 화면에서 로그인해 주세요.', 'success');
 }
 
 form?.addEventListener('submit', async (event) => {
