@@ -21,6 +21,12 @@ function setLoading(isLoading) {
       : '로그인';
 }
 
+const queryParams = new URLSearchParams(window.location.search);
+if (form?.dataset.mode === 'login' && queryParams.get('signup') === 'success') {
+  setStatus('회원가입이 완료되었습니다. 가입한 계정으로 로그인해 주세요.', 'success');
+  window.history.replaceState({}, '', window.location.pathname);
+}
+
 function authErrorMessage(error) {
   const message = error?.message ?? '';
   if (/invalid login credentials/i.test(message)) return '이메일 또는 비밀번호가 올바르지 않습니다.';
@@ -73,13 +79,8 @@ async function handleSignup(data) {
 
   if (error) throw error;
 
-  if (result.session) {
-    window.location.replace('./dashboard.html');
-    return;
-  }
-
-  form.reset();
-  setStatus('회원가입이 완료되었습니다. 로그인 화면에서 로그인해 주세요.', 'success');
+  if (result.session) await supabase.auth.signOut();
+  window.location.replace('./login.html?signup=success');
 }
 
 form?.addEventListener('submit', async (event) => {
