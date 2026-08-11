@@ -46,11 +46,9 @@ async function handleLogin(data) {
 
 async function validateInviteCode(inviteCode) {
   if (!inviteCode) return;
-
   const { data: isValid, error } = await supabase.rpc('validate_team_invite', {
     p_invite_code: inviteCode,
   });
-
   if (error) throw error;
   if (!isValid) throw new Error('유효하지 않은 팀 초대 코드입니다.');
 }
@@ -60,10 +58,7 @@ async function handleSignup(data) {
   const passwordConfirm = String(data.get('password_confirm'));
   const inviteCode = String(data.get('invite_code') ?? '').trim().toUpperCase();
 
-  if (password !== passwordConfirm) {
-    throw new Error('비밀번호 확인이 일치하지 않습니다.');
-  }
-
+  if (password !== passwordConfirm) throw new Error('비밀번호 확인이 일치하지 않습니다.');
   await validateInviteCode(inviteCode);
 
   const { data: result, error } = await supabase.auth.signUp({
@@ -78,7 +73,6 @@ async function handleSignup(data) {
   });
 
   if (error) throw error;
-
   if (result.session) await supabase.auth.signOut();
   window.location.replace('./login.html?signup=success');
 }
@@ -104,14 +98,12 @@ document.querySelector('[data-google-login]')?.addEventListener('click', async (
     provider: 'google',
     options: { redirectTo: `${window.location.origin}/dashboard.html` },
   });
-
   if (error) setStatus(authErrorMessage(error), 'error');
 });
 
 document.querySelector('[data-forgot-password]')?.addEventListener('click', async (event) => {
   event.preventDefault();
   const email = form.elements.email.value.trim();
-
   if (!email) {
     setStatus('비밀번호를 재설정할 이메일을 먼저 입력해 주세요.', 'error');
     form.elements.email.focus();
@@ -121,7 +113,6 @@ document.querySelector('[data-forgot-password]')?.addEventListener('click', asyn
   const { error } = await supabase.auth.resetPasswordForEmail(email, {
     redirectTo: `${window.location.origin}/reset-password.html`,
   });
-
   setStatus(
     error ? authErrorMessage(error) : '비밀번호 재설정 메일을 보냈습니다.',
     error ? 'error' : 'success',

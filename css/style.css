@@ -697,3 +697,19 @@ body {
 .header-profile-avatar[data-logout] {
   cursor: pointer;
 }
+
+.empty-state {
+  padding: 22px 12px;
+  color: #8b8b94;
+  font-size: 13px;
+  text-align: center;
+}
+
+.app-error {
+  margin: 16px 0;
+  padding: 12px 16px;
+  border: 1px solid #fecaca;
+  border-radius: 10px;
+  background: #fef2f2;
+  color: #b91c1c;
+}

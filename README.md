@@ -1,19 +1,33 @@
-# 팀가치 프론트엔드 배포 미러
+# 시너지온 팀가치 프론트엔드
 
-이 저장소는 Netlify 사이트 `teamgachi-2026`의 자동 배포를 위한 **임시 미러**입니다.
-
-실제 원본 코드는 아래 팀 저장소에서 관리합니다.
+팀가치 웹 프론트엔드와 Netlify 자동 배포용 저장소입니다. 실제 통합 원본과 Supabase 백엔드는 팀 저장소에서 관리합니다.
 
 - 팀 저장소: <https://github.com/gkatjgml3/teamgachi>
-- 프론트엔드 원본: `teamgachi/web/`
-- 배포 사이트: <https://teamgachi-2026.netlify.app>
+- 통합 프론트엔드: `teamgachi/web/`
+- 배포 사이트: <https://teamgachi.netlify.app>
 
-## 현재 프론트엔드 범위
+## 구현 화면
 
-- 로그인 화면
-- 회원가입 화면
-- 비밀번호 재설정 화면
-- 대시보드 디자인
-- Supabase Auth 연결
+- `html/login.html`: 로그인
+- `html/signup.html`: 회원가입 및 팀 초대 코드
+- `html/reset-password.html`: 비밀번호 재설정
+- `html/dashboard.html`: 팀 대시보드
+- `html/todo.html`: 할 일 CRUD와 우선순위 정렬
+- `html/chat.html`: Realtime 채팅과 Storage 자료함
+- `html/progress.html`: 팀원별 진척도와 업무 보드
 
-대시보드 카드의 수치와 목록은 현재 디자인 확인용 예시 데이터입니다. 새로운 개발과 문서 수정은 `teamgachi` 저장소를 기준으로 진행합니다.
+로그인한 사용자가 참여 중인 팀이 없으면 첫 로그인 시 기본 팀을 한 번만 자동 생성합니다. 새 팀은 할 일과 진척도 등이 모두 0에서 시작합니다.
+
+## 로컬 실행
+
+```powershell
+npx.cmd --yes serve . --listen 4174
+```
+
+브라우저에서 <http://localhost:4174/html/index.html>에 접속합니다.
+
+## 보안
+
+- 프론트에는 Supabase Project URL과 Publishable Key만 둡니다.
+- Supabase Secret Key와 OpenAI API Key는 커밋하지 않습니다.
+- 데이터 접근은 Supabase RLS 정책으로 팀별 제한합니다.

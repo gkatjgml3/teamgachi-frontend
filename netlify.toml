@@ -1,6 +1,46 @@
 [build]
   publish = "."
 
+[[redirects]]
+  from = "/"
+  to = "/html/index.html"
+  status = 200
+
+[[redirects]]
+  from = "/login.html"
+  to = "/html/login.html"
+  status = 200
+
+[[redirects]]
+  from = "/signup.html"
+  to = "/html/signup.html"
+  status = 200
+
+[[redirects]]
+  from = "/reset-password.html"
+  to = "/html/reset-password.html"
+  status = 200
+
+[[redirects]]
+  from = "/dashboard.html"
+  to = "/html/dashboard.html"
+  status = 200
+
+[[redirects]]
+  from = "/todo.html"
+  to = "/html/todo.html"
+  status = 200
+
+[[redirects]]
+  from = "/chat.html"
+  to = "/html/chat.html"
+  status = 200
+
+[[redirects]]
+  from = "/progress.html"
+  to = "/html/progress.html"
+  status = 200
+
 [[headers]]
   for = "/*"
   [headers.values]
