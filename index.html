@@ -8,9 +8,9 @@
 <body>
   <p>팀가치를 불러오는 중입니다...</p>
   <script type="module">
-    import { supabase } from './js/supabase-client.js';
+    import { supabase } from './supabase-client.js';
     const { data: { session } } = await supabase.auth.getSession();
-    window.location.replace(session ? './html/dashboard.html' : './html/login.html');
+    window.location.replace(session ? './dashboard.html' : './login.html');
   </script>
 </body>
 </html>
