@@ -21,25 +21,25 @@
 
       <form data-auth-form data-mode="login">
         <div class="form-group">
-          <label>이메일</label>
-          <input type="email" name="email" placeholder="name@example.com" autocomplete="email" required>
+          <label for="login-email">이메일</label>
+          <input id="login-email" type="email" name="email" placeholder="name@example.com" autocomplete="email" required>
         </div>
 
         <div class="form-group">
-          <label>비밀번호</label>
-          <input type="password" name="password" placeholder="비밀번호를 입력하세요" autocomplete="current-password" required>
+          <label for="login-password">비밀번호</label>
+          <input id="login-password" type="password" name="password" placeholder="비밀번호를 입력하세요" autocomplete="current-password" required>
         </div>
 
         <div class="form-row">
           <label class="checkbox-label">
-            <input type="checkbox">
+            <input type="checkbox" name="remember">
             <span>로그인 상태 유지</span>
           </label>
           <a href="#" class="forgot-link" data-forgot-password>비밀번호 찾기</a>
         </div>
 
         <button type="submit" class="btn btn-primary">로그인</button>
-        <p class="auth-status" data-auth-status aria-live="polite"></p>
+        <p class="auth-status" data-auth-status aria-live="polite" hidden></p>
       </form>
 
       <div class="auth-divider">
@@ -58,5 +58,6 @@
   </div>
 
   <script type="module" src="auth.js"></script>
+
 </body>
 </html>

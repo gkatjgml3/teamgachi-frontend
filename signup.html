@@ -21,39 +21,39 @@
 
       <form data-auth-form data-mode="signup">
         <div class="form-group">
-          <label>이름</label>
-          <input type="text" name="display_name" placeholder="홍길동" autocomplete="name" required>
+          <label for="signup-name">이름</label>
+          <input id="signup-name" type="text" name="display_name" placeholder="홍길동" autocomplete="name" maxlength="50" required>
         </div>
 
         <div class="form-group">
-          <label>이메일</label>
-          <input type="email" name="email" placeholder="name@example.com" autocomplete="email" required>
+          <label for="signup-email">이메일</label>
+          <input id="signup-email" type="email" name="email" placeholder="name@example.com" autocomplete="email" required>
         </div>
 
         <div class="form-group">
-          <label>비밀번호</label>
-          <input type="password" name="password" minlength="8" pattern="(?=.*[A-Za-z])(?=.*[0-9]).{8,}" placeholder="8자 이상, 영문+숫자 조합" autocomplete="new-password" required>
+          <label for="signup-password">비밀번호</label>
+          <input id="signup-password" type="password" name="password" minlength="8" pattern="(?=.*[A-Za-z])(?=.*[0-9]).{8,}" placeholder="8자 이상, 영문+숫자 조합" autocomplete="new-password" required>
         </div>
 
         <div class="form-group">
-          <label>비밀번호 확인</label>
-          <input type="password" name="password_confirm" minlength="8" placeholder="비밀번호를 다시 입력하세요" autocomplete="new-password" required>
+          <label for="signup-password-confirm">비밀번호 확인</label>
+          <input id="signup-password-confirm" type="password" name="password_confirm" minlength="8" placeholder="비밀번호를 다시 입력하세요" autocomplete="new-password" required>
         </div>
 
         <div class="form-group">
-          <label>팀 초대 코드 (선택)</label>
-          <input type="text" name="invite_code" placeholder="팀장에게 받은 코드를 입력하세요">
+          <label for="signup-invite-code">팀 초대 코드 (선택)</label>
+          <input id="signup-invite-code" type="text" name="invite_code" maxlength="8" placeholder="팀장에게 받은 코드를 입력하세요" autocomplete="off">
         </div>
 
         <div class="form-row mb-16">
           <label class="checkbox-label">
-            <input type="checkbox" required>
+            <input type="checkbox" name="terms" required>
             <span>이용약관 및 개인정보 처리방침에 동의합니다</span>
           </label>
         </div>
 
         <button type="submit" class="btn btn-primary">회원가입</button>
-        <p class="auth-status" data-auth-status aria-live="polite"></p>
+        <p class="auth-status" data-auth-status aria-live="polite" hidden></p>
       </form>
 
       <div class="auth-footer-text">
@@ -63,5 +63,6 @@
   </div>
 
   <script type="module" src="auth.js"></script>
+
 </body>
 </html>

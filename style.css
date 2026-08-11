@@ -379,6 +379,7 @@ body {
   margin-top: 4px;
 }
 
+/* 🎯 할 일 추가 버튼 클릭 및 찌그러지는 애니메이션 효과 */
 .btn-primary-add {
   background-color: #534be8;
   color: #ffffff;
@@ -388,6 +389,22 @@ body {
   font-size: 12px;
   font-weight: 600;
   cursor: pointer;
+  transition: all 0.1s ease;
+  user-select: none;
+  outline: none;
+  box-shadow: 0 2px 4px rgba(83, 75, 232, 0.2);
+}
+
+.btn-primary-add:hover {
+  background-color: #433bc8;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 8px rgba(83, 75, 232, 0.3);
+}
+
+.btn-primary-add:active {
+  transform: translateY(2px) scale(0.96);
+  background-color: #3830a3;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
 }
 
 .metrics-grid {
@@ -657,21 +674,18 @@ body {
   cursor: pointer;
 }
 
-.auth-status,
-.connection-status {
+.auth-status {
   min-height: 18px;
   margin-top: 12px;
-  font-size: 12px;
   color: #6e6e73;
+  font-size: 12px;
 }
 
-.auth-status.error,
-.connection-status.error {
+.auth-status.error {
   color: #c62828;
 }
 
-.auth-status.success,
-.connection-status.success {
+.auth-status.success {
   color: #237a3b;
 }
 
@@ -680,126 +694,6 @@ body {
   opacity: 0.65;
 }
 
-.backend-dashboard {
-  width: 100%;
-  max-width: 1000px;
-}
-
-.backend-panel {
-  margin-bottom: 16px;
-}
-
-.btn-small {
-  border: 1px solid #e5e5ea;
-  border-radius: 7px;
-  background: #fff;
-  padding: 8px 12px;
-  color: #333;
-  font-size: 12px;
-  font-weight: 600;
+.header-profile-avatar[data-logout] {
   cursor: pointer;
-}
-
-.btn-small.btn-accent {
-  border-color: #534be8;
-  background: #534be8;
-  color: #fff;
-}
-
-.team-toolbar,
-.team-toolbar form,
-.todo-create-form {
-  display: flex;
-  gap: 8px;
-}
-
-.team-toolbar {
-  flex-wrap: wrap;
-}
-
-.team-toolbar select,
-.team-toolbar input,
-.todo-create-form input {
-  min-width: 0;
-  border: 1px solid #e5e5ea;
-  border-radius: 7px;
-  background: #fafafa;
-  padding: 9px 11px;
-  outline: none;
-}
-
-.team-toolbar select {
-  min-width: 180px;
-}
-
-.team-toolbar form,
-.todo-create-form input[name="title"] {
-  flex: 1;
-}
-
-.empty-guide {
-  margin-top: 14px;
-  color: #8e8e93;
-  font-size: 12px;
-}
-
-.todo-list {
-  margin-top: 14px;
-  list-style: none;
-}
-
-.todo-item {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 11px 4px;
-  border-bottom: 1px solid #f2f2f7;
-}
-
-.todo-item.done strong {
-  color: #8e8e93;
-  text-decoration: line-through;
-}
-
-.todo-content {
-  display: flex;
-  flex: 1;
-  flex-direction: column;
-  gap: 3px;
-}
-
-.todo-content small {
-  color: #8e8e93;
-}
-
-.todo-delete {
-  border: 0;
-  background: transparent;
-  color: #c62828;
-  cursor: pointer;
-  font-size: 11px;
-}
-
-@media (max-width: 720px) {
-  .sidebar {
-    display: none;
-  }
-
-  .main-content {
-    margin-left: 0;
-  }
-
-  .dashboard-inner {
-    padding: 20px 16px;
-  }
-
-  .team-toolbar,
-  .team-toolbar form,
-  .todo-create-form {
-    flex-direction: column;
-  }
-
-  .team-toolbar select {
-    width: 100%;
-  }
 }
