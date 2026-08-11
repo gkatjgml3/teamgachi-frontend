@@ -65,6 +65,7 @@ async function handleSignup(data) {
     email: String(data.get('email')).trim(),
     password,
     options: {
+      emailRedirectTo: `${window.location.origin}/dashboard.html`,
       data: {
         display_name: String(data.get('display_name')).trim(),
         invite_code: inviteCode || null,
