@@ -39,7 +39,7 @@ body {
 .brand-logo-icon {
   width: 32px;
   height: 32px;
-  background-image: url('image/팀가치_로고.png');
+  background-image: url(logo.png);
   background-size: contain;
   background-repeat: no-repeat;
   background-position: center;
