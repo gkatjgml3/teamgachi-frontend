@@ -16,6 +16,7 @@ let context;
 let todos = [];
 let activeFilter = '전체';
 let aiSorted = false;
+let collaboratorMap = new Map();
 
 function dueDateLabel(value) {
   if (!value) return '마감일 없음';
@@ -42,13 +43,20 @@ function filteredTodos() {
 function todoRow(todo, memberMap) {
   const done = todo.status === 'done';
   const statusClass = done ? 'completed' : todo.status === 'in_progress' ? 'in-progress' : 'pending';
+  const collaboratorNames = (collaboratorMap.get(todo.id) ?? [])
+    .map((userId) => memberMap.get(userId)?.name)
+    .filter(Boolean);
+  const assigneeText = [memberMap.get(todo.assignee_id)?.name, ...collaboratorNames]
+    .filter(Boolean).join(', ') || '미배정';
   return `
     <div class="todo-item-row ${done ? 'done' : ''}" data-todo-id="${todo.id}">
       <div class="col-task">
         <input type="checkbox" id="todo-${todo.id}" ${done ? 'checked' : ''}>
         <label for="todo-${todo.id}">${escapeHtml(todo.title)}</label>
+        ${todo.details ? `<div class="todo-details">${escapeHtml(todo.details)}</div>` : ''}
+        ${todo.requires_evidence ? '<span class="evidence-required">증빙 파일 필수</span>' : ''}
       </div>
-      <div class="col-assignee"><span class="user-chip"><span class="avatar-sm"></span> ${escapeHtml(memberMap.get(todo.assignee_id)?.name ?? '미배정')}</span></div>
+      <div class="col-assignee"><span class="user-chip"><span class="avatar-sm"></span> ${escapeHtml(assigneeText)}</span></div>
       <div class="col-duedate">${dueDateLabel(todo.due_at)}</div>
       <div class="col-priority"><span class="pill-priority ${priorityClass[todo.priority]}">${priorityLabel[todo.priority]}</span></div>
       <div class="col-status">
@@ -87,6 +95,14 @@ function render() {
   card.querySelectorAll('input[type="checkbox"]').forEach((checkbox) => {
     checkbox.addEventListener('change', async () => {
       const id = checkbox.closest('[data-todo-id]').dataset.todoId;
+      const todo = todos.find((item) => item.id === id);
+      if (checkbox.checked && todo?.requires_evidence) {
+        const completed = await uploadEvidence(todo);
+        if (!completed) {
+          checkbox.checked = false;
+          return;
+        }
+      }
       const { error } = await supabase.from('todos').update({ status: checkbox.checked ? 'done' : 'todo' }).eq('id', id);
       if (error) return window.alert(error.message);
       await loadTodos();
@@ -112,61 +128,149 @@ function render() {
   if (barElement) barElement.style.width = `${rate}%`;
 }
 
+function chooseEvidenceFile() {
+  return new Promise((resolve) => {
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = '.png,.jpg,.jpeg,.webp,.pdf,.docx,.xlsx,.pptx';
+    input.hidden = true;
+    document.body.append(input);
+    input.addEventListener('change', () => {
+      const file = input.files?.[0] ?? null;
+      input.remove();
+      resolve(file);
+    }, { once: true });
+    input.click();
+    window.setTimeout(() => {
+      if (document.body.contains(input) && !input.files?.length) {
+        input.remove();
+        resolve(null);
+      }
+    }, 60000);
+  });
+}
+
+async function uploadEvidence(todo) {
+  const file = await chooseEvidenceFile();
+  if (!file) return false;
+  if (file.size > 20 * 1024 * 1024) {
+    window.alert('증빙 파일은 최대 20MB까지 업로드할 수 있습니다.');
+    return false;
+  }
+  const extension = file.name.includes('.') ? `.${file.name.split('.').pop()}` : '';
+  const storagePath = `${context.team.id}/${context.user.id}/evidence/${crypto.randomUUID()}${extension}`;
+  const { error: uploadError } = await supabase.storage.from('team-files')
+    .upload(storagePath, file, { contentType: file.type || 'application/octet-stream', upsert: false });
+  if (uploadError) {
+    window.alert(uploadError.message);
+    return false;
+  }
+  const { data: record, error: recordError } = await supabase.from('files').insert({
+    team_id: context.team.id,
+    uploaded_by: context.user.id,
+    original_name: file.name,
+    storage_path: storagePath,
+    mime_type: file.type || 'application/octet-stream',
+    size_bytes: file.size,
+    kind: 'evidence',
+  }).select('id').single();
+  if (recordError) {
+    await supabase.storage.from('team-files').remove([storagePath]);
+    window.alert(recordError.message);
+    return false;
+  }
+  const { error: evidenceError } = await supabase.from('todo_evidence').upsert({
+    todo_id: todo.id,
+    file_id: record.id,
+    submitted_by: context.user.id,
+  });
+  if (evidenceError) {
+    await supabase.from('files').delete().eq('id', record.id);
+    await supabase.storage.from('team-files').remove([storagePath]);
+    window.alert(evidenceError.message);
+    return false;
+  }
+  return true;
+}
+
 async function loadTodos() {
   const { data, error } = await supabase
     .from('todos')
-    .select('id, title, description, status, priority, due_at, assignee_id, position, created_at')
+    .select('id, title, description, details, requires_evidence, status, priority, due_at, assignee_id, position, created_at')
     .eq('team_id', context.team.id)
     .order('position')
     .order('created_at');
   if (error) throw error;
   todos = data ?? [];
+  collaboratorMap = new Map();
+  if (todos.length) {
+    const { data: collaborators, error: collaboratorError } = await supabase
+      .from('todo_collaborators').select('todo_id, user_id').in('todo_id', todos.map((todo) => todo.id));
+    if (collaboratorError) throw collaboratorError;
+    (collaborators ?? []).forEach((row) => {
+      const ids = collaboratorMap.get(row.todo_id) ?? [];
+      ids.push(row.user_id);
+      collaboratorMap.set(row.todo_id, ids);
+    });
+  }
   render();
 }
 
 function configureForm() {
   const formBox = document.querySelector('.add-form');
-  const titleInput = formBox?.querySelector('.form-input');
-  const selects = formBox?.querySelectorAll('.form-select');
-  const assigneeSelect = selects?.[0];
-  const dueSelect = selects?.[1];
+  const titleInput = formBox?.querySelector('[data-todo-title]');
+  const detailsInput = formBox?.querySelector('[data-todo-details]');
+  const assigneeSelect = formBox?.querySelector('[data-todo-assignee]');
+  const dueInput = formBox?.querySelector('[data-todo-date]');
+  const collaboratorSelect = formBox?.querySelector('[data-todo-collaborators]');
+  const evidenceInput = formBox?.querySelector('[data-todo-evidence]');
   const submitButton = formBox?.querySelector('.btn-submit-add');
-  if (!titleInput || !assigneeSelect || !dueSelect || !submitButton) return;
+  if (!titleInput || !assigneeSelect || !dueInput || !collaboratorSelect || !submitButton) return;
 
   assigneeSelect.innerHTML = '<option value="">담당자 없음</option>' + context.members
     .map((member) => `<option value="${member.userId}">${escapeHtml(member.name)}</option>`)
     .join('');
   assigneeSelect.value = context.user.id;
-  dueSelect.innerHTML = `
-    <option value="">마감일 없음</option>
-    <option value="today">오늘</option>
-    <option value="tomorrow">내일</option>
-    <option value="week">일주일 후</option>`;
+  collaboratorSelect.innerHTML = context.members
+    .map((member) => `<option value="${member.userId}">${escapeHtml(member.name)}</option>`).join('');
 
   submitButton.addEventListener('click', async () => {
     const title = titleInput.value.trim();
     if (!title) return window.alert('할 일을 입력해 주세요.');
     let dueAt = null;
-    if (dueSelect.value) {
-      const date = new Date();
-      if (dueSelect.value === 'tomorrow') date.setDate(date.getDate() + 1);
-      if (dueSelect.value === 'week') date.setDate(date.getDate() + 7);
-      date.setHours(23, 59, 0, 0);
+    if (dueInput.value) {
+      const date = new Date(`${dueInput.value}T23:59:00`);
       dueAt = date.toISOString();
     }
+    const collaboratorIds = [...collaboratorSelect.selectedOptions]
+      .map((option) => option.value)
+      .filter((userId) => userId && userId !== assigneeSelect.value);
     submitButton.disabled = true;
-    const { error } = await supabase.from('todos').insert({
+    const { data: createdTodo, error } = await supabase.from('todos').insert({
       team_id: context.team.id,
       title,
+      description: detailsInput?.value.trim() || null,
+      details: detailsInput?.value.trim() || null,
       assignee_id: assigneeSelect.value || null,
       due_at: dueAt,
       priority: 'medium',
+      requires_evidence: Boolean(evidenceInput?.checked),
       created_by: context.user.id,
       position: todos.length,
-    });
+    }).select('id').single();
     submitButton.disabled = false;
     if (error) return window.alert(error.message);
+    if (collaboratorIds.length) {
+      const { error: collaboratorError } = await supabase.from('todo_collaborators').insert(
+        collaboratorIds.map((userId) => ({ todo_id: createdTodo.id, user_id: userId })),
+      );
+      if (collaboratorError) return window.alert(collaboratorError.message);
+    }
     titleInput.value = '';
+    if (detailsInput) detailsInput.value = '';
+    dueInput.value = '';
+    [...collaboratorSelect.options].forEach((option) => { option.selected = false; });
+    if (evidenceInput) evidenceInput.checked = false;
     await loadTodos();
   });
 }
@@ -183,7 +287,7 @@ function configureFilters() {
   document.querySelector('.btn-ai-sort')?.addEventListener('click', () => {
     aiSorted = true;
     const banner = document.querySelector('.ai-banner-text');
-    if (banner) banner.innerHTML = '<span>AI</span> 우선순위와 마감일을 기준으로 정렬했습니다.';
+    if (banner) banner.innerHTML = '<span>자동</span> 우선순위와 마감일을 기준으로 정렬했습니다.';
     render();
   });
   document.querySelector('.ai-reset-link')?.addEventListener('click', (event) => {

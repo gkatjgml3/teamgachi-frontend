@@ -16,7 +16,7 @@
     <aside class="sidebar">
       
       <div class="sidebar-brand">
-        <div class="brand-logo-icon sm"></div>
+        <img src="../logo.png" alt="TeamGachi" class="brand-logo-img">
         <span class="brand-logo-title">TeamGachi</span>
       </div>
 
@@ -30,7 +30,7 @@
         <a href="chat.html" class="menu-item">
           <i data-lucide="message-square"></i> <span>채팅 · 자료집</span>
         </a>
-        <a href="#" class="menu-item">
+        <a href="calendar.html" class="menu-item">
           <i data-lucide="calendar"></i> <span>캘린더</span>
         </a>
         <a href="progress.html" class="menu-item">
@@ -77,15 +77,15 @@
           </div>
           <div class="todo-actions">
             <select class="select-sort">
-              <option>정렬: AI 추천순</option>
+              <option>정렬: 우선순위·마감일</option>
             </select>
-            <button class="btn-ai-sort">AI 우선순위 정렬</button>
+            <button class="btn-ai-sort">우선순위 자동 정렬</button>
             <button class="btn-primary-add">+ 할 일 추가</button>
           </div>
         </div>
 
         <div class="ai-banner">
-          <span class="ai-banner-text"><span>AI</span> 등록된 할 일이 없습니다.</span>
+          <span class="ai-banner-text"><span>자동</span> 등록된 할 일이 없습니다.</span>
           <a href="#" class="ai-reset-link">원래 순서로 되돌리기</a>
         </div>
 
@@ -114,18 +114,17 @@
             <div class="ui-card">
               <h3 class="ui-card-title mb-14">할 일 추가</h3>
               <div class="add-form">
-                <input type="text" class="form-input" placeholder="할 일을 입력하세요">
+                <input type="text" class="form-input" data-todo-title placeholder="할 일을 입력하세요">
+                <textarea class="form-input form-details" data-todo-details rows="3" placeholder="자세한 내용을 입력하세요"></textarea>
                 <div class="form-flex-row">
-                  <select class="form-select">
+                  <select class="form-select" data-todo-assignee>
                     <option value="" disabled selected>담당자</option>
                   </select>
-                  <select class="form-select">
-                    <option value="" disabled selected>마감일</option>
-                    <option>오늘</option>
-                    <option>내일</option>
-                    <option>이번 주 말</option>
-                  </select>
+                  <input class="form-select" data-todo-date type="date" aria-label="마감 날짜">
                 </div>
+                <label class="form-label" for="todo-collaborators">공동 작업자</label>
+                <select id="todo-collaborators" class="form-select collaborators-select" data-todo-collaborators multiple></select>
+                <label class="evidence-option"><input type="checkbox" data-todo-evidence> 완료할 때 증빙 파일 업로드 필수</label>
                 <button class="btn-submit-add">추가하기</button>
               </div>
             </div>

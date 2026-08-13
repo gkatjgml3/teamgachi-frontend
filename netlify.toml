@@ -41,6 +41,11 @@
   to = "/html/progress.html"
   status = 200
 
+[[redirects]]
+  from = "/calendar.html"
+  to = "/html/calendar.html"
+  status = 200
+
 [[headers]]
   for = "/*"
   [headers.values]

@@ -67,9 +67,29 @@ export async function getAppContext() {
   if (profileError) throw profileError;
   if (teamError) throw teamError;
 
-  const teamRow = Array.isArray(teamRows) ? teamRows[0] : teamRows;
-  if (!teamRow) throw new Error('팀 정보를 만들지 못했습니다.');
-  const members = await loadMembers(teamRow.team_id);
+  const ensuredTeam = Array.isArray(teamRows) ? teamRows[0] : teamRows;
+  if (!ensuredTeam) throw new Error('팀 정보를 만들지 못했습니다.');
+  const { data: memberships, error: membershipError } = await supabase
+    .from('team_members')
+    .select('team_id, role, team:teams!team_members_team_id_fkey(id, name, invite_code)')
+    .eq('user_id', user.id)
+    .order('joined_at');
+  if (membershipError) throw membershipError;
+  const teams = (memberships ?? []).map((membership) => ({
+    id: membership.team_id,
+    name: membership.team?.name ?? '이름 없는 팀',
+    inviteCode: membership.team?.invite_code ?? '',
+    role: membership.role,
+  }));
+  const savedTeamId = window.localStorage.getItem('teamgachi.activeTeamId');
+  const teamRow = teams.find((team) => team.id === savedTeamId) ?? teams[0] ?? {
+    id: ensuredTeam.team_id,
+    name: ensuredTeam.team_name,
+    inviteCode: ensuredTeam.invite_code,
+    role: ensuredTeam.member_role,
+  };
+  window.localStorage.setItem('teamgachi.activeTeamId', teamRow.id);
+  const members = await loadMembers(teamRow.id);
 
   return {
     user,
@@ -81,13 +101,102 @@ export async function getAppContext() {
       avatarUrl: profile?.avatar_url ?? null,
     },
     team: {
-      id: teamRow.team_id,
-      name: teamRow.team_name,
-      inviteCode: teamRow.invite_code,
-      role: teamRow.member_role,
+      id: teamRow.id,
+      name: teamRow.name,
+      inviteCode: teamRow.inviteCode,
+      role: teamRow.role,
     },
+    teams,
     members,
   };
+}
+
+function createOverlay(className, title) {
+  document.querySelector(`.${className}`)?.remove();
+  const overlay = document.createElement('div');
+  overlay.className = `app-overlay ${className}`;
+  overlay.innerHTML = `<div class="app-modal"><div class="app-modal-header"><h3>${escapeHtml(title)}</h3><button type="button" data-close>×</button></div><div class="app-modal-body"></div></div>`;
+  overlay.querySelector('[data-close]').addEventListener('click', () => overlay.remove());
+  overlay.addEventListener('click', (event) => { if (event.target === overlay) overlay.remove(); });
+  document.body.append(overlay);
+  return overlay;
+}
+
+async function runGlobalSearch(context, query) {
+  const term = query.trim();
+  if (!term) return;
+  const escaped = term.replaceAll('%', '\\%').replaceAll('_', '\\_');
+  const [todos, schedules, messages, files] = await Promise.all([
+    supabase.from('todos').select('id, title, details').eq('team_id', context.team.id).ilike('title', `%${escaped}%`).limit(10),
+    supabase.from('schedules').select('id, title, starts_at').eq('team_id', context.team.id).ilike('title', `%${escaped}%`).limit(10),
+    supabase.from('messages').select('id, content, created_at').eq('team_id', context.team.id).ilike('content', `%${escaped}%`).limit(10),
+    supabase.from('files').select('id, original_name, kind').eq('team_id', context.team.id).ilike('original_name', `%${escaped}%`).limit(10),
+  ]);
+  const failed = [todos, schedules, messages, files].find((result) => result.error);
+  if (failed?.error) throw failed.error;
+  const rows = [
+    ...(todos.data ?? []).map((item) => ({ type: '할 일', text: item.title, url: './todo.html' })),
+    ...(schedules.data ?? []).map((item) => ({ type: '일정', text: item.title, url: './calendar.html' })),
+    ...(messages.data ?? []).map((item) => ({ type: '채팅', text: item.content, url: './chat.html' })),
+    ...(files.data ?? []).map((item) => ({ type: '자료', text: item.original_name, url: './chat.html' })),
+  ];
+  const overlay = createOverlay('search-results-overlay', `“${term}” 검색 결과`);
+  overlay.querySelector('.app-modal-body').innerHTML = rows.length
+    ? rows.map((row) => `<a class="search-result-item" href="${row.url}"><strong>${row.type}</strong><span>${escapeHtml(row.text)}</span></a>`).join('')
+    : '<div class="empty-state">검색 결과가 없습니다.</div>';
+}
+
+function configureSearch(context) {
+  document.querySelectorAll('.header-search input, .search-box input').forEach((input) => {
+    input.addEventListener('keydown', async (event) => {
+      if (event.key !== 'Enter') return;
+      event.preventDefault();
+      try { await runGlobalSearch(context, input.value); } catch (error) { window.alert(error.message); }
+    });
+  });
+}
+
+function configureTeamMenu(context) {
+  let button = document.querySelector('.btn-more-options, [data-team-menu]');
+  if (!button) {
+    button = document.createElement('button');
+    button.type = 'button';
+    button.className = 'header-btn-icon team-menu-button';
+    button.dataset.teamMenu = '';
+    button.textContent = '⋮';
+    document.querySelector('.header-right-tools')?.prepend(button);
+  }
+  button.addEventListener('click', () => {
+    const overlay = createOverlay('team-menu-overlay', '팀 관리');
+    const body = overlay.querySelector('.app-modal-body');
+    body.innerHTML = `
+      <label class="modal-label">현재 팀</label>
+      <select class="modal-input" data-switch-team>${context.teams.map((team) => `<option value="${team.id}" ${team.id === context.team.id ? 'selected' : ''}>${escapeHtml(team.name)}</option>`).join('')}</select>
+      <div class="modal-actions">
+        <button type="button" class="modal-button" data-rename-team>팀 이름 변경</button>
+        <button type="button" class="modal-button primary" data-create-team>새 팀 만들기</button>
+      </div>
+      <p class="modal-help">초대 코드: <strong>${escapeHtml(context.team.inviteCode)}</strong></p>`;
+    body.querySelector('[data-switch-team]').addEventListener('change', (event) => {
+      window.localStorage.setItem('teamgachi.activeTeamId', event.target.value);
+      window.location.reload();
+    });
+    body.querySelector('[data-rename-team]').addEventListener('click', async () => {
+      const name = window.prompt('새 팀 이름을 입력하세요.', context.team.name)?.trim();
+      if (!name) return;
+      const { error } = await supabase.from('teams').update({ name }).eq('id', context.team.id);
+      if (error) return window.alert(error.message);
+      window.location.reload();
+    });
+    body.querySelector('[data-create-team]').addEventListener('click', async () => {
+      const name = window.prompt('새 팀 이름을 입력하세요.')?.trim();
+      if (!name) return;
+      const { data, error } = await supabase.from('teams').insert({ name, owner_id: context.user.id }).select('id').single();
+      if (error) return window.alert(error.message);
+      window.localStorage.setItem('teamgachi.activeTeamId', data.id);
+      window.location.reload();
+    });
+  });
 }
 
 export function setupShell(context) {
@@ -120,6 +229,9 @@ export function setupShell(context) {
       window.alert(`${link.textContent.trim()} 화면은 다음 단계에서 추가됩니다.`);
     });
   });
+
+  configureSearch(context);
+  configureTeamMenu(context);
 
   window.lucide?.createIcons();
 }

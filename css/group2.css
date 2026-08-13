@@ -1690,3 +1690,30 @@ body.dashboard-body {
 .header-profile-avatar {
   cursor: pointer;
 }
+
+/* TeamGachi 공통 기능 UI */
+.brand-logo-img { width:36px; height:36px; object-fit:contain; flex:0 0 36px; }
+.main-header { min-height:80px; box-sizing:border-box; align-items:center; }
+.header-page-name { margin:0; line-height:1.2; font-size:22px; }
+.form-details { resize:vertical; min-height:72px; font-family:inherit; }
+.form-label { display:block; margin:10px 0 6px; color:#555; font-size:13px; font-weight:600; }
+.collaborators-select { width:100%; min-height:72px; }
+.evidence-option { display:flex; align-items:center; gap:8px; margin:12px 0; color:#555; font-size:13px; }
+.todo-details { margin:5px 0 0 28px; color:#777; font-size:12px; white-space:pre-wrap; }
+.evidence-required { display:inline-block; margin:5px 0 0 28px; padding:3px 7px; border-radius:6px; background:#fff3e8; color:#b85c00; font-size:11px; }
+.app-overlay { position:fixed; inset:0; z-index:9999; display:grid; place-items:center; padding:20px; background:rgba(20,20,30,.42); }
+.app-modal { width:min(560px,100%); max-height:78vh; overflow:auto; border-radius:16px; background:#fff; box-shadow:0 24px 80px rgba(0,0,0,.22); }
+.app-modal-header { display:flex; align-items:center; justify-content:space-between; padding:18px 20px; border-bottom:1px solid #eee; }
+.app-modal-header h3 { margin:0; font-size:18px; }
+.app-modal-header button { border:0; background:none; font-size:24px; cursor:pointer; }
+.app-modal-body { padding:20px; }
+.search-result-item { display:flex; gap:14px; padding:12px; border-bottom:1px solid #eee; color:#222; text-decoration:none; }
+.search-result-item strong { min-width:42px; color:#5b4df5; }
+.search-result-item span { overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.modal-label { display:block; margin-bottom:7px; font-weight:700; }
+.modal-input { width:100%; padding:11px; border:1px solid #ddd; border-radius:9px; }
+.modal-actions { display:flex; gap:10px; margin-top:16px; }
+.modal-button { flex:1; padding:11px; border:1px solid #ddd; border-radius:9px; background:#fff; cursor:pointer; }
+.modal-button.primary { border-color:#5b4df5; background:#5b4df5; color:#fff; }
+.modal-help { margin:16px 0 0; color:#777; font-size:13px; }
+.team-menu-button { font-size:22px; }

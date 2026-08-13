@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>TeamGachi - 캘린더</title>
+  <link rel="stylesheet" href="../css/calendar.css">
+</head>
+<body class="dashboard-body">
+  <div class="app-layout">
+    <aside class="sidebar">
+      <div class="sidebar-brand"><img src="../logo.png" alt="TeamGachi" class="brand-logo-img"><span class="brand-title">TeamGachi</span></div>
+      <nav class="sidebar-menu">
+        <a href="dashboard.html" class="menu-item">대시보드</a>
+        <a href="todo.html" class="menu-item">할 일</a>
+        <a href="chat.html" class="menu-item">채팅 · 자료함</a>
+        <a href="calendar.html" class="menu-item active">캘린더</a>
+        <a href="progress.html" class="menu-item">업무 · 진척도</a>
+        <a href="#" class="menu-item">집중 타이머</a>
+        <a href="#" class="menu-item">공지사항</a>
+      </nav>
+      <div class="sidebar-profile"><img src="../profile.png" alt="" class="profile-avatar"><div><div class="profile-name">불러오는 중</div><div class="profile-role"></div></div></div>
+    </aside>
+    <main class="main-content">
+      <header class="main-header">
+        <h1 class="header-page-name">캘린더</h1>
+        <div class="header-right-tools"><div class="header-search"><input type="text" placeholder="검색..."></div><button class="header-btn-icon" data-team-menu>⋮</button><div class="header-profile-avatar" data-logout></div></div>
+      </header>
+      <div class="content-body">
+        <div class="calendar-layout">
+          <div class="card">
+            <div class="calendar-top-bar">
+              <div class="cal-nav-group"><button class="btn-icon-sm" data-prev>&lt;</button><button class="btn-icon-sm" data-next>&gt;</button><button class="btn-today" data-today>오늘</button><span class="current-month-text"></span></div>
+              <button class="btn-primary" data-add-schedule>+ 일정 추가</button>
+            </div>
+            <table class="calendar-table"><thead><tr><th class="sun">일</th><th>월</th><th>화</th><th>수</th><th>목</th><th>금</th><th class="sat">토</th></tr></thead><tbody data-calendar-body></tbody></table>
+          </div>
+          <div class="side-panel">
+            <div class="card"><div class="sidebar-card-title"><span>다가오는 마감</span><span>D-Day</span></div><div class="dday-list" data-upcoming><div class="empty-state">등록된 일정이 없습니다.</div></div></div>
+            <div class="card"><div class="sidebar-card-title">이번 달 요약</div><div class="summary-row"><span>전체 일정</span><span class="summary-value" data-month-count>0건</span></div><div class="summary-row"><span>할 일 마감</span><span class="summary-value" data-todo-count>0건</span></div></div>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+  <script type="module" src="../js/calendar.js"></script>
+</body>
+</html>

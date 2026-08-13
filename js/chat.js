@@ -13,6 +13,7 @@ let messages = [];
 let files = [];
 let summaryText = '요약할 대화가 없습니다.';
 let realtimeChannel;
+let activeDriveKind = 'file';
 
 function memberName(userId) {
   return context.members.find((member) => member.userId === userId)?.name ?? '팀원';
@@ -39,7 +40,7 @@ function renderMessages() {
   body.innerHTML = `
     <div class="ai-summary-card">
       <div class="ai-summary-header">
-        <span class="ai-badge">AI</span>
+        <span class="ai-badge">자동</span>
         <span class="ai-summary-title">대화 요약 (메시지 ${messages.length}건)</span>
       </div>
       <ul class="ai-summary-list">${summaryLines.map((line) => `<li>${escapeHtml(line.replace(/^[-•]\s*/, ''))}</li>`).join('')}</ul>
@@ -60,30 +61,53 @@ function renderFiles() {
   const count = document.querySelector('.drive-count');
   const storageText = document.querySelector('.storage-value');
   const storageBar = document.querySelector('.storage-bar-fill');
-  const used = files.reduce((sum, file) => sum + Number(file.size_bytes || 0), 0);
+  const visibleFiles = files.filter((file) => {
+    if (activeDriveKind === 'image') return file.kind === 'image';
+    if (activeDriveKind === 'link') return file.kind === 'link';
+    return file.kind === 'file' || file.kind === 'evidence' || !file.kind;
+  });
+  const used = files.filter((file) => file.kind !== 'link').reduce((sum, file) => sum + Number(file.size_bytes || 0), 0);
   const limit = 1024 * 1024 * 1024;
   const percent = Math.min((used / limit) * 100, 100);
-  if (count) count.textContent = `전체 ${files.length}개`;
+  if (count) count.textContent = `전체 ${visibleFiles.length}개`;
   if (storageText) storageText.textContent = `${humanFileSize(used)} / 1GB`;
   if (storageBar) storageBar.style.width = `${percent}%`;
   if (!list) return;
-  list.innerHTML = files.length
-    ? files.map((file) => `
+  list.innerHTML = visibleFiles.length
+    ? visibleFiles.map((file) => `
       <li class="file-item">
         <div class="file-type-icon"></div>
         <div class="file-meta-info">
           <div class="file-title">${escapeHtml(file.original_name)}</div>
-          <div class="file-sub">${escapeHtml(memberName(file.uploaded_by))} · ${humanFileSize(file.size_bytes)} · ${formatDate(file.created_at)}</div>
+          <div class="file-sub">${escapeHtml(memberName(file.uploaded_by))} · ${file.kind === 'link' ? '링크' : humanFileSize(file.size_bytes)} · ${formatDate(file.created_at)}</div>
         </div>
-        <button class="btn-item-more" data-file-path="${escapeHtml(file.storage_path)}" title="다운로드">↓</button>
+        <button class="btn-item-more" data-open-id="${file.id}" title="${file.kind === 'link' ? '열기' : '다운로드'}">${file.kind === 'link' ? '↗' : '↓'}</button>
+        <button class="btn-item-more" data-delete-id="${file.id}" title="삭제">×</button>
       </li>`).join('')
     : '<li class="empty-state">업로드한 파일이 없습니다.</li>';
 
-  list.querySelectorAll('[data-file-path]').forEach((button) => {
+  list.querySelectorAll('[data-open-id]').forEach((button) => {
     button.addEventListener('click', async () => {
-      const { data, error } = await supabase.storage.from('team-files').createSignedUrl(button.dataset.filePath, 60);
+      const file = files.find((item) => item.id === button.dataset.openId);
+      if (!file) return;
+      if (file.kind === 'link') return window.open(file.external_url, '_blank', 'noopener');
+      const { data, error } = await supabase.storage.from('team-files').createSignedUrl(file.storage_path, 60);
       if (error) return window.alert(error.message);
       window.open(data.signedUrl, '_blank', 'noopener');
+    });
+  });
+  list.querySelectorAll('[data-delete-id]').forEach((button) => {
+    button.addEventListener('click', async () => {
+      if (!window.confirm('이 자료를 삭제할까요?')) return;
+      const file = files.find((item) => item.id === button.dataset.deleteId);
+      if (!file) return;
+      if (file.kind !== 'link') {
+        const { error: storageError } = await supabase.storage.from('team-files').remove([file.storage_path]);
+        if (storageError) return window.alert(storageError.message);
+      }
+      const { error } = await supabase.from('files').delete().eq('id', file.id);
+      if (error) return window.alert(error.message);
+      await loadFiles();
     });
   });
 }
@@ -103,7 +127,7 @@ async function loadMessages() {
 async function loadFiles() {
   const { data, error } = await supabase
     .from('files')
-    .select('id, uploaded_by, original_name, storage_path, mime_type, size_bytes, created_at')
+    .select('id, uploaded_by, original_name, storage_path, mime_type, size_bytes, kind, external_url, created_at')
     .eq('team_id', context.team.id)
     .order('created_at', { ascending: false });
   if (error) throw error;
@@ -124,11 +148,12 @@ async function sendMessage() {
   input.value = '';
 }
 
-async function uploadFile(file) {
+async function uploadFile(file, requestedKind = activeDriveKind) {
   if (!file) return;
   if (file.size > 20 * 1024 * 1024) return window.alert('파일은 최대 20MB까지 업로드할 수 있습니다.');
   const extension = file.name.includes('.') ? `.${file.name.split('.').pop()}` : '';
-  const storagePath = `${context.team.id}/${crypto.randomUUID()}${extension}`;
+  const kind = requestedKind === 'image' || file.type.startsWith('image/') ? 'image' : 'file';
+  const storagePath = `${context.team.id}/${context.user.id}/${crypto.randomUUID()}${extension}`;
   const { error: uploadError } = await supabase.storage
     .from('team-files')
     .upload(storagePath, file, { contentType: file.type, upsert: false });
@@ -141,11 +166,37 @@ async function uploadFile(file) {
     storage_path: storagePath,
     mime_type: file.type || 'application/octet-stream',
     size_bytes: file.size,
+    kind,
   });
   if (recordError) {
     await supabase.storage.from('team-files').remove([storagePath]);
     return window.alert(recordError.message);
   }
+  await loadFiles();
+}
+
+async function addLink() {
+  const rawUrl = window.prompt('공유할 링크 주소를 입력하세요.');
+  if (!rawUrl) return;
+  let url;
+  try {
+    url = new URL(rawUrl);
+    if (!['http:', 'https:'].includes(url.protocol)) throw new Error();
+  } catch {
+    return window.alert('https:// 또는 http://로 시작하는 올바른 주소를 입력해 주세요.');
+  }
+  const title = window.prompt('링크 이름을 입력하세요.', url.hostname) || url.hostname;
+  const { error } = await supabase.from('files').insert({
+    team_id: context.team.id,
+    uploaded_by: context.user.id,
+    original_name: title,
+    storage_path: `link:${crypto.randomUUID()}`,
+    mime_type: 'text/uri-list',
+    size_bytes: 1,
+    kind: 'link',
+    external_url: url.toString(),
+  });
+  if (error) return window.alert(error.message);
   await loadFiles();
 }
 
@@ -164,26 +215,49 @@ function configureActions() {
   fileInput.hidden = true;
   fileInput.accept = '.png,.jpg,.jpeg,.webp,.pdf,.txt,.csv,.zip,.docx,.xlsx,.pptx';
   document.body.append(fileInput);
-  fileInput.addEventListener('change', () => uploadFile(fileInput.files?.[0]));
+  fileInput.addEventListener('change', async () => {
+    await uploadFile(fileInput.files?.[0]);
+    fileInput.value = '';
+  });
   document.querySelector('.btn-attach')?.addEventListener('click', () => fileInput.click());
   const dropzone = document.querySelector('.upload-dropzone');
-  dropzone?.addEventListener('click', () => fileInput.click());
+  dropzone?.addEventListener('click', () => activeDriveKind === 'link' ? addLink() : fileInput.click());
   dropzone?.addEventListener('dragover', (event) => event.preventDefault());
   dropzone?.addEventListener('drop', (event) => {
     event.preventDefault();
+    if (activeDriveKind === 'link') return window.alert('링크 탭에서는 업로드 영역을 클릭해 주소를 입력해 주세요.');
     uploadFile(event.dataTransfer.files?.[0]);
   });
 
-  document.querySelector('.btn-ai-summary')?.addEventListener('click', async (event) => {
-    const button = event.currentTarget;
-    button.disabled = true;
-    button.textContent = '요약 중...';
-    const { data, error } = await supabase.functions.invoke('summarize-chat', {
-      body: { teamId: context.team.id, limit: 100 },
+  document.querySelectorAll('.drive-tab').forEach((button, index) => {
+    button.addEventListener('click', () => {
+      document.querySelectorAll('.drive-tab').forEach((tab) => tab.classList.remove('active'));
+      button.classList.add('active');
+      activeDriveKind = ['file', 'link', 'image'][index] ?? 'file';
+      fileInput.accept = activeDriveKind === 'image'
+        ? 'image/png,image/jpeg,image/webp'
+        : '.png,.jpg,.jpeg,.webp,.pdf,.txt,.csv,.zip,.docx,.xlsx,.pptx';
+      const text = document.querySelector('.upload-text');
+      if (text) text.textContent = activeDriveKind === 'link'
+        ? '클릭해 링크 주소 추가'
+        : activeDriveKind === 'image' ? '이미지를 끌어 놓거나 클릭해 업로드' : '파일을 끌어 놓거나 클릭해 업로드';
+      renderFiles();
     });
-    button.disabled = false;
-    button.textContent = 'AI 대화 요약';
-    summaryText = error ? `요약 실패: ${error.message}` : data.summary;
+  });
+
+  document.querySelector('.btn-ai-summary')?.addEventListener('click', (event) => {
+    const button = event.currentTarget;
+    button.textContent = '대화 자동 요약';
+    if (!messages.length) {
+      summaryText = '요약할 대화가 없습니다.';
+    } else {
+      const latest = messages.slice(-5);
+      summaryText = [
+        `최근 ${latest.length}개 메시지를 정리했습니다.`,
+        ...latest.map((message) => `${memberName(message.author_id)}: ${message.content}`),
+        '외부 AI 요약은 고교 사용 조건에 맞는 제공자 선정 후 연결할 예정입니다.',
+      ].join('\n');
+    }
     renderMessages();
   });
 }
