@@ -8,6 +8,7 @@
 
 ## 최근 수정사항
 
+- Netlify 크레딧 제한을 피하기 위해 Cloudflare Pages 호환 라우팅을 추가하고 배포 이전 진행
 - `수정본` 7개를 최종 HTML 원본으로 재확인하고, 타이머·공지 배포 경로와 전 화면 공통 글자·헤더·사이드바 정렬을 수정
 - Google Cloud OAuth 클라이언트를 생성하고 Supabase Google provider를 활성화해 실제 계정 선택 화면까지 동작 확인
 - Google OAuth 이동 상태·계정 선택·오류 안내를 보강하고 로그인 완료 후 대시보드로 연결
