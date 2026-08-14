@@ -8,7 +8,7 @@
 
 ## 최근 수정사항
 
-- Netlify 크레딧 제한을 피하기 위해 Cloudflare Pages 호환 라우팅을 추가하고 배포 이전 진행
+- Netlify 크레딧 제한을 피하기 위해 Cloudflare Pages로 이전하고 GitHub `main` 브랜치 자동 배포 연결 완료
 - `수정본` 7개를 최종 HTML 원본으로 재확인하고, 타이머·공지 배포 경로와 전 화면 공통 글자·헤더·사이드바 정렬을 수정
 - Google Cloud OAuth 클라이언트를 생성하고 Supabase Google provider를 활성화해 실제 계정 선택 화면까지 동작 확인
 - Google OAuth 이동 상태·계정 선택·오류 안내를 보강하고 로그인 완료 후 대시보드로 연결
@@ -36,10 +36,10 @@
 
 ## 운영 배포 주소
 
-- 메인 사이트: <https://teamgachi.netlify.app>
-- 로그인: <https://teamgachi.netlify.app/login.html>
+- 메인 사이트: <https://teamgachi.pages.dev>
+- 로그인: <https://teamgachi.pages.dev/login.html>
 
-> 2026-08-14 기준 Netlify 운영 크레딧 소진으로 신규 Production Deploy가 일시 정지되어 있습니다. 최신 로고·프로필·AI 연결 코드는 GitHub에 반영되었으며, 다음 결제 주기 또는 플랜 갱신 후 자동 배포됩니다.
+> 2026-08-14부터 Cloudflare Pages를 운영 배포로 사용합니다. Netlify 사이트는 이전 배포본 확인용으로만 남겨 둡니다.
 
 - 팀 저장소: <https://github.com/gkatjgml3/teamgachi>
 - 통합 프론트엔드: `teamgachi/web/`
@@ -102,8 +102,8 @@ npx.cmd --yes serve . --listen 4174
 
 ## Google 로그인 설정
 
-- 승인된 JavaScript 원본: `https://teamgachi.netlify.app`
+- 승인된 JavaScript 원본: `https://teamgachi.pages.dev`
 - Google OAuth 리디렉션 URI: `https://yezdalggrwjtjemkcehj.supabase.co/auth/v1/callback`
-- Supabase Site URL: `https://teamgachi.netlify.app`
-- Supabase Redirect URLs: `https://teamgachi.netlify.app/**`
+- Supabase Site URL: `https://teamgachi.pages.dev`
+- Supabase Redirect URLs: `https://teamgachi.pages.dev/**` (이전 Netlify 주소는 전환 기간 동안 보조 주소로 유지)
 - 2026-08-14: Supabase `Authentication → Sign In / Providers → Google`에 Client ID와 Client Secret을 안전하게 저장하고 provider 활성화를 완료했습니다.
