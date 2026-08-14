@@ -8,6 +8,7 @@
 
 ## 최근 수정사항
 
+- Google Cloud OAuth 클라이언트를 생성하고 Supabase Google provider를 활성화해 실제 계정 선택 화면까지 동작 확인
 - Google OAuth 이동 상태·계정 선택·오류 안내를 보강하고 로그인 완료 후 대시보드로 연결
 - GitHub의 `파일명(수정본).html` 7개를 최종 디자인 원본으로 확정하고 실제 서비스 화면에 적용
 - 기존 5개 화면에 더해 `집중 타이머`와 `공지사항` 화면을 활성화하고 Supabase 데이터 연결 추가
@@ -103,4 +104,4 @@ npx.cmd --yes serve . --listen 4174
 - Google OAuth 리디렉션 URI: `https://yezdalggrwjtjemkcehj.supabase.co/auth/v1/callback`
 - Supabase Site URL: `https://teamgachi.netlify.app`
 - Supabase Redirect URLs: `https://teamgachi.netlify.app/**`
-- Supabase `Authentication → Sign In / Providers → Google`에 Google Client ID와 Client Secret을 저장하고 provider를 활성화합니다.
+- 2026-08-14: Supabase `Authentication → Sign In / Providers → Google`에 Client ID와 Client Secret을 안전하게 저장하고 provider 활성화를 완료했습니다.
