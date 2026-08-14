@@ -5,6 +5,15 @@ const roleLabels = {
   admin: '관리자',
   member: '팀원',
 };
+const JWT_CLOCK_ERROR = /jwt.*issued.*future|issued at future|not valid yet/i;
+
+function wait(milliseconds) {
+  return new Promise((resolve) => window.setTimeout(resolve, milliseconds));
+}
+
+function isJwtClockError(error) {
+  return JWT_CLOCK_ERROR.test(error?.message ?? '');
+}
 
 export function escapeHtml(value = '') {
   return String(value)
@@ -53,9 +62,10 @@ async function loadMembers(teamId) {
   }));
 }
 
-export async function getAppContext() {
+async function loadAppContextOnce() {
   const { data: { user }, error: userError } = await supabase.auth.getUser();
-  if (userError || !user) {
+  if (userError) throw userError;
+  if (!user) {
     window.location.replace('./login.html');
     return null;
   }
@@ -109,6 +119,20 @@ export async function getAppContext() {
     teams,
     members,
   };
+}
+
+export async function getAppContext() {
+  let lastError;
+  for (let attempt = 0; attempt < 6; attempt += 1) {
+    try {
+      return await loadAppContextOnce();
+    } catch (error) {
+      lastError = error;
+      if (!isJwtClockError(error)) throw error;
+      await wait(500 * (attempt + 1));
+    }
+  }
+  throw lastError ?? new Error('로그인 세션을 확인하지 못했습니다.');
 }
 
 function createOverlay(className, title) {

@@ -2,6 +2,26 @@ import { supabase } from './supabase-client.js';
 
 const form = document.querySelector('[data-auth-form]');
 const statusElement = document.querySelector('[data-auth-status]');
+const JWT_CLOCK_ERROR = /jwt.*issued.*future|issued at future|not valid yet/i;
+
+function wait(milliseconds) {
+  return new Promise((resolve) => window.setTimeout(resolve, milliseconds));
+}
+
+async function waitForAuthenticatedSession(initialAccessToken) {
+  let lastError;
+  for (let attempt = 0; attempt < 6; attempt += 1) {
+    if (attempt > 0) await wait(500 * attempt);
+    const { data: { session } } = await supabase.auth.getSession();
+    const accessToken = session?.access_token ?? initialAccessToken;
+    if (!accessToken) continue;
+    const { error } = await supabase.auth.getUser(accessToken);
+    if (!error) return;
+    lastError = error;
+    if (!JWT_CLOCK_ERROR.test(error.message ?? '')) throw error;
+  }
+  throw lastError ?? new Error('로그인 세션을 확인하지 못했습니다. 다시 시도해 주세요.');
+}
 
 function setStatus(message, type = '') {
   if (!statusElement) return;
@@ -31,16 +51,18 @@ function authErrorMessage(error) {
   const message = error?.message ?? '';
   if (/invalid login credentials/i.test(message)) return '이메일 또는 비밀번호가 올바르지 않습니다.';
   if (/user already registered/i.test(message)) return '이미 가입된 이메일입니다.';
+  if (JWT_CLOCK_ERROR.test(message)) return '로그인 시간을 맞추는 중입니다. 잠시 후 다시 시도해 주세요.';
   return message || '요청을 처리하지 못했습니다. 잠시 후 다시 시도해 주세요.';
 }
 
 async function handleLogin(data) {
-  const { error } = await supabase.auth.signInWithPassword({
+  const { data: result, error } = await supabase.auth.signInWithPassword({
     email: String(data.get('email')).trim(),
     password: String(data.get('password')),
   });
 
   if (error) throw error;
+  await waitForAuthenticatedSession(result.session?.access_token);
   window.location.replace('./dashboard.html');
 }
 
