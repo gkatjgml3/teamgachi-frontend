@@ -139,9 +139,17 @@ function createOverlay(className, title, onClose = () => {}) {
   const previous = document.querySelector(`.${className}`);
   if (previous?.closeModal) previous.closeModal();
   else previous?.remove();
-  const overlay = document.createElement('div');
-  overlay.className = `app-overlay ${className}`;
-  overlay.innerHTML = `<div class="app-modal"><div class="app-modal-header"><h3>${escapeHtml(title)}</h3><button type="button" data-close>×</button></div><div class="app-modal-body"></div></div>`;
+  const template = document.querySelector('#app-modal-template');
+  const overlay = template?.content.firstElementChild.cloneNode(true) ?? document.createElement('div');
+  overlay.classList.add('app-overlay', className);
+  if (!template) {
+    overlay.innerHTML = '<section class="app-modal" role="dialog" aria-modal="true" data-modal-dialog><div class="app-modal-header"><h3 data-modal-title></h3><button type="button" data-close aria-label="닫기">×</button></div><div class="app-modal-body"></div></section>';
+  }
+  const titleElement = overlay.querySelector('[data-modal-title]');
+  const titleId = `app-modal-title-${crypto.randomUUID()}`;
+  titleElement.id = titleId;
+  titleElement.textContent = title;
+  overlay.querySelector('[data-modal-dialog]').setAttribute('aria-labelledby', titleId);
   let closed = false;
   overlay.closeModal = () => {
     if (closed) return;
@@ -152,7 +160,7 @@ function createOverlay(className, title, onClose = () => {}) {
   overlay.querySelector('[data-close]').addEventListener('click', overlay.closeModal);
   overlay.addEventListener('click', (event) => { if (event.target === overlay) overlay.closeModal(); });
   overlay.addEventListener('keydown', (event) => { if (event.key === 'Escape') overlay.closeModal(); });
-  document.body.append(overlay);
+  (document.querySelector('#app-modal-root') ?? document.body).append(overlay);
   return overlay;
 }
 

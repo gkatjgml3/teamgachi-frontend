@@ -1,0 +1,176 @@
+:root {
+  --teamgachi-sidebar-width: 220px;
+  --teamgachi-header-height: 64px;
+  --teamgachi-page-gutter: 24px;
+}
+
+body.dashboard-body {
+  font-size: 13px;
+}
+
+.app-layout {
+  min-height: 100vh;
+}
+
+.sidebar {
+  box-sizing: border-box;
+  width: var(--teamgachi-sidebar-width) !important;
+  min-width: var(--teamgachi-sidebar-width) !important;
+  padding: 20px 16px !important;
+  position: fixed !important;
+  inset: 0 auto 0 0 !important;
+  z-index: 100 !important;
+}
+
+.sidebar-brand {
+  box-sizing: border-box;
+  min-height: 44px;
+  margin: 0 !important;
+  padding: 0 8px 24px !important;
+  gap: 10px !important;
+}
+
+.brand-logo-img {
+  width: 36px !important;
+  height: 36px !important;
+  flex: 0 0 36px !important;
+  object-fit: contain;
+}
+
+.brand-logo-title,
+.brand-title {
+  font-size: 18px !important;
+  font-weight: 800 !important;
+  line-height: 1.2;
+  letter-spacing: -0.4px;
+}
+
+.sidebar-menu {
+  gap: 3px !important;
+}
+
+.menu-item {
+  box-sizing: border-box;
+  min-height: 38px;
+  padding: 9px 12px !important;
+  gap: 10px !important;
+  font-size: 13px !important;
+}
+
+.sidebar-profile {
+  box-sizing: border-box;
+  min-height: 58px;
+  padding: 10px !important;
+  gap: 10px !important;
+  margin-top: auto !important;
+}
+
+.profile-avatar {
+  width: 34px !important;
+  height: 34px !important;
+  flex: 0 0 34px;
+}
+
+.profile-name {
+  font-size: 12px !important;
+}
+
+.profile-role {
+  font-size: 10px !important;
+}
+
+.main-content {
+  box-sizing: border-box;
+  width: calc(100% - var(--teamgachi-sidebar-width));
+  min-width: 0;
+  margin-left: var(--teamgachi-sidebar-width) !important;
+}
+
+.main-header {
+  box-sizing: border-box;
+  width: 100%;
+  height: var(--teamgachi-header-height) !important;
+  min-height: var(--teamgachi-header-height) !important;
+  padding: 0 var(--teamgachi-page-gutter) !important;
+  position: sticky;
+  top: 0;
+  z-index: 90;
+}
+
+.header-page-name {
+  margin: 0 !important;
+  font-size: 18px !important;
+  font-weight: 700 !important;
+  line-height: 1.2 !important;
+}
+
+.header-right-tools {
+  min-height: 36px;
+  gap: 10px !important;
+}
+
+.header-search {
+  box-sizing: border-box;
+  width: 196px;
+  height: 36px !important;
+  padding: 0 12px !important;
+  gap: 8px !important;
+  border-radius: 8px !important;
+}
+
+.search-ic {
+  position: static !important;
+  width: 16px !important;
+  height: 16px !important;
+  flex: 0 0 16px;
+}
+
+.header-search input {
+  box-sizing: border-box;
+  width: 100% !important;
+  height: 34px;
+  padding: 0 !important;
+  font-size: 13px !important;
+}
+
+.header-btn-icon {
+  box-sizing: border-box;
+  width: 36px !important;
+  height: 36px !important;
+  flex: 0 0 36px;
+  border-radius: 8px !important;
+}
+
+.header-profile-avatar {
+  width: 34px !important;
+  height: 34px !important;
+  flex: 0 0 34px;
+}
+
+.dashboard-inner,
+.progress-container,
+.content-body {
+  box-sizing: border-box;
+  width: 100%;
+  padding: var(--teamgachi-page-gutter) !important;
+}
+
+.chat-container {
+  box-sizing: border-box;
+  width: 100%;
+  height: calc(100vh - var(--teamgachi-header-height)) !important;
+  padding: var(--teamgachi-page-gutter) !important;
+  gap: 20px !important;
+}
+
+@media (max-width: 900px) {
+  :root {
+    --teamgachi-sidebar-width: 200px;
+    --teamgachi-page-gutter: 20px;
+  }
+
+  .header-search {
+    width: 160px;
+  }
+}
+

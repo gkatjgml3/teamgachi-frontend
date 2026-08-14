@@ -8,6 +8,7 @@
   <title>TeamGachi - 대시보드</title>
   <script src="https://unpkg.com/lucide@latest"></script>
   <link rel="stylesheet" href="../css/style.css">
+  <link rel="stylesheet" href="../css/shared-layout.css">
 </head>
 <body class="dashboard-body">
 
@@ -53,7 +54,7 @@
 
     <main class="main-content">
       <header class="main-header">
-        <h2 class="header-page-name">대시보드</h2>
+        <h1 class="header-page-name">대시보드</h1>
         <div class="header-right-tools">
           <div class="header-search">
             <i data-lucide="search" class="search-ic"></i>
@@ -161,6 +162,10 @@
     </main>
   </div>
 
+  <div id="app-modal-root" aria-live="polite"></div>
+  <template id="app-modal-template">
+    <div class="app-overlay"><section class="app-modal" role="dialog" aria-modal="true" data-modal-dialog><div class="app-modal-header"><h3 data-modal-title></h3><button type="button" data-close aria-label="닫기">×</button></div><div class="app-modal-body"></div></section></div>
+  </template>
   <script type="module" src="../js/dashboard.js"></script>
 </body>
 </html>
