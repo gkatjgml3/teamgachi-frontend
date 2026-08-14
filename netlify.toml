@@ -46,6 +46,16 @@
   to = "/html/calendar.html"
   status = 200
 
+[[redirects]]
+  from = "/timer.html"
+  to = "/html/timer.html"
+  status = 200
+
+[[redirects]]
+  from = "/notice.html"
+  to = "/html/notice.html"
+  status = 200
+
 [[headers]]
   for = "/*"
   [headers.values]

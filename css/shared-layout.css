@@ -2,13 +2,33 @@
   --teamgachi-sidebar-width: 220px;
   --teamgachi-header-height: 64px;
   --teamgachi-page-gutter: 24px;
+  --teamgachi-font-family: -apple-system, BlinkMacSystemFont, "Pretendard", "Segoe UI", sans-serif;
+  --teamgachi-text: #1c1c1e;
+  --teamgachi-muted: #636366;
+  --teamgachi-border: #e5e5ea;
+  --teamgachi-surface: #ffffff;
+  --teamgachi-background: #f8f9fa;
+}
+
+html,
+body {
+  width: 100%;
+  min-height: 100%;
 }
 
 body.dashboard-body {
+  margin: 0;
+  color: var(--teamgachi-text);
+  background: var(--teamgachi-background);
   font-size: 13px;
+  font-family: var(--teamgachi-font-family);
+  line-height: 1.45;
 }
 
-.app-layout {
+.app-layout,
+.app-container {
+  box-sizing: border-box;
+  width: 100%;
   min-height: 100vh;
 }
 
@@ -20,23 +40,20 @@ body.dashboard-body {
   position: fixed !important;
   inset: 0 auto 0 0 !important;
   z-index: 100 !important;
+  overflow: hidden;
+  border-right: 1px solid var(--teamgachi-border) !important;
+  background: var(--teamgachi-surface) !important;
 }
 
-.sidebar-brand {
-  box-sizing: border-box;
-  min-height: 44px;
-  margin: 0 !important;
-  padding: 0 8px 24px !important;
-  gap: 10px !important;
-}
-
+.sidebar-brand,
 .sidebar-logo {
-  display: flex;
-  align-items: center;
+  display: flex !important;
+  align-items: center !important;
   box-sizing: border-box;
-  min-height: 44px;
+  width: 100%;
+  min-height: 60px;
   margin: 0 !important;
-  padding: 0 8px 24px !important;
+  padding: 0 8px 16px !important;
   gap: 10px !important;
 }
 
@@ -81,37 +98,50 @@ body.dashboard-body {
   letter-spacing: -0.4px;
 }
 
-.sidebar-menu {
-  gap: 3px !important;
-}
-
+.sidebar-menu,
 .nav-menu {
   display: flex;
   flex: 1;
   flex-direction: column;
+  width: 100%;
+  min-height: 0;
+  margin: 0;
+  padding: 0;
   gap: 3px !important;
+  overflow-y: auto;
+  overflow-x: hidden;
+  scrollbar-width: thin;
 }
 
-.menu-item {
-  box-sizing: border-box;
-  min-height: 38px;
-  padding: 9px 12px !important;
-  gap: 10px !important;
-  font-size: 13px !important;
-}
-
+.menu-item,
 .nav-item {
-  display: flex;
-  align-items: center;
+  display: flex !important;
+  align-items: center !important;
   box-sizing: border-box;
-  min-height: 38px;
+  width: 100%;
+  min-height: 40px;
   padding: 9px 12px !important;
   gap: 10px !important;
-  border-radius: 8px;
-  color: #636366;
+  border-radius: 8px !important;
+  color: var(--teamgachi-muted);
   font-size: 13px !important;
   font-weight: 500;
+  line-height: 20px !important;
   text-decoration: none;
+}
+
+.menu-item svg,
+.nav-item svg,
+.nav-icon {
+  width: 17px !important;
+  height: 17px !important;
+  flex: 0 0 17px !important;
+  stroke-width: 2 !important;
+}
+
+.menu-item span,
+.nav-item span {
+  line-height: 20px !important;
 }
 
 .nav-item.active {
@@ -122,6 +152,7 @@ body.dashboard-body {
 
 .sidebar-profile {
   box-sizing: border-box;
+  width: 100%;
   min-height: 58px;
   padding: 10px !important;
   gap: 10px !important;
@@ -155,10 +186,19 @@ body.dashboard-body {
   box-sizing: border-box;
   width: calc(100% - var(--teamgachi-sidebar-width));
   min-width: 0;
+  min-height: 100vh;
   margin-left: var(--teamgachi-sidebar-width) !important;
+  display: flex !important;
+  flex: 1 1 auto;
+  flex-direction: column;
+  background: var(--teamgachi-background);
 }
 
-.main-header {
+.main-header,
+.top-header {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
   box-sizing: border-box;
   width: 100%;
   height: var(--teamgachi-header-height) !important;
@@ -167,57 +207,97 @@ body.dashboard-body {
   position: sticky;
   top: 0;
   z-index: 90;
+  border-bottom: 1px solid var(--teamgachi-border) !important;
+  background: var(--teamgachi-surface) !important;
 }
 
-.header-page-name {
+.header-page-name,
+.page-title {
   margin: 0 !important;
   font-size: 18px !important;
   font-weight: 700 !important;
   line-height: 1.2 !important;
+  letter-spacing: -0.3px;
 }
 
-.header-right-tools {
+.header-right-tools,
+.header-right {
+  display: flex !important;
+  align-items: center !important;
   min-height: 36px;
   gap: 10px !important;
 }
 
-.header-search {
+.header-search,
+.search-box {
+  position: relative !important;
+  display: flex !important;
+  align-items: center !important;
   box-sizing: border-box;
   width: 196px;
   height: 36px !important;
   padding: 0 12px !important;
   gap: 8px !important;
   border-radius: 8px !important;
+  background: #f2f2f7 !important;
 }
 
-.search-ic {
+.header-search svg,
+.search-box svg,
+.search-ic,
+.search-icon {
   position: static !important;
   width: 16px !important;
   height: 16px !important;
   flex: 0 0 16px;
+  color: #8e8e93 !important;
 }
 
-.header-search input {
+.header-search input,
+.search-box input {
   box-sizing: border-box;
   width: 100% !important;
   height: 34px;
   padding: 0 !important;
+  border: 0 !important;
+  outline: 0 !important;
+  background: transparent !important;
+  color: var(--teamgachi-text) !important;
   font-size: 13px !important;
+  font-family: inherit !important;
 }
 
-.header-btn-icon {
+.header-btn-icon,
+.icon-btn {
+  display: grid !important;
+  place-items: center !important;
   box-sizing: border-box;
   width: 36px !important;
   height: 36px !important;
   flex: 0 0 36px;
+  padding: 0 !important;
+  border: 0 !important;
   border-radius: 8px !important;
+  background: #f2f2f7 !important;
+  color: var(--teamgachi-muted) !important;
+}
+
+.header-btn-icon svg,
+.icon-btn svg {
+  width: 16px !important;
+  height: 16px !important;
 }
 
 .header-profile-avatar {
+  display: inline-grid !important;
+  place-items: center !important;
   width: 34px !important;
   height: 34px !important;
   flex: 0 0 34px;
+  padding: 0 !important;
+  border: 1px solid rgba(91, 77, 245, 0.08) !important;
   border-radius: 50%;
+  background: #d9d5f7 !important;
 }
 
 .pastel-avatar {
@@ -236,7 +316,25 @@ body.dashboard-body {
 .content-body {
   box-sizing: border-box;
   width: 100%;
+  min-height: calc(100vh - var(--teamgachi-header-height));
   padding: var(--teamgachi-page-gutter) !important;
+  background: var(--teamgachi-background);
+}
+
+.content-body .card-title,
+.content-body .list-card-header h3,
+.content-body .side-card-head h4,
+.content-body .feed-header h2 {
+  font-size: 15px !important;
+  font-weight: 700 !important;
+  line-height: 1.35 !important;
+}
+
+button,
+input,
+select,
+textarea {
+  font-family: var(--teamgachi-font-family);
 }
 
 .chat-container {
