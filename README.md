@@ -8,6 +8,7 @@
 
 ## 최근 수정사항
 
+- Google OAuth 이동 상태·계정 선택·오류 안내를 보강하고 로그인 완료 후 대시보드로 연결
 - GitHub의 `파일명(수정본).html` 7개를 최종 디자인 원본으로 확정하고 실제 서비스 화면에 적용
 - 기존 5개 화면에 더해 `집중 타이머`와 `공지사항` 화면을 활성화하고 Supabase 데이터 연결 추가
 - 캘린더의 일정 막대와 오른쪽 `다가오는 마감` 항목을 누르면 날짜·시간·구분·D-Day 상세 팝업 표시
@@ -94,3 +95,12 @@ npx.cmd --yes serve . --listen 4174
 - 프론트에는 Supabase Project URL과 Publishable Key만 둡니다.
 - Supabase Secret Key와 외부 AI API Key는 커밋하지 않습니다.
 - 데이터 접근은 Supabase RLS 정책으로 팀별 제한합니다.
+- Google OAuth Client Secret은 GitHub에 저장하지 않고 Supabase의 Google provider 설정에만 입력합니다.
+
+## Google 로그인 설정
+
+- 승인된 JavaScript 원본: `https://teamgachi.netlify.app`
+- Google OAuth 리디렉션 URI: `https://yezdalggrwjtjemkcehj.supabase.co/auth/v1/callback`
+- Supabase Site URL: `https://teamgachi.netlify.app`
+- Supabase Redirect URLs: `https://teamgachi.netlify.app/**`
+- Supabase `Authentication → Sign In / Providers → Google`에 Google Client ID와 Client Secret을 저장하고 provider를 활성화합니다.

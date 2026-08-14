@@ -2,6 +2,7 @@ import { supabase } from './supabase-client.js';
 
 const form = document.querySelector('[data-auth-form]');
 const statusElement = document.querySelector('[data-auth-status]');
+const googleLoginButton = document.querySelector('[data-google-login]');
 const JWT_CLOCK_ERROR = /jwt.*issued.*future|issued at future|not valid yet/i;
 
 function wait(milliseconds) {
@@ -41,9 +42,23 @@ function setLoading(isLoading) {
       : '로그인';
 }
 
+function setGoogleLoading(isLoading) {
+  if (!googleLoginButton) return;
+  const label = googleLoginButton.querySelector('[data-google-label]');
+  googleLoginButton.disabled = isLoading;
+  if (label) label.textContent = isLoading
+    ? 'Google 로그인 화면으로 이동 중...'
+    : 'Google 계정으로 계속하기';
+}
+
 const queryParams = new URLSearchParams(window.location.search);
 if (form?.dataset.mode === 'login' && queryParams.get('signup') === 'success') {
   setStatus('회원가입이 완료되었습니다. 가입한 계정으로 로그인해 주세요.', 'success');
+  window.history.replaceState({}, '', window.location.pathname);
+}
+
+if (queryParams.get('error_description')) {
+  setStatus(queryParams.get('error_description'), 'error');
   window.history.replaceState({}, '', window.location.pathname);
 }
 
@@ -115,12 +130,20 @@ form?.addEventListener('submit', async (event) => {
   }
 });
 
-document.querySelector('[data-google-login]')?.addEventListener('click', async () => {
+googleLoginButton?.addEventListener('click', async () => {
+  setStatus('Google 로그인 화면으로 이동합니다.');
+  setGoogleLoading(true);
   const { error } = await supabase.auth.signInWithOAuth({
     provider: 'google',
-    options: { redirectTo: `${window.location.origin}/dashboard.html` },
+    options: {
+      redirectTo: `${window.location.origin}/dashboard.html`,
+      queryParams: { prompt: 'select_account' },
+    },
   });
-  if (error) setStatus(authErrorMessage(error), 'error');
+  if (error) {
+    setStatus(authErrorMessage(error), 'error');
+    setGoogleLoading(false);
+  }
 });
 
 document.querySelector('[data-forgot-password]')?.addEventListener('click', async (event) => {
