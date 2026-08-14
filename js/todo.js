@@ -17,6 +17,8 @@ let todos = [];
 let activeFilter = '전체';
 let aiSorted = false;
 let collaboratorMap = new Map();
+let aiRankingMap = new Map();
+let aiPriorityMap = new Map();
 
 function dueDateLabel(value) {
   if (!value) return '마감일 없음';
@@ -32,6 +34,10 @@ function filteredTodos() {
   if (activeFilter === '팀 할 일') rows = rows.filter((todo) => todo.assignee_id !== context.user.id);
   if (aiSorted) {
     rows = [...rows].sort((a, b) => {
+      if (aiRankingMap.size) {
+        return (aiRankingMap.get(a.id) ?? Number.MAX_SAFE_INTEGER)
+          - (aiRankingMap.get(b.id) ?? Number.MAX_SAFE_INTEGER);
+      }
       const score = priorityScore[b.priority] - priorityScore[a.priority];
       if (score !== 0) return score;
       return new Date(a.due_at ?? '9999-12-31') - new Date(b.due_at ?? '9999-12-31');
@@ -48,6 +54,7 @@ function todoRow(todo, memberMap) {
     .filter(Boolean);
   const assigneeText = [memberMap.get(todo.assignee_id)?.name, ...collaboratorNames]
     .filter(Boolean).join(', ') || '미배정';
+  const displayedPriority = aiPriorityMap.get(todo.id) ?? todo.priority;
   return `
     <div class="todo-item-row ${done ? 'done' : ''}" data-todo-id="${todo.id}">
       <div class="col-task">
@@ -58,7 +65,7 @@ function todoRow(todo, memberMap) {
       </div>
       <div class="col-assignee"><span class="user-chip"><span class="avatar-sm"></span> ${escapeHtml(assigneeText)}</span></div>
       <div class="col-duedate">${dueDateLabel(todo.due_at)}</div>
-      <div class="col-priority"><span class="pill-priority ${priorityClass[todo.priority]}">${priorityLabel[todo.priority]}</span></div>
+      <div class="col-priority"><span class="pill-priority ${priorityClass[displayedPriority]}">${priorityLabel[displayedPriority]}</span></div>
       <div class="col-status">
         <span class="status-pill ${statusClass}">${statusLabel[todo.status]}</span>
         <button type="button" class="todo-delete-btn" data-delete-id="${todo.id}">삭제</button>
@@ -284,15 +291,36 @@ function configureFilters() {
       render();
     });
   });
-  document.querySelector('.btn-ai-sort')?.addEventListener('click', () => {
+  document.querySelector('.btn-ai-sort')?.addEventListener('click', async (event) => {
+    const button = event.currentTarget;
     aiSorted = true;
     const banner = document.querySelector('.ai-banner-text');
-    if (banner) banner.innerHTML = '<span>자동</span> 우선순위와 마감일을 기준으로 정렬했습니다.';
+    button.disabled = true;
+    button.textContent = 'AI 추천 중...';
+    try {
+      const { data, error } = await supabase.functions.invoke('recommend-priority', {
+        body: { teamId: context.team.id },
+      });
+      if (error) throw error;
+      const rankings = data?.rankings ?? [];
+      aiRankingMap = new Map(rankings.map((item) => [item.todoId, item.rank]));
+      aiPriorityMap = new Map(rankings.map((item) => [item.todoId, item.suggestedPriority]));
+      if (banner) banner.innerHTML = '<span>AI</span> 마감일·중요도·업무 위험도를 분석해 추천했습니다.';
+    } catch (error) {
+      console.warn('AI 추천 대신 자동 정렬을 사용합니다.', error);
+      aiRankingMap = new Map();
+      aiPriorityMap = new Map();
+      if (banner) banner.innerHTML = '<span>자동</span> AI 연결 전이므로 저장된 우선순위와 마감일로 정렬했습니다.';
+    }
+    button.disabled = false;
+    button.textContent = 'AI 우선순위 추천';
     render();
   });
   document.querySelector('.ai-reset-link')?.addEventListener('click', (event) => {
     event.preventDefault();
     aiSorted = false;
+    aiRankingMap = new Map();
+    aiPriorityMap = new Map();
     render();
   });
 }

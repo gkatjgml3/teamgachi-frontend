@@ -40,7 +40,7 @@ function renderMessages() {
   body.innerHTML = `
     <div class="ai-summary-card">
       <div class="ai-summary-header">
-        <span class="ai-badge">자동</span>
+        <span class="ai-badge">AI</span>
         <span class="ai-summary-title">대화 요약 (메시지 ${messages.length}건)</span>
       </div>
       <ul class="ai-summary-list">${summaryLines.map((line) => `<li>${escapeHtml(line.replace(/^[-•]\s*/, ''))}</li>`).join('')}</ul>
@@ -245,19 +245,25 @@ function configureActions() {
     });
   });
 
-  document.querySelector('.btn-ai-summary')?.addEventListener('click', (event) => {
+  document.querySelector('.btn-ai-summary')?.addEventListener('click', async (event) => {
     const button = event.currentTarget;
-    button.textContent = '대화 자동 요약';
-    if (!messages.length) {
-      summaryText = '요약할 대화가 없습니다.';
-    } else {
+    button.disabled = true;
+    button.textContent = 'AI 요약 중...';
+    try {
+      const { data, error } = await supabase.functions.invoke('summarize-chat', {
+        body: { teamId: context.team.id, limit: 100 },
+      });
+      if (error) throw error;
+      summaryText = data?.summary || '요약할 대화가 없습니다.';
+    } catch (error) {
+      console.warn('AI 요약 대신 자동 정리를 표시합니다.', error);
       const latest = messages.slice(-5);
-      summaryText = [
-        `최근 ${latest.length}개 메시지를 정리했습니다.`,
-        ...latest.map((message) => `${memberName(message.author_id)}: ${message.content}`),
-        '외부 AI 요약은 고교 사용 조건에 맞는 제공자 선정 후 연결할 예정입니다.',
-      ].join('\n');
+      summaryText = latest.length
+        ? [`AI 연결 전 자동 정리입니다.`, ...latest.map((message) => `${memberName(message.author_id)}: ${message.content}`)].join('\n')
+        : '요약할 대화가 없습니다.';
     }
+    button.disabled = false;
+    button.textContent = 'AI 대화 요약';
     renderMessages();
   });
 }

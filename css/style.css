@@ -268,7 +268,8 @@ body {
   width: 32px;
   height: 32px;
   border-radius: 50%;
-  background-color: #d1d1d6;
+  background: #d9d5f7;
+  object-fit: cover;
 }
 
 .profile-name {
@@ -354,7 +355,7 @@ body {
   width: 28px;
   height: 28px;
   border-radius: 50%;
-  background-color: #d1d1d6;
+  background: #d9d5f7;
 }
 
 .dashboard-inner {
@@ -716,6 +717,8 @@ body {
 
 /* TeamGachi 공통 기능 UI */
 .brand-logo-img { width:36px; height:36px; object-fit:contain; flex:0 0 36px; }
+.auth-logo-img { width:44px; height:44px; flex-basis:44px; border-radius:12px; }
+.profile-avatar, .header-profile-avatar, .m-avatar, .avatar-sm, .avatar-xs, .msg-avatar, .member-avatar { background:#d9d5f7 !important; }
 .main-header { min-height:80px; box-sizing:border-box; align-items:center; }
 .header-page-name { margin:0; line-height:1.2; font-size:22px; }
 .form-details { resize:vertical; min-height:72px; font-family:inherit; }

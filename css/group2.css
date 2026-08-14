@@ -1693,6 +1693,7 @@ body.dashboard-body {
 
 /* TeamGachi 공통 기능 UI */
 .brand-logo-img { width:36px; height:36px; object-fit:contain; flex:0 0 36px; }
+.profile-avatar, .header-profile-avatar, .m-avatar, .avatar-sm, .avatar-xs, .msg-avatar, .member-avatar { background:#d9d5f7 !important; object-fit:cover; }
 .main-header { min-height:80px; box-sizing:border-box; align-items:center; }
 .header-page-name { margin:0; line-height:1.2; font-size:22px; }
 .form-details { resize:vertical; min-height:72px; font-family:inherit; }
