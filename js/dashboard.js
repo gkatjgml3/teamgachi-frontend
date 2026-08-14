@@ -20,8 +20,8 @@ function dDay(value) {
 
 function setMetric(card, value, subtext) {
   if (!card) return;
-  card.querySelector('.m-value').textContent = value;
-  card.querySelector('.m-sub').textContent = subtext;
+  card.querySelector('.summary-value').textContent = value;
+  card.querySelector('.summary-sub').textContent = subtext;
 }
 
 function renderPriorities(todos, memberMap) {
@@ -38,12 +38,10 @@ function renderPriorities(todos, memberMap) {
 
   container.innerHTML = active.length
     ? active.map((todo, index) => `
-      <div class="task-row">
-        <span class="t-index">${index + 1}</span>
-        <span class="t-desc">${escapeHtml(todo.title)}</span>
-        <span class="t-assignee">${escapeHtml(memberMap.get(todo.assignee_id)?.name ?? '미배정')}</span>
-        <span class="t-dday">${dDay(todo.due_at)}</span>
-        <span class="pill-priority ${priorityClass[todo.priority]}">${priorityLabel[todo.priority]}</span>
+      <div class="priority-item">
+        <div><b>${index + 1}.</b>&nbsp; ${escapeHtml(todo.title)}</div>
+        <div><span class="item-meta">${escapeHtml(memberMap.get(todo.assignee_id)?.name ?? '미배정')} · ${dDay(todo.due_at)}</span>
+        <span class="badge-purple">${priorityLabel[todo.priority]}</span></div>
       </div>`).join('')
     : '<div class="empty-state">등록된 할 일이 없습니다.</div>';
 }
@@ -56,14 +54,12 @@ function renderMembers(context, todos) {
     const done = assigned.filter((todo) => todo.status === 'done').length;
     const percent = assigned.length ? Math.round((done / assigned.length) * 100) : 0;
     return `
-      <div class="member-row">
-        <div class="m-avatar"></div>
-        <div class="m-info">
-          <div class="m-name">${escapeHtml(member.name)}</div>
-          <div class="m-role">${member.role === 'owner' ? '팀장' : member.role === 'admin' ? '관리자' : '팀원'}</div>
+      <div class="progress-item">
+        <div class="progress-header">
+          <span><b>${escapeHtml(member.name)}</b> (${member.role === 'owner' ? '팀장' : member.role === 'admin' ? '관리자' : '팀원'})</span>
+          <span class="item-meta">${done} / ${assigned.length} (${percent}%)</span>
         </div>
-        <div class="bar-bg"><div class="bar-fill" style="width: ${percent}%;"></div></div>
-        <div class="m-score">${done}/${assigned.length}</div>
+        <div class="progress-bar-bg"><div class="progress-bar-fill" style="width: ${percent}%;"></div></div>
       </div>`;
   }).join('');
 }
@@ -73,10 +69,10 @@ function renderSchedules(schedules) {
   if (!container) return;
   container.innerHTML = schedules.length
     ? schedules.map((schedule) => `
-      <div class="schedule-row">
-        <span class="date-chip">${formatDate(schedule.starts_at)}</span>
-        <span class="s-title">${escapeHtml(schedule.title)}</span>
-        <span class="s-dday">${dDay(schedule.starts_at)}</span>
+      <div class="schedule-item">
+        <span class="item-meta">${formatDate(schedule.starts_at)}</span>
+        <span>${escapeHtml(schedule.title)}</span>
+        <span class="badge-purple">${dDay(schedule.starts_at)}</span>
       </div>`).join('')
     : '<div class="empty-state">다가오는 일정이 없습니다.</div>';
 }
@@ -86,10 +82,9 @@ function renderNotices(notices) {
   if (!container) return;
   container.innerHTML = notices.length
     ? notices.map((notice) => `
-      <div class="notice-row">
-        <span class="notice-tag ${notice.category === 'urgent' ? 'purple' : ''}">${notice.category === 'urgent' ? '필독' : notice.category === 'event' ? '일정' : '일반'}</span>
-        <span class="n-title">${escapeHtml(notice.title)}</span>
-        <span class="n-date">${formatDate(notice.created_at)}</span>
+      <div class="notice-item">
+        <span class="${notice.category === 'urgent' ? 'badge-red' : 'badge-purple'}">${notice.category === 'urgent' ? '필독' : notice.category === 'event' ? '일정' : '일반'}</span>
+        <span>${escapeHtml(notice.title)}</span>
       </div>`).join('')
     : '<div class="empty-state">등록된 공지가 없습니다.</div>';
 }
@@ -124,7 +119,7 @@ async function initialize() {
 
     const projectTag = document.querySelector('.project-tag-info');
     if (projectTag) projectTag.textContent = `${context.team.name} · 팀원 ${context.members.length}명 · 초대 코드 ${context.team.inviteCode}`;
-    const cards = document.querySelectorAll('.metric-card');
+    const cards = document.querySelectorAll('.summary-card');
     setMetric(cards[0], `${overall}%`, activeTodos.length ? `완료 ${done}건` : '새 팀은 0%에서 시작합니다');
     setMetric(cards[1], `${myActive.length}건`, `오늘 마감 ${todayDue}건`);
     setMetric(cards[2], `${done} / ${activeTodos.length}`, '팀 전체 기준');

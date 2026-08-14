@@ -38,40 +38,35 @@ function renderSummary() {
 }
 
 function renderMembers() {
-  const table = document.querySelector('.team-table');
+  const table = document.querySelector('[data-team-table]');
   if (!table) return;
-  table.querySelectorAll('.team-table-row').forEach((row) => row.remove());
-  context.members.forEach((member) => {
+  table.hidden = false;
+  table.innerHTML = context.members.map((member) => {
     const assigned = todos.filter((todo) => todo.assignee_id === member.userId && todo.status !== 'canceled');
     const done = assigned.filter((todo) => todo.status === 'done').length;
     const delayed = assigned.filter((todo) => todo.status !== 'done' && todo.due_at && new Date(todo.due_at) < new Date()).length;
     const percent = assigned.length ? Math.round((done / assigned.length) * 100) : 0;
     const titles = assigned.filter((todo) => todo.status !== 'done').slice(0, 2).map((todo) => todo.title).join(' · ') || '배정된 업무 없음';
-    const row = document.createElement('div');
-    row.className = 'team-table-row';
-    row.innerHTML = `
-      <div class="col-member"><span class="avatar-sm"></span> <strong>${escapeHtml(member.name)}</strong></div>
-      <div class="col-role">${member.role === 'owner' ? '팀장' : member.role === 'admin' ? '관리자' : '팀원'}</div>
-      <div class="col-task">${escapeHtml(titles)}</div>
-      <div class="col-progress">
-        <div class="bar-bg-sm"><div class="bar-fill-sm" style="width: ${percent}%;"></div></div>
-        <span class="percent-txt">${percent}%</span>
-      </div>
-      <div class="col-done">${done} / ${assigned.length}</div>
-      <div class="col-delay"><span class="${delayed ? 'pill-warning' : 'pill-zero'}">${delayed}건</span></div>`;
-    table.append(row);
-  });
+    return `<tr class="team-table-row">
+      <td><div class="member-info"><span class="member-avatar pastel-avatar"></span><span class="member-name">${escapeHtml(member.name)}</span></div></td>
+      <td>${member.role === 'owner' ? '팀장' : member.role === 'admin' ? '관리자' : '팀원'}</td>
+      <td>${escapeHtml(titles)}</td>
+      <td><div class="table-progress-wrap"><div class="table-progress-bar"><div class="table-progress-fill" style="width:${percent}%"></div></div><strong>${percent}%</strong></div></td>
+      <td>${done} / ${assigned.length}</td>
+      <td><span class="${delayed ? 'badge-delay-exist' : 'badge-delay-zero'}">${delayed}건</span></td>
+    </tr>`;
+  }).join('');
 }
 
 function taskCard(todo) {
   const member = context.members.find((item) => item.userId === todo.assignee_id);
   return `
     <div class="kanban-card" draggable="true" data-todo-id="${todo.id}">
-      <span class="category-tag ${todo.priority === 'high' || todo.priority === 'urgent' ? 'backend' : 'planning'}">${todo.priority === 'urgent' ? '긴급' : todo.priority === 'high' ? '높음' : todo.priority === 'medium' ? '보통' : '낮음'}</span>
-      <div class="card-task-title">${escapeHtml(todo.title)}</div>
-      <div class="card-footer">
-        <div class="assignee-info"><span class="avatar-xs"></span> ${escapeHtml(member?.name ?? '미배정')}</div>
-        <span class="dday-text">${dDay(todo.due_at)}</span>
+      <span class="kanban-card-tag ${todo.priority === 'high' || todo.priority === 'urgent' ? 'tag-back' : 'tag-plan'}">${todo.priority === 'urgent' ? '긴급' : todo.priority === 'high' ? '높음' : todo.priority === 'medium' ? '보통' : '낮음'}</span>
+      <div class="kanban-card-title">${escapeHtml(todo.title)}</div>
+      <div class="kanban-card-footer">
+        <div class="kanban-assignee"><span class="kanban-assignee-img pastel-avatar"></span> ${escapeHtml(member?.name ?? '미배정')}</div>
+        <span class="kanban-dday">${dDay(todo.due_at)}</span>
       </div>
     </div>`;
 }
@@ -79,6 +74,7 @@ function taskCard(todo) {
 function renderBoard() {
   const grid = document.querySelector('.kanban-grid');
   if (!grid) return;
+  grid.hidden = false;
   const columns = [
     { status: 'todo', label: '대기' },
     { status: 'in_progress', label: '진행 중' },
@@ -88,9 +84,9 @@ function renderBoard() {
     const rows = todos.filter((todo) => todo.status === column.status);
     return `
       <div class="kanban-column" data-status="${column.status}">
-        <div class="column-title-bar">
-          <span class="col-name">${column.label} <span class="badge-num">${rows.length}</span></span>
-          <button class="btn-add-item" data-go-todo>+</button>
+        <div class="kanban-col-header">
+          <span class="kanban-col-title">${column.label} <span class="count-badge">${rows.length}</span></span>
+          <button class="kanban-add-btn" data-go-todo>+</button>
         </div>
         ${rows.length ? rows.map(taskCard).join('') : '<div class="empty-state">업무가 없습니다.</div>'}
       </div>`;

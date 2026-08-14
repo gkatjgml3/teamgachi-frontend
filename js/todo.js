@@ -58,27 +58,27 @@ function todoRow(todo, memberMap) {
     .filter(Boolean).join(', ') || '미배정';
   const displayedPriority = aiPriorityMap.get(todo.id) ?? todo.priority;
   return `
-    <div class="todo-item-row ${done ? 'done' : ''}" data-todo-id="${todo.id}">
-      <div class="col-task">
+    <tr class="todo-item-row ${done ? 'done' : ''}" data-todo-id="${todo.id}">
+      <td class="col-task">
         <input type="checkbox" id="todo-${todo.id}" ${done ? 'checked' : ''}>
         <label for="todo-${todo.id}">${escapeHtml(todo.title)}</label>
         ${todo.details ? `<div class="todo-details">${escapeHtml(todo.details)}</div>` : ''}
         ${todo.requires_evidence ? '<span class="evidence-required">증빙 파일 필수</span>' : ''}
-      </div>
-      <div class="col-assignee"><span class="user-chip"><span class="avatar-sm"></span> ${escapeHtml(assigneeText)}</span></div>
-      <div class="col-duedate">${dueDateLabel(todo.due_at)}</div>
-      <div class="col-priority"><span class="pill-priority ${priorityClass[displayedPriority]}">${priorityLabel[displayedPriority]}</span></div>
-      <div class="col-status">
+      </td>
+      <td class="col-assignee"><span class="assignee-box"><span class="avatar-sm"></span> ${escapeHtml(assigneeText)}</span></td>
+      <td class="col-duedate">${dueDateLabel(todo.due_at)}</td>
+      <td class="col-priority"><span class="${displayedPriority === 'urgent' || displayedPriority === 'high' ? 'badge-red' : 'badge-gray'}">${priorityLabel[displayedPriority]}</span></td>
+      <td class="col-status" style="text-align:right">
         <span class="status-pill ${statusClass}">${statusLabel[todo.status]}</span>
         <button type="button" class="todo-delete-btn" data-delete-id="${todo.id}">삭제</button>
-      </div>
-    </div>`;
+      </td>
+    </tr>`;
 }
 
 function render() {
   const card = document.querySelector('.todo-list-card');
-  if (!card) return;
-  card.querySelectorAll('.todo-group').forEach((group) => group.remove());
+  const tableBody = card?.querySelector('[data-todo-list]');
+  if (!card || !tableBody) return;
   const rows = filteredTodos();
   const memberMap = new Map(context.members.map((member) => [member.userId, member]));
   const active = rows.filter((todo) => todo.status !== 'done');
@@ -88,18 +88,12 @@ function render() {
     { title: `진행할 일 · ${active.length}건`, rows: active },
     { title: `완료 · ${done.length}건`, rows: done },
   ];
-  const fragment = document.createDocumentFragment();
-  groups.forEach((group) => {
-    const element = document.createElement('div');
-    element.className = 'todo-group';
-    element.innerHTML = `<div class="group-title">${group.title}</div>${
+  tableBody.innerHTML = groups.map((group) => `
+    <tr class="todo-group"><td colspan="5" class="group-label">${group.title}</td></tr>${
       group.rows.length
         ? group.rows.map((todo) => todoRow(todo, memberMap)).join('')
-        : '<div class="empty-state">표시할 할 일이 없습니다.</div>'
-    }`;
-    fragment.append(element);
-  });
-  card.append(fragment);
+        : '<tr><td colspan="5" class="empty-state">표시할 할 일이 없습니다.</td></tr>'
+    }`).join('');
 
   card.querySelectorAll('input[type="checkbox"]').forEach((checkbox) => {
     checkbox.addEventListener('change', async () => {
@@ -329,6 +323,9 @@ function configureFilters() {
     aiRankingMap = new Map();
     aiPriorityMap = new Map();
     render();
+  });
+  document.querySelector('[data-open-todo-form]')?.addEventListener('click', () => {
+    document.querySelector('[data-todo-title]')?.focus();
   });
 }
 

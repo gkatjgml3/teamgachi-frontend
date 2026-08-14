@@ -203,6 +203,32 @@ export function showAppConfirm(message, {
   });
 }
 
+export function showAppDetails({
+  title = '상세 정보',
+  heading = '',
+  badge = '',
+  rows = [],
+  buttonText = '닫기',
+} = {}) {
+  return new Promise((resolve) => {
+    const overlay = createOverlay('app-detail-overlay', title, resolve);
+    const body = overlay.querySelector('.app-modal-body');
+    body.innerHTML = `
+      <div class="app-detail-heading">
+        ${badge ? `<span class="app-detail-badge">${escapeHtml(badge)}</span>` : ''}
+        ${heading ? `<strong>${escapeHtml(heading)}</strong>` : ''}
+      </div>
+      <dl class="app-detail-list">
+        ${rows.map((row) => `<div class="app-detail-row"><dt>${escapeHtml(row.label)}</dt><dd>${escapeHtml(row.value || '-')}</dd></div>`).join('')}
+      </dl>
+      <div class="modal-actions single">
+        <button type="button" class="modal-button primary" data-confirm>${escapeHtml(buttonText)}</button>
+      </div>`;
+    body.querySelector('[data-confirm]').addEventListener('click', overlay.closeModal);
+    body.querySelector('[data-confirm]').focus();
+  });
+}
+
 export function showAppForm({
   title,
   description = '',
@@ -225,9 +251,14 @@ export function showAppForm({
         field.min ? `min="${escapeHtml(field.min)}"` : '',
         field.max ? `max="${escapeHtml(field.max)}"` : '',
       ].filter(Boolean).join(' ');
-      const control = field.type === 'textarea'
-        ? `<textarea ${attributes}>${escapeHtml(field.value ?? '')}</textarea>`
-        : `<input type="${escapeHtml(field.type || 'text')}" value="${escapeHtml(field.value ?? '')}" ${attributes}>`;
+      let control;
+      if (field.type === 'textarea') {
+        control = `<textarea ${attributes}>${escapeHtml(field.value ?? '')}</textarea>`;
+      } else if (field.type === 'select') {
+        control = `<select ${attributes}>${(field.options ?? []).map((option) => `<option value="${escapeHtml(option.value)}" ${option.value === field.value ? 'selected' : ''}>${escapeHtml(option.label)}</option>`).join('')}</select>`;
+      } else {
+        control = `<input type="${escapeHtml(field.type || 'text')}" value="${escapeHtml(field.value ?? '')}" ${attributes}>`;
+      }
       return `<div class="modal-field"><label class="modal-label" for="${id}">${escapeHtml(field.label)}</label>${control}<p class="modal-field-error" data-error-for="${escapeHtml(field.name)}"></p></div>`;
     }).join('');
     body.innerHTML = `

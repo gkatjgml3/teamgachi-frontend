@@ -3,51 +3,57 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>TeamGachi - 대시보드</title>
   <link rel="icon" type="image/png" href="../logo.png">
   <link rel="apple-touch-icon" href="../logo.png">
-  <title>TeamGachi - 대시보드</title>
-  <script src="https://unpkg.com/lucide@latest"></script>
-  <link rel="stylesheet" href="../css/style.css">
+  <link rel="stylesheet" href="../css/todo, dashboard.css">
   <link rel="stylesheet" href="../css/shared-layout.css">
 </head>
 <body class="dashboard-body">
+  <div class="app-container">
 
-  <div class="app-layout">
     <aside class="sidebar">
-      <div class="sidebar-brand">
-        <img src="../logo.png" alt="TeamGachi" class="brand-logo-img">
-        <span class="brand-logo-title">TeamGachi</span>
-      </div>
+      <a href="dashboard.html" class="sidebar-brand brand-home-link" aria-label="대시보드로 이동" style="color:inherit;text-decoration:none">
+        <img src="../logo.png" alt="팀가치 로고" class="brand-logo-img">
+        <span class="brand-title">TeamGachi</span>
+      </a>
 
       <nav class="sidebar-menu">
         <a href="dashboard.html" class="menu-item active">
-          <i data-lucide="layout-dashboard"></i> <span>대시보드</span>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/></svg>
+          <span>대시보드</span>
         </a>
         <a href="todo.html" class="menu-item">
-          <i data-lucide="check-square"></i> <span>할 일</span>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/></svg>
+          <span>할 일</span>
         </a>
         <a href="chat.html" class="menu-item">
-          <i data-lucide="message-square"></i> <span>채팅 · 자료집</span>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
+          <span>채팅 · 자료함</span>
         </a>
         <a href="calendar.html" class="menu-item">
-          <i data-lucide="calendar"></i> <span>캘린더</span>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+          <span>캘린더</span>
         </a>
         <a href="progress.html" class="menu-item">
-          <i data-lucide="bar-chart-2"></i> <span>업무 · 진척도</span>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M18 20V10"/><path d="M12 20V4"/><path d="M6 20v-6"/></svg>
+          <span>업무 · 진척도</span>
         </a>
-        <a href="#" class="menu-item">
-          <i data-lucide="timer"></i> <span>집중 타이머</span>
+        <a href="timer.html" class="menu-item">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+          <span>집중 타이머</span>
         </a>
-        <a href="#" class="menu-item">
-          <i data-lucide="megaphone"></i> <span>공지사항</span>
+        <a href="notice.html" class="menu-item">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 01-3.46 0"/></svg>
+          <span>공지사항</span>
         </a>
       </nav>
 
       <div class="sidebar-profile">
-        <div class="profile-avatar"></div>
-        <div class="profile-meta">
-          <div class="profile-name" data-profile-name>불러오는 중</div>
-          <div class="profile-role" data-profile-role></div>
+        <span class="profile-avatar pastel-avatar" aria-hidden="true"></span>
+        <div>
+          <div class="profile-name">불러오는 중</div>
+          <div class="profile-role"></div>
         </div>
       </div>
     </aside>
@@ -57,111 +63,109 @@
         <h1 class="header-page-name">대시보드</h1>
         <div class="header-right-tools">
           <div class="header-search">
-            <i data-lucide="search" class="search-ic"></i>
-            <input type="text" placeholder="검색">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
+            <input type="text" placeholder="검색...">
           </div>
-          <button class="header-btn-icon"><i data-lucide="bell"></i></button>
-          <div class="header-profile-avatar" data-logout role="button" tabindex="0" aria-label="로그아웃" title="로그아웃"></div>
+          <button class="header-btn-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 01-3.46 0"/></svg>
+          </button>
+          <span class="header-profile-avatar pastel-avatar" aria-hidden="true"></span>
         </div>
       </header>
 
-      <div class="dashboard-inner">
-        <div class="welcome-section">
+      <div class="content-body">
+
+        <div class="dashboard-title-area">
           <div>
-            <h1 class="welcome-heading">안녕하세요, <span data-welcome-name>팀원</span>님</h1>
-            <p class="project-tag-info">새 팀 · 팀원 0명</p>
+            <h2>안녕하세요, <span data-welcome-name>팀원</span>님 👋</h2>
+            <p class="project-tag-info">팀 정보를 불러오는 중입니다.</p>
           </div>
-          <button class="btn-primary-add" id="add-task-btn">+ 할 일 추가</button>
+          <button class="btn-primary" id="add-task-btn">+ 할 일 추가</button>
         </div>
 
-        <div class="metrics-grid">
-          <div class="metric-card">
-            <span class="m-label">전체 진행률</span>
-            <div class="m-value">0%</div>
-            <span class="m-sub">새 팀은 0%에서 시작합니다</span>
+        <div class="grid-summary">
+          <div class="summary-card">
+            <div class="summary-label">전체 진행률</div>
+            <div class="summary-value">0%</div>
+            <div class="summary-sub">새 팀은 0%에서 시작합니다</div>
           </div>
-          <div class="metric-card">
-            <span class="m-label">내 할 일</span>
-            <div class="m-value">0건</div>
-            <span class="m-sub">오늘 마감 0건</span>
+          <div class="summary-card">
+            <div class="summary-label">내 할 일</div>
+            <div class="summary-value">0건</div>
+            <div class="summary-sub">오늘 마감 0건</div>
           </div>
-          <div class="metric-card">
-            <span class="m-label">팀 완료 업무</span>
-            <div class="m-value">0 / 0</div>
-            <span class="m-sub">팀 전체 기준</span>
+          <div class="summary-card">
+            <div class="summary-label">팀 완료 업무</div>
+            <div class="summary-value">0 / 0</div>
+            <div class="summary-sub">팀 전체 기준</div>
           </div>
-          <div class="metric-card">
-            <span class="m-label">읽지 않은 알림</span>
-            <div class="m-value">0</div>
-            <span class="m-sub">새 공지 0건</span>
+          <div class="summary-card">
+            <div class="summary-label">읽지 않은 알림</div>
+            <div class="summary-value">0</div>
+            <div class="summary-sub">새 공지 0건</div>
           </div>
         </div>
 
-        <div class="columns-grid">
+        <div class="grid-main">
 
-          <div class="col-left">
-            <div class="ui-card">
-              <div class="ui-card-header">
-                <h3 class="ui-card-title">오늘의 우선순위 <span class="ai-pill">AI</span></h3>
-                <a href="#" class="link-action">다시 추천 <i data-lucide="rotate-cw" class="ic-small"></i></a>
-              </div>
-              <div class="task-rows">
-                <div class="empty-state">등록된 할 일이 없습니다.</div>
-              </div>
-              <div class="ai-notice-box">
-                AI가 마감일 · 중요도 · 업무 의존관계를 분석해 순서를 추천했어요.
-              </div>
+          <div class="column-left">
+
+            <div class="card">
+              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                <div class="card-title">오늘의 우선순위 <span class="badge-purple">AI 추천</span></div>
+                <button style="background: none; border: none; font-size: 11px; color: #8e8e93; cursor: pointer; display: flex; align-items: center; gap: 4px; padding: 0;">
+                    <span>다시 추천</span>
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"/>
+                        </svg>
+                </button>
             </div>
 
-            <div class="ui-card">
-              <div class="ui-card-header">
-                <h3 class="ui-card-title">팀원별 진척도</h3>
-                <a href="#" class="link-action">전체 보기 ›</a>
-              </div>
-              <div class="member-rows">
-                <div class="empty-state">등록된 팀원이 없습니다.</div>
-              </div>
+              <div class="task-rows"><div class="empty-state">등록된 할 일이 없습니다.</div></div>
             </div>
+
+            <div class="card">
+              <div style="display: flex; justify-content: space-between; align-items: center;">
+                <div class="card-title">팀원별 진척도</div>
+                <span style="font-size: 11px; color: #8e8e93; cursor: pointer;">전체 보기 ›</span>
+              </div>
+
+              <div class="member-rows"><div class="empty-state">팀원 진행률을 불러오는 중입니다.</div></div>
+            </div>
+
           </div>
 
-          <div class="col-right">
-            <div class="ui-card">
-              <div class="ui-card-header">
-                <h3 class="ui-card-title">다가오는 일정</h3>
-                <a href="#" class="link-action">캘린더 ›</a>
+          <div class="column-right">
+
+            <div class="card">
+              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                <div class="card-title">다가오는 일정</div>
+                <span style="font-size: 11px; color: #8e8e93; cursor: pointer;">캘린더 ›</span>
               </div>
-              <div class="schedule-rows">
-                <div class="empty-state">다가오는 일정이 없습니다.</div>
-              </div>
+              <div class="schedule-rows"><div class="empty-state">다가오는 일정이 없습니다.</div></div>
             </div>
 
-            <div class="ui-card">
-              <div class="ui-card-header">
-                <h3 class="ui-card-title">채팅 요약 <span class="ai-pill">AI</span></h3>
-                <span class="time-label">오늘</span>
-              </div>
-              <ul class="bullet-list">
-                <li>요약할 팀 대화가 없습니다.</li>
-              </ul>
-              <button class="btn-outline-full">전체 대화 요약 보기</button>
+            <div class="card">
+              <div class="card-title">채팅 요약 <span class="badge-purple">AI</span></div>
+              <ul class="chat-summary-list bullet-list"><li>요약할 팀 대화가 없습니다.</li></ul>
             </div>
 
-            <div class="ui-card">
-              <div class="ui-card-header">
-                <h3 class="ui-card-title">공지사항</h3>
-                <a href="#" class="link-action">전체 ›</a>
+            <div class="card">
+              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                <div class="card-title">공지사항</div>
+                <span style="font-size: 11px; color: #8e8e93; cursor: pointer;">전체 ›</span>
               </div>
-              <div class="notice-rows">
-                <div class="empty-state">등록된 공지가 없습니다.</div>
-              </div>
+              <div class="notice-rows"><div class="empty-state">등록된 공지가 없습니다.</div></div>
             </div>
+
           </div>
 
         </div>
+
       </div>
     </main>
-  </div>
 
+  </div>
   <div id="app-modal-root" aria-live="polite"></div>
   <template id="app-modal-template">
     <div class="app-overlay"><section class="app-modal" role="dialog" aria-modal="true" data-modal-dialog><div class="app-modal-header"><h3 data-modal-title></h3><button type="button" data-close aria-label="닫기">×</button></div><div class="app-modal-body"></div></section></div>

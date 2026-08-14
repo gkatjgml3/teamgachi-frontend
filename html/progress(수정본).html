@@ -1,19 +1,22 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="ko">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>TeamGachi - 업무 · 진척도</title>
-  <link rel="stylesheet" href="style_progress.css">
+  <link rel="icon" type="image/png" href="../logo.png">
+  <link rel="apple-touch-icon" href="../logo.png">
+  <link rel="stylesheet" href="../css/progress.css">
+  <link rel="stylesheet" href="../css/shared-layout.css">
 </head>
-<body>
+<body class="dashboard-body">
   <div class="app-container">
-    
+
     <aside class="sidebar">
-      <div class="sidebar-brand">
+      <a href="dashboard.html" class="sidebar-brand brand-home-link" aria-label="대시보드로 이동" style="color:inherit;text-decoration:none">
         <img src="../logo.png" alt="팀가치 로고" class="brand-logo-img">
         <span class="brand-title">TeamGachi</span>
-      </div>
+      </a>
 
       <nav class="sidebar-menu">
         <a href="dashboard.html" class="menu-item">
@@ -47,10 +50,10 @@
       </nav>
 
       <div class="sidebar-profile">
-        <img src="profile.png" alt="Profile" class="profile-avatar">
+        <span class="profile-avatar pastel-avatar" aria-hidden="true"></span>
         <div>
-          <div class="profile-name">박서아</div>
-          <div class="profile-role">기획 · 디자인</div>
+          <div class="profile-name">불러오는 중</div>
+          <div class="profile-role"></div>
         </div>
       </div>
     </aside>
@@ -66,26 +69,26 @@
           <button class="header-btn-icon">
             <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 01-3.46 0"/></svg>
           </button>
-          <img src="profile.png" alt="Profile" class="header-profile-avatar">
+          <span class="header-profile-avatar pastel-avatar" aria-hidden="true"></span>
         </div>
       </header>
 
       <div class="content-body">
-        
+
         <div class="card">
           <div class="card-header-flex" style="margin-bottom: 0;">
             <span class="card-title">프로젝트 전체 진행률</span>
-            <span class="card-subtitle">마감 2026.08.20 · D-14</span>
+            <span class="card-subtitle dday-tag">등록된 마감일 없음</span>
           </div>
           <div class="overall-progress-box">
-            <span class="overall-percentage">68%</span>
+            <span class="overall-percentage percent-big">0%</span>
             <div class="overall-bar-container">
-              <div class="overall-bar-fill"></div>
+              <div class="overall-bar-fill bar-fill-lg" style="width:0%"></div>
             </div>
-            <div class="progress-legend">
-              <span><span class="legend-dot completed"></span>완료 <strong>27</strong></span>
-              <span><span class="legend-dot ongoing"></span>진행 중 <strong>8</strong></span>
-              <span><span class="legend-dot waiting"></span>대기 <strong>5</strong></span>
+            <div class="progress-legend status-count-group">
+              <span><span class="legend-dot completed"></span>완료 <strong>0</strong></span>
+              <span><span class="legend-dot ongoing"></span>진행 중 <strong>0</strong></span>
+              <span><span class="legend-dot waiting"></span>대기 <strong>0</strong></span>
             </div>
           </div>
         </div>
@@ -95,7 +98,7 @@
             <span class="card-title">팀원별 업무 현황</span>
             <div style="display: flex; gap: 8px;">
               <select class="select-filter-sm"><option>전체 기간</option></select>
-              <button class="btn-secondary">업무 배정</button>
+              <button class="btn-secondary btn-assign">업무 배정</button>
             </div>
           </div>
 
@@ -110,11 +113,11 @@
                 <th style="width: 6%;">지연</th>
               </tr>
             </thead>
-            <tbody>
+            <tbody class="team-table" data-team-table hidden>
               <tr>
                 <td>
                   <div class="member-info">
-                    <img src="profile.png" alt="Profile" class="member-avatar">
+                    <img src="../logo.png" alt="Profile" class="member-avatar">
                     <span class="member-name">박서아</span>
                   </div>
                 </td>
@@ -132,7 +135,7 @@
               <tr>
                 <td>
                   <div class="member-info">
-                    <img src="profile.png" alt="Profile" class="member-avatar">
+                    <img src="../logo.png" alt="Profile" class="member-avatar">
                     <span class="member-name">이시윤</span>
                   </div>
                 </td>
@@ -150,7 +153,7 @@
               <tr>
                 <td>
                   <div class="member-info">
-                    <img src="profile.png" alt="Profile" class="member-avatar">
+                    <img src="../logo.png" alt="Profile" class="member-avatar">
                     <span class="member-name">함서희</span>
                   </div>
                 </td>
@@ -175,8 +178,8 @@
             <span class="card-subtitle">드래그해서 상태를 변경할 수 있습니다</span>
           </div>
 
-          <div class="kanban-board">
-            
+          <div class="kanban-board kanban-grid" hidden>
+
             <div class="kanban-column">
               <div class="kanban-col-header">
                 <span class="kanban-col-title">대기 <span class="count-badge">5</span></span>
@@ -188,7 +191,7 @@
                 <div class="kanban-card-title">캘린더 화면 기획</div>
                 <div class="kanban-card-footer">
                   <div class="kanban-assignee">
-                    <img src="profile.png" alt="Profile" class="kanban-assignee-img">
+                    <img src="../logo.png" alt="Profile" class="kanban-assignee-img">
                     <span>박서아</span>
                   </div>
                   <span class="kanban-dday">D-8</span>
@@ -200,7 +203,7 @@
                 <div class="kanban-card-title">공지사항 UI 구현</div>
                 <div class="kanban-card-footer">
                   <div class="kanban-assignee">
-                    <img src="profile.png" alt="Profile" class="kanban-assignee-img">
+                    <img src="../logo.png" alt="Profile" class="kanban-assignee-img">
                     <span>이시윤</span>
                   </div>
                   <span class="kanban-dday">D-9</span>
@@ -212,7 +215,7 @@
                 <div class="kanban-card-title">Storage 파일 업로드</div>
                 <div class="kanban-card-footer">
                   <div class="kanban-assignee">
-                    <img src="profile.png" alt="Profile" class="kanban-assignee-img">
+                    <img src="../logo.png" alt="Profile" class="kanban-assignee-img">
                     <span>함서희</span>
                   </div>
                   <span class="kanban-dday">D-7</span>
@@ -231,7 +234,7 @@
                 <div class="kanban-card-title">대시보드 퍼블리싱</div>
                 <div class="kanban-card-footer">
                   <div class="kanban-assignee">
-                    <img src="profile.png" alt="Profile" class="kanban-assignee-img">
+                    <img src="../logo.png" alt="Profile" class="kanban-assignee-img">
                     <span>이시윤</span>
                   </div>
                   <span class="kanban-dday">D-2</span>
@@ -243,7 +246,7 @@
                 <div class="kanban-card-title">DB 스키마 확정</div>
                 <div class="kanban-card-footer">
                   <div class="kanban-assignee">
-                    <img src="profile.png" alt="Profile" class="kanban-assignee-img">
+                    <img src="../logo.png" alt="Profile" class="kanban-assignee-img">
                     <span>함서희</span>
                   </div>
                   <span class="kanban-dday urgent">오늘</span>
@@ -255,7 +258,7 @@
                 <div class="kanban-card-title">기능 명세서 검토</div>
                 <div class="kanban-card-footer">
                   <div class="kanban-assignee">
-                    <img src="profile.png" alt="Profile" class="kanban-assignee-img">
+                    <img src="../logo.png" alt="Profile" class="kanban-assignee-img">
                     <span>박서아</span>
                   </div>
                   <span class="kanban-dday urgent">오늘</span>
@@ -274,7 +277,7 @@
                 <div class="kanban-card-title">와이어프레임 초안</div>
                 <div class="kanban-card-footer">
                   <div class="kanban-assignee">
-                    <img src="profile.png" alt="Profile" class="kanban-assignee-img">
+                    <img src="../logo.png" alt="Profile" class="kanban-assignee-img">
                     <span>박서아</span>
                   </div>
                   <span class="kanban-dday">08/05</span>
@@ -286,7 +289,7 @@
                 <div class="kanban-card-title">Supabase 프로젝트 생성</div>
                 <div class="kanban-card-footer">
                   <div class="kanban-assignee">
-                    <img src="profile.png" alt="Profile" class="kanban-assignee-img">
+                    <img src="../logo.png" alt="Profile" class="kanban-assignee-img">
                     <span>함서희</span>
                   </div>
                   <span class="kanban-dday">08/04</span>
@@ -301,5 +304,10 @@
     </main>
 
   </div>
+  <div id="app-modal-root" aria-live="polite"></div>
+  <template id="app-modal-template">
+    <div class="app-overlay"><section class="app-modal" role="dialog" aria-modal="true" data-modal-dialog><div class="app-modal-header"><h3 data-modal-title></h3><button type="button" data-close aria-label="닫기">×</button></div><div class="app-modal-body"></div></section></div>
+  </template>
+  <script type="module" src="../js/progress.js"></script>
 </body>
 </html>

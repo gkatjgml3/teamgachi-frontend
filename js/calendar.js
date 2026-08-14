@@ -1,9 +1,11 @@
 import {
   escapeHtml,
   formatDate,
+  formatTime,
   getAppContext,
   setupShell,
   showAppAlert,
+  showAppDetails,
   showAppForm,
   showPageError,
   supabase,
@@ -28,6 +30,8 @@ function renderCalendar() {
   const year = visibleMonth.getFullYear();
   const month = visibleMonth.getMonth();
   document.querySelector('.current-month-text').textContent = `${year}년 ${month + 1}월`;
+  const monthLabel = document.querySelector('[data-month-label]');
+  if (monthLabel) monthLabel.textContent = `${year}.${String(month + 1).padStart(2, '0')}`;
   const first = new Date(year, month, 1);
   const gridStart = new Date(year, month, 1 - first.getDay());
   const byDay = new Map();
@@ -45,7 +49,7 @@ function renderCalendar() {
       date.setDate(gridStart.getDate() + week * 7 + day);
       const items = byDay.get(dayKey(date)) ?? [];
       const classes = [date.getMonth() !== month ? 'other-month' : '', dayKey(date) === dayKey(new Date()) ? 'today' : ''].filter(Boolean).join(' ');
-      cells.push(`<td class="${classes}"><div class="date-number">${date.getDate()}</div>${items.slice(0, 3).map((item) => `<div class="event-bar ${item.todo_id ? 'event-orange' : 'event-purple'}" title="${escapeHtml(item.title)}">${escapeHtml(item.title)}</div>`).join('')}</td>`);
+      cells.push(`<td class="${classes}"><div class="date-number">${date.getDate()}</div>${items.slice(0, 3).map((item) => `<button type="button" class="event-bar schedule-detail-trigger ${item.todo_id ? 'event-orange' : 'event-purple'}" data-schedule-id="${escapeHtml(item.id)}" title="${escapeHtml(item.title)} 상세 보기">${escapeHtml(item.title)}</button>`).join('')}</td>`);
     }
     rows.push(`<tr>${cells.join('')}</tr>`);
   }
@@ -54,7 +58,39 @@ function renderCalendar() {
   document.querySelector('[data-month-count]').textContent = `${monthRows.length}건`;
   document.querySelector('[data-todo-count]').textContent = `${monthRows.filter((item) => item.todo_id).length}건`;
   const upcoming = schedules.filter((item) => new Date(item.starts_at) >= new Date()).slice(0, 8);
-  document.querySelector('[data-upcoming]').innerHTML = upcoming.length ? upcoming.map((item) => `<div class="dday-item ${item.todo_id ? 'warning' : 'info'}"><div><div class="dday-title">${escapeHtml(item.title)}</div><div class="dday-date">${formatDate(item.starts_at)}</div></div><span class="badge-dday">${dDay(item.starts_at)}</span></div>`).join('') : '<div class="empty-state">등록된 일정이 없습니다.</div>';
+  document.querySelector('[data-upcoming]').innerHTML = upcoming.length ? upcoming.map((item) => `<button type="button" class="dday-item schedule-detail-trigger ${item.todo_id ? 'warning' : 'info'}" data-schedule-id="${escapeHtml(item.id)}" title="${escapeHtml(item.title)} 상세 보기"><span><span class="dday-title">${escapeHtml(item.title)}</span><span class="dday-date">${formatDate(item.starts_at)}</span></span><span class="badge-dday">${dDay(item.starts_at)}</span></button>`).join('') : '<div class="empty-state">등록된 일정이 없습니다.</div>';
+}
+
+function showScheduleDetails(scheduleId) {
+  const schedule = schedules.find((item) => item.id === scheduleId);
+  if (!schedule) return;
+  const dateText = formatDate(schedule.starts_at, {
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric',
+    weekday: 'short',
+  });
+  const timeText = schedule.ends_at
+    ? `${formatTime(schedule.starts_at)} ~ ${formatTime(schedule.ends_at)}`
+    : formatTime(schedule.starts_at);
+  showAppDetails({
+    title: '일정 상세',
+    heading: schedule.title,
+    badge: schedule.todo_id ? '할 일 마감' : '팀 일정',
+    rows: [
+      { label: '날짜', value: dateText },
+      { label: '시간', value: timeText },
+      { label: '구분', value: schedule.todo_id ? '할 일에서 연동된 마감 일정' : '직접 등록한 팀 일정' },
+      { label: '남은 기간', value: dDay(schedule.starts_at) },
+    ],
+  });
+}
+
+function configureScheduleDetails() {
+  document.querySelector('.content-body')?.addEventListener('click', (event) => {
+    const trigger = event.target.closest('[data-schedule-id]');
+    if (trigger) showScheduleDetails(trigger.dataset.scheduleId);
+  });
 }
 
 async function loadSchedules() {
@@ -99,6 +135,7 @@ async function initialize() {
     document.querySelector('[data-next]').addEventListener('click', async () => { visibleMonth.setMonth(visibleMonth.getMonth() + 1); await loadSchedules(); });
     document.querySelector('[data-today]').addEventListener('click', async () => { visibleMonth = new Date(); visibleMonth.setDate(1); await loadSchedules(); });
     document.querySelector('[data-add-schedule]').addEventListener('click', addSchedule);
+    configureScheduleDetails();
     await loadSchedules();
   } catch (error) { showPageError(error); }
 }

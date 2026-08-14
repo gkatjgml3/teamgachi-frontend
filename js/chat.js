@@ -28,11 +28,11 @@ function renderMessages() {
   const summaryLines = summaryText.split('\n').filter(Boolean);
   const messageHtml = messages.length
     ? messages.map((message) => `
-      <div class="message-group ${message.author_id === context.user.id ? 'me' : ''}">
+      <div class="message-item ${message.author_id === context.user.id ? 'me' : ''}">
         <div class="msg-avatar"></div>
-        <div class="msg-content-wrap">
+        <div class="msg-content">
           <div class="msg-meta">
-            <span class="msg-sender">${escapeHtml(memberName(message.author_id))}</span>
+            <span class="msg-author">${escapeHtml(memberName(message.author_id))}</span>
             <span class="msg-time">${formatTime(message.created_at)}</span>
           </div>
           <div class="msg-bubble ${message.author_id === context.user.id ? 'my-bubble' : ''}">${escapeHtml(message.content)}</div>
@@ -41,14 +41,13 @@ function renderMessages() {
     : '<div class="empty-state">첫 메시지를 보내 대화를 시작해 보세요.</div>';
 
   body.innerHTML = `
-    <div class="ai-summary-card">
-      <div class="ai-summary-header">
-        <span class="ai-badge">AI</span>
-        <span class="ai-summary-title">대화 요약 (메시지 ${messages.length}건)</span>
+    <div class="chat-ai-summary">
+      <div class="summary-header">
+        <span class="summary-title"><span class="badge-purple">AI</span> 대화 요약 (메시지 ${messages.length}건)</span>
       </div>
-      <ul class="ai-summary-list">${summaryLines.map((line) => `<li>${escapeHtml(line.replace(/^[-•]\s*/, ''))}</li>`).join('')}</ul>
+      <ul class="summary-list">${summaryLines.map((line) => `<li>${escapeHtml(line.replace(/^[-•]\s*/, ''))}</li>`).join('')}</ul>
     </div>
-    <div class="date-divider"><span>${formatDate(new Date(), { year: 'numeric', month: 'long', day: 'numeric' })}</span></div>
+    <div class="chat-date-divider"><span class="chat-date-text">${formatDate(new Date(), { year: 'numeric', month: 'long', day: 'numeric' })}</span></div>
     ${messageHtml}`;
   body.scrollTop = body.scrollHeight;
 }
@@ -78,16 +77,17 @@ function renderFiles() {
   if (!list) return;
   list.innerHTML = visibleFiles.length
     ? visibleFiles.map((file) => `
-      <li class="file-item">
-        <div class="file-type-icon"></div>
-        <div class="file-meta-info">
-          <div class="file-title">${escapeHtml(file.original_name)}</div>
-          <div class="file-sub">${escapeHtml(memberName(file.uploaded_by))} · ${file.kind === 'link' ? '링크' : humanFileSize(file.size_bytes)} · ${formatDate(file.created_at)}</div>
+      <div class="drive-file-item">
+        <div class="drive-file-left"><div class="drive-file-icon"></div>
+        <div class="drive-file-details">
+          <span class="drive-file-name">${escapeHtml(file.original_name)}</span>
+          <span class="drive-file-meta">${escapeHtml(memberName(file.uploaded_by))} · ${file.kind === 'link' ? '링크' : humanFileSize(file.size_bytes)} · ${formatDate(file.created_at)}</span>
         </div>
-        <button class="btn-item-more" data-open-id="${file.id}" title="${file.kind === 'link' ? '열기' : '다운로드'}">${file.kind === 'link' ? '↗' : '↓'}</button>
-        <button class="btn-item-more" data-delete-id="${file.id}" title="삭제">×</button>
-      </li>`).join('')
-    : '<li class="empty-state">업로드한 파일이 없습니다.</li>';
+        </div>
+        <div class="drive-file-actions"><button class="drive-more-btn" data-open-id="${file.id}" title="${file.kind === 'link' ? '열기' : '다운로드'}">${file.kind === 'link' ? '↗' : '↓'}</button>
+        <button class="drive-more-btn" data-delete-id="${file.id}" title="삭제">×</button></div>
+      </div>`).join('')
+    : '<div class="empty-state">업로드한 자료가 없습니다.</div>';
 
   list.querySelectorAll('[data-open-id]').forEach((button) => {
     button.addEventListener('click', async () => {

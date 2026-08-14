@@ -1,19 +1,22 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="ko">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>TeamGachi - 대시보드</title>
-  <link rel="stylesheet" href="style_2.css">
+  <link rel="icon" type="image/png" href="../logo.png">
+  <link rel="apple-touch-icon" href="../logo.png">
+  <link rel="stylesheet" href="../css/todo, dashboard.css">
+  <link rel="stylesheet" href="../css/shared-layout.css">
 </head>
-<body>
+<body class="dashboard-body">
   <div class="app-container">
-    
+
     <aside class="sidebar">
-      <div class="sidebar-brand">
+      <a href="dashboard.html" class="sidebar-brand brand-home-link" aria-label="대시보드로 이동" style="color:inherit;text-decoration:none">
         <img src="../logo.png" alt="팀가치 로고" class="brand-logo-img">
         <span class="brand-title">TeamGachi</span>
-      </div>
+      </a>
 
       <nav class="sidebar-menu">
         <a href="dashboard.html" class="menu-item active">
@@ -47,10 +50,10 @@
       </nav>
 
       <div class="sidebar-profile">
-        <img src="profile.png" alt="Profile" class="profile-avatar">
+        <span class="profile-avatar pastel-avatar" aria-hidden="true"></span>
         <div>
-          <div class="profile-name">박서아</div>
-          <div class="profile-role">기획 · 디자인</div>
+          <div class="profile-name">불러오는 중</div>
+          <div class="profile-role"></div>
         </div>
       </div>
     </aside>
@@ -66,47 +69,47 @@
           <button class="header-btn-icon">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 01-3.46 0"/></svg>
           </button>
-          <img src="profile.png" alt="Profile" class="header-profile-avatar">
+          <span class="header-profile-avatar pastel-avatar" aria-hidden="true"></span>
         </div>
       </header>
 
       <div class="content-body">
-        
+
         <div class="dashboard-title-area">
           <div>
-            <h2>안녕하세요, 박서아님 👋</h2>
-            <p>AI 경진대회 프로젝트 · 팀원 3명 · 마감 D-14</p>
+            <h2>안녕하세요, <span data-welcome-name>팀원</span>님 👋</h2>
+            <p class="project-tag-info">팀 정보를 불러오는 중입니다.</p>
           </div>
-          <button class="btn-primary">+ 할 일 추가</button>
+          <button class="btn-primary" id="add-task-btn">+ 할 일 추가</button>
         </div>
 
         <div class="grid-summary">
           <div class="summary-card">
             <div class="summary-label">전체 진행률</div>
-            <div class="summary-value">68%</div>
-            <div class="summary-sub">지난주 대비 +12%</div>
+            <div class="summary-value">0%</div>
+            <div class="summary-sub">새 팀은 0%에서 시작합니다</div>
           </div>
           <div class="summary-card">
             <div class="summary-label">내 할 일</div>
-            <div class="summary-value">5건</div>
-            <div class="summary-sub" style="color: #e54242;">오늘 마감 2건</div>
+            <div class="summary-value">0건</div>
+            <div class="summary-sub">오늘 마감 0건</div>
           </div>
           <div class="summary-card">
             <div class="summary-label">팀 완료 업무</div>
-            <div class="summary-value">27 / 40</div>
-            <div class="summary-sub">이번 주 +8건</div>
+            <div class="summary-value">0 / 0</div>
+            <div class="summary-sub">팀 전체 기준</div>
           </div>
           <div class="summary-card">
             <div class="summary-label">읽지 않은 알림</div>
-            <div class="summary-value">12건</div>
-            <div class="summary-sub">새 공지 2건</div>
+            <div class="summary-value">0</div>
+            <div class="summary-sub">새 공지 0건</div>
           </div>
         </div>
 
         <div class="grid-main">
-          
+
           <div class="column-left">
-            
+
             <div class="card">
               <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
                 <div class="card-title">오늘의 우선순위 <span class="badge-purple">AI 추천</span></div>
@@ -117,19 +120,8 @@
                         </svg>
                 </button>
             </div>
-              
-              <div class="priority-item">
-                <div><b>1.</b> &nbsp;기능 명세서 최종 검토</div>
-                <div><span style="color: #8e8e93; margin-right: 8px;">박서아 · D-1</span> <span class="badge-purple">높음</span></div>
-              </div>
-              <div class="priority-item">
-                <div><b>2.</b> &nbsp;Supabase 테이블 스키마 확정</div>
-                <div><span style="color: #8e8e93; margin-right: 8px;">함서희 · D-2</span> <span class="badge-purple">높음</span></div>
-              </div>
-              <div class="priority-item">
-                <div><b>3.</b> &nbsp;대시보드 화면 퍼블리싱</div>
-                <div><span style="color: #8e8e93; margin-right: 8px;">이시윤 · D-4</span> <span class="badge-gray">보통</span></div>
-              </div>
+
+              <div class="task-rows"><div class="empty-state">등록된 할 일이 없습니다.</div></div>
             </div>
 
             <div class="card">
@@ -138,64 +130,24 @@
                 <span style="font-size: 11px; color: #8e8e93; cursor: pointer;">전체 보기 ›</span>
               </div>
 
-              <div class="progress-item">
-                <div class="progress-header">
-                  <span><b>박서아</b> (기획 · 디자인)</span>
-                  <span style="color: #8e8e93;">9 / 12 (75%)</span>
-                </div>
-                <div class="progress-bar-bg"><div class="progress-bar-fill" style="width: 75%;"></div></div>
-              </div>
-
-              <div class="progress-item">
-                <div class="progress-header">
-                  <span><b>이시윤</b> (프론트엔드)</span>
-                  <span style="color: #8e8e93;">6 / 11 (55%)</span>
-                </div>
-                <div class="progress-bar-bg"><div class="progress-bar-fill" style="width: 55%;"></div></div>
-              </div>
-
-              <div class="progress-item">
-                <div class="progress-header">
-                  <span><b>함서희</b> (백엔드)</span>
-                  <span style="color: #8e8e93;">12 / 17 (70%)</span>
-                </div>
-                <div class="progress-bar-bg"><div class="progress-bar-fill" style="width: 70%;"></div></div>
-              </div>
+              <div class="member-rows"><div class="empty-state">팀원 진행률을 불러오는 중입니다.</div></div>
             </div>
 
           </div>
 
           <div class="column-right">
-            
+
             <div class="card">
               <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
                 <div class="card-title">다가오는 일정</div>
                 <span style="font-size: 11px; color: #8e8e93; cursor: pointer;">캘린더 ›</span>
               </div>
-              <div class="schedule-item">
-                <span style="color: #8e8e93;">08/07</span>
-                <span>1차 기능 데모</span>
-                <span class="badge-red">D-1</span>
-              </div>
-              <div class="schedule-item">
-                <span style="color: #8e8e93;">08/09</span>
-                <span>디자인 시안 확정</span>
-                <span class="badge-purple">D-3</span>
-              </div>
-              <div class="schedule-item">
-                <span style="color: #8e8e93;">08/14</span>
-                <span>중간 점검 회의</span>
-                <span class="badge-purple">D-8</span>
-              </div>
+              <div class="schedule-rows"><div class="empty-state">다가오는 일정이 없습니다.</div></div>
             </div>
 
             <div class="card">
               <div class="card-title">채팅 요약 <span class="badge-purple">AI</span></div>
-              <ul class="chat-summary-list">
-                <li>로그인 방식은 Supabase Auth로 확정</li>
-                <li>자료함 용량 제한 20MB 합의</li>
-                <li>내일 19시 화면 리뷰 회의 진행</li>
-              </ul>
+              <ul class="chat-summary-list bullet-list"><li>요약할 팀 대화가 없습니다.</li></ul>
             </div>
 
             <div class="card">
@@ -203,14 +155,7 @@
                 <div class="card-title">공지사항</div>
                 <span style="font-size: 11px; color: #8e8e93; cursor: pointer;">전체 ›</span>
               </div>
-              <div class="notice-item">
-                <span class="badge-red">필독</span>
-                <span>제출 양식 변경 안내</span>
-              </div>
-              <div class="notice-item">
-                <span class="badge-purple">일정</span>
-                <span>8/9 정기회의 시간 변경</span>
-              </div>
+              <div class="notice-rows"><div class="empty-state">등록된 공지가 없습니다.</div></div>
             </div>
 
           </div>
@@ -221,5 +166,10 @@
     </main>
 
   </div>
+  <div id="app-modal-root" aria-live="polite"></div>
+  <template id="app-modal-template">
+    <div class="app-overlay"><section class="app-modal" role="dialog" aria-modal="true" data-modal-dialog><div class="app-modal-header"><h3 data-modal-title></h3><button type="button" data-close aria-label="닫기">×</button></div><div class="app-modal-body"></div></section></div>
+  </template>
+  <script type="module" src="../js/dashboard.js"></script>
 </body>
 </html>
