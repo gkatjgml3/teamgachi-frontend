@@ -4,6 +4,9 @@ import {
   formatTime,
   getAppContext,
   setupShell,
+  showAppAlert,
+  showAppConfirm,
+  showAppForm,
   showPageError,
   supabase,
 } from './app-context.js';
@@ -92,21 +95,26 @@ function renderFiles() {
       if (!file) return;
       if (file.kind === 'link') return window.open(file.external_url, '_blank', 'noopener');
       const { data, error } = await supabase.storage.from('team-files').createSignedUrl(file.storage_path, 60);
-      if (error) return window.alert(error.message);
+      if (error) return showAppAlert(error.message, { title: '자료 열기 실패' });
       window.open(data.signedUrl, '_blank', 'noopener');
     });
   });
   list.querySelectorAll('[data-delete-id]').forEach((button) => {
     button.addEventListener('click', async () => {
-      if (!window.confirm('이 자료를 삭제할까요?')) return;
+      const confirmed = await showAppConfirm('삭제한 자료는 되돌릴 수 없습니다. 이 자료를 삭제할까요?', {
+        title: '자료 삭제',
+        confirmText: '삭제하기',
+        danger: true,
+      });
+      if (!confirmed) return;
       const file = files.find((item) => item.id === button.dataset.deleteId);
       if (!file) return;
       if (file.kind !== 'link') {
         const { error: storageError } = await supabase.storage.from('team-files').remove([file.storage_path]);
-        if (storageError) return window.alert(storageError.message);
+        if (storageError) return showAppAlert(storageError.message, { title: '자료 삭제 실패' });
       }
       const { error } = await supabase.from('files').delete().eq('id', file.id);
-      if (error) return window.alert(error.message);
+      if (error) return showAppAlert(error.message, { title: '자료 삭제 실패' });
       await loadFiles();
     });
   });
@@ -144,20 +152,22 @@ async function sendMessage() {
     author_id: context.user.id,
     content,
   });
-  if (error) return window.alert(error.message);
+  if (error) return showAppAlert(error.message, { title: '메시지 전송 실패' });
   input.value = '';
 }
 
 async function uploadFile(file, requestedKind = activeDriveKind) {
   if (!file) return;
-  if (file.size > 20 * 1024 * 1024) return window.alert('파일은 최대 20MB까지 업로드할 수 있습니다.');
+  if (file.size > 20 * 1024 * 1024) {
+    return showAppAlert('파일은 최대 20MB까지 업로드할 수 있습니다.', { title: '파일 용량 확인' });
+  }
   const extension = file.name.includes('.') ? `.${file.name.split('.').pop()}` : '';
   const kind = requestedKind === 'image' || file.type.startsWith('image/') ? 'image' : 'file';
   const storagePath = `${context.team.id}/${context.user.id}/${crypto.randomUUID()}${extension}`;
   const { error: uploadError } = await supabase.storage
     .from('team-files')
     .upload(storagePath, file, { contentType: file.type, upsert: false });
-  if (uploadError) return window.alert(uploadError.message);
+  if (uploadError) return showAppAlert(uploadError.message, { title: '파일 업로드 실패' });
 
   const { error: recordError } = await supabase.from('files').insert({
     team_id: context.team.id,
@@ -170,22 +180,30 @@ async function uploadFile(file, requestedKind = activeDriveKind) {
   });
   if (recordError) {
     await supabase.storage.from('team-files').remove([storagePath]);
-    return window.alert(recordError.message);
+    return showAppAlert(recordError.message, { title: '파일 저장 실패' });
   }
   await loadFiles();
 }
 
 async function addLink() {
-  const rawUrl = window.prompt('공유할 링크 주소를 입력하세요.');
-  if (!rawUrl) return;
+  const values = await showAppForm({
+    title: '링크 추가',
+    description: '팀원들과 공유할 웹 주소와 표시 이름을 입력해 주세요.',
+    fields: [
+      { name: 'url', label: '링크 주소', type: 'url', placeholder: 'https://example.com', required: true },
+      { name: 'title', label: '링크 이름', placeholder: '예: 프로젝트 참고 자료' },
+    ],
+    submitText: '링크 추가',
+  });
+  if (!values) return;
   let url;
   try {
-    url = new URL(rawUrl);
+    url = new URL(values.url);
     if (!['http:', 'https:'].includes(url.protocol)) throw new Error();
   } catch {
-    return window.alert('https:// 또는 http://로 시작하는 올바른 주소를 입력해 주세요.');
+    return showAppAlert('https:// 또는 http://로 시작하는 올바른 주소를 입력해 주세요.', { title: '링크 주소 확인' });
   }
-  const title = window.prompt('링크 이름을 입력하세요.', url.hostname) || url.hostname;
+  const title = values.title || url.hostname;
   const { error } = await supabase.from('files').insert({
     team_id: context.team.id,
     uploaded_by: context.user.id,
@@ -196,7 +214,7 @@ async function addLink() {
     kind: 'link',
     external_url: url.toString(),
   });
-  if (error) return window.alert(error.message);
+  if (error) return showAppAlert(error.message, { title: '링크 추가 실패' });
   await loadFiles();
 }
 
@@ -223,9 +241,11 @@ function configureActions() {
   const dropzone = document.querySelector('.upload-dropzone');
   dropzone?.addEventListener('click', () => activeDriveKind === 'link' ? addLink() : fileInput.click());
   dropzone?.addEventListener('dragover', (event) => event.preventDefault());
-  dropzone?.addEventListener('drop', (event) => {
+  dropzone?.addEventListener('drop', async (event) => {
     event.preventDefault();
-    if (activeDriveKind === 'link') return window.alert('링크 탭에서는 업로드 영역을 클릭해 주소를 입력해 주세요.');
+    if (activeDriveKind === 'link') {
+      return showAppAlert('링크 탭에서는 업로드 영역을 클릭해 주소를 입력해 주세요.', { title: '링크 추가 방법' });
+    }
     uploadFile(event.dataTransfer.files?.[0]);
   });
 

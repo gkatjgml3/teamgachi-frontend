@@ -3,6 +3,7 @@ import {
   formatDate,
   getAppContext,
   setupShell,
+  showAppAlert,
   showPageError,
   supabase,
 } from './app-context.js';
@@ -106,7 +107,7 @@ function renderBoard() {
       event.preventDefault();
       const todoId = event.dataTransfer.getData('text/plain');
       const { error } = await supabase.from('todos').update({ status: column.dataset.status }).eq('id', todoId);
-      if (error) return window.alert(error.message);
+      if (error) return showAppAlert(error.message, { title: '업무 상태 변경 실패' });
       await loadTodos();
     });
   });

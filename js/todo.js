@@ -3,6 +3,8 @@ import {
   formatDate,
   getAppContext,
   setupShell,
+  showAppAlert,
+  showAppConfirm,
   showPageError,
   supabase,
 } from './app-context.js';
@@ -111,15 +113,20 @@ function render() {
         }
       }
       const { error } = await supabase.from('todos').update({ status: checkbox.checked ? 'done' : 'todo' }).eq('id', id);
-      if (error) return window.alert(error.message);
+      if (error) return showAppAlert(error.message, { title: '할 일 상태 변경 실패' });
       await loadTodos();
     });
   });
   card.querySelectorAll('[data-delete-id]').forEach((button) => {
     button.addEventListener('click', async () => {
-      if (!window.confirm('이 할 일을 삭제할까요?')) return;
+      const confirmed = await showAppConfirm('삭제한 할 일은 되돌릴 수 없습니다. 이 할 일을 삭제할까요?', {
+        title: '할 일 삭제',
+        confirmText: '삭제하기',
+        danger: true,
+      });
+      if (!confirmed) return;
       const { error } = await supabase.from('todos').delete().eq('id', button.dataset.deleteId);
-      if (error) return window.alert(error.message);
+      if (error) return showAppAlert(error.message, { title: '할 일 삭제 실패' });
       await loadTodos();
     });
   });
@@ -161,7 +168,7 @@ async function uploadEvidence(todo) {
   const file = await chooseEvidenceFile();
   if (!file) return false;
   if (file.size > 20 * 1024 * 1024) {
-    window.alert('증빙 파일은 최대 20MB까지 업로드할 수 있습니다.');
+    await showAppAlert('증빙 파일은 최대 20MB까지 업로드할 수 있습니다.', { title: '파일 용량 확인' });
     return false;
   }
   const extension = file.name.includes('.') ? `.${file.name.split('.').pop()}` : '';
@@ -169,7 +176,7 @@ async function uploadEvidence(todo) {
   const { error: uploadError } = await supabase.storage.from('team-files')
     .upload(storagePath, file, { contentType: file.type || 'application/octet-stream', upsert: false });
   if (uploadError) {
-    window.alert(uploadError.message);
+    await showAppAlert(uploadError.message, { title: '증빙 파일 업로드 실패' });
     return false;
   }
   const { data: record, error: recordError } = await supabase.from('files').insert({
@@ -183,7 +190,7 @@ async function uploadEvidence(todo) {
   }).select('id').single();
   if (recordError) {
     await supabase.storage.from('team-files').remove([storagePath]);
-    window.alert(recordError.message);
+    await showAppAlert(recordError.message, { title: '증빙 파일 저장 실패' });
     return false;
   }
   const { error: evidenceError } = await supabase.from('todo_evidence').upsert({
@@ -194,7 +201,7 @@ async function uploadEvidence(todo) {
   if (evidenceError) {
     await supabase.from('files').delete().eq('id', record.id);
     await supabase.storage.from('team-files').remove([storagePath]);
-    window.alert(evidenceError.message);
+    await showAppAlert(evidenceError.message, { title: '증빙 제출 실패' });
     return false;
   }
   return true;
@@ -243,7 +250,7 @@ function configureForm() {
 
   submitButton.addEventListener('click', async () => {
     const title = titleInput.value.trim();
-    if (!title) return window.alert('할 일을 입력해 주세요.');
+    if (!title) return showAppAlert('할 일을 입력해 주세요.', { title: '할 일 확인' });
     let dueAt = null;
     if (dueInput.value) {
       const date = new Date(`${dueInput.value}T23:59:00`);
@@ -266,12 +273,12 @@ function configureForm() {
       position: todos.length,
     }).select('id').single();
     submitButton.disabled = false;
-    if (error) return window.alert(error.message);
+    if (error) return showAppAlert(error.message, { title: '할 일 추가 실패' });
     if (collaboratorIds.length) {
       const { error: collaboratorError } = await supabase.from('todo_collaborators').insert(
         collaboratorIds.map((userId) => ({ todo_id: createdTodo.id, user_id: userId })),
       );
-      if (collaboratorError) return window.alert(collaboratorError.message);
+      if (collaboratorError) return showAppAlert(collaboratorError.message, { title: '공동 작업자 저장 실패' });
     }
     titleInput.value = '';
     if (detailsInput) detailsInput.value = '';

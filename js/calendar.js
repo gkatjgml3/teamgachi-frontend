@@ -1,4 +1,13 @@
-import { escapeHtml, formatDate, getAppContext, setupShell, showPageError, supabase } from './app-context.js';
+import {
+  escapeHtml,
+  formatDate,
+  getAppContext,
+  setupShell,
+  showAppAlert,
+  showAppForm,
+  showPageError,
+  supabase,
+} from './app-context.js';
 
 let context;
 let schedules = [];
@@ -58,16 +67,26 @@ async function loadSchedules() {
 }
 
 async function addSchedule() {
-  const title = window.prompt('일정 이름을 입력하세요.')?.trim();
-  if (!title) return;
-  const dateText = window.prompt('날짜를 YYYY-MM-DD 형식으로 입력하세요.', dayKey(new Date()))?.trim();
-  if (!/^\d{4}-\d{2}-\d{2}$/.test(dateText ?? '')) return window.alert('날짜 형식이 올바르지 않습니다.');
-  const timeText = window.prompt('시작 시간을 HH:MM 형식으로 입력하세요.', '09:00')?.trim();
-  if (!/^\d{2}:\d{2}$/.test(timeText ?? '')) return window.alert('시간 형식이 올바르지 않습니다.');
+  const values = await showAppForm({
+    title: '새 일정 추가',
+    description: '일정 이름과 정확한 날짜·시작 시간을 입력해 주세요.',
+    fields: [
+      { name: 'title', label: '일정 이름', placeholder: '예: 중간 점검 회의', required: true },
+      { name: 'date', label: '날짜', type: 'date', value: dayKey(new Date()), required: true },
+      { name: 'time', label: '시작 시간', type: 'time', value: '09:00', required: true },
+    ],
+    submitText: '일정 추가',
+  });
+  if (!values) return;
+  const { title, date: dateText, time: timeText } = values;
   const startsAt = new Date(`${dateText}T${timeText}:00`);
+  if (Number.isNaN(startsAt.getTime())) {
+    await showAppAlert('날짜와 시간을 다시 확인해 주세요.', { title: '일정 확인' });
+    return;
+  }
   const endsAt = new Date(startsAt.getTime() + 60 * 60 * 1000);
   const { error } = await supabase.from('schedules').insert({ team_id: context.team.id, title, starts_at: startsAt.toISOString(), ends_at: endsAt.toISOString(), created_by: context.user.id });
-  if (error) return window.alert(error.message);
+  if (error) return showAppAlert(error.message, { title: '일정 추가 실패' });
   await loadSchedules();
 }
 

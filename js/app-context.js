@@ -135,15 +135,129 @@ export async function getAppContext() {
   throw lastError ?? new Error('로그인 세션을 확인하지 못했습니다.');
 }
 
-function createOverlay(className, title) {
-  document.querySelector(`.${className}`)?.remove();
+function createOverlay(className, title, onClose = () => {}) {
+  const previous = document.querySelector(`.${className}`);
+  if (previous?.closeModal) previous.closeModal();
+  else previous?.remove();
   const overlay = document.createElement('div');
   overlay.className = `app-overlay ${className}`;
   overlay.innerHTML = `<div class="app-modal"><div class="app-modal-header"><h3>${escapeHtml(title)}</h3><button type="button" data-close>×</button></div><div class="app-modal-body"></div></div>`;
-  overlay.querySelector('[data-close]').addEventListener('click', () => overlay.remove());
-  overlay.addEventListener('click', (event) => { if (event.target === overlay) overlay.remove(); });
+  let closed = false;
+  overlay.closeModal = () => {
+    if (closed) return;
+    closed = true;
+    overlay.remove();
+    onClose();
+  };
+  overlay.querySelector('[data-close]').addEventListener('click', overlay.closeModal);
+  overlay.addEventListener('click', (event) => { if (event.target === overlay) overlay.closeModal(); });
+  overlay.addEventListener('keydown', (event) => { if (event.key === 'Escape') overlay.closeModal(); });
   document.body.append(overlay);
   return overlay;
+}
+
+export function showAppAlert(message, { title = '알림', buttonText = '확인' } = {}) {
+  return new Promise((resolve) => {
+    const overlay = createOverlay('app-message-overlay', title, resolve);
+    const body = overlay.querySelector('.app-modal-body');
+    body.innerHTML = `
+      <p class="app-modal-message">${escapeHtml(message)}</p>
+      <div class="modal-actions single">
+        <button type="button" class="modal-button primary" data-confirm>${escapeHtml(buttonText)}</button>
+      </div>`;
+    body.querySelector('[data-confirm]').addEventListener('click', overlay.closeModal);
+    body.querySelector('[data-confirm]').focus();
+  });
+}
+
+export function showAppConfirm(message, {
+  title = '확인',
+  confirmText = '확인',
+  cancelText = '취소',
+  danger = false,
+} = {}) {
+  return new Promise((resolve) => {
+    let confirmed = false;
+    const overlay = createOverlay('app-confirm-overlay', title, () => resolve(confirmed));
+    const body = overlay.querySelector('.app-modal-body');
+    body.innerHTML = `
+      <p class="app-modal-message">${escapeHtml(message)}</p>
+      <div class="modal-actions">
+        <button type="button" class="modal-button" data-cancel>${escapeHtml(cancelText)}</button>
+        <button type="button" class="modal-button ${danger ? 'danger' : 'primary'}" data-confirm>${escapeHtml(confirmText)}</button>
+      </div>`;
+    body.querySelector('[data-cancel]').addEventListener('click', overlay.closeModal);
+    body.querySelector('[data-confirm]').addEventListener('click', () => {
+      confirmed = true;
+      overlay.closeModal();
+    });
+    body.querySelector('[data-cancel]').focus();
+  });
+}
+
+export function showAppForm({
+  title,
+  description = '',
+  fields = [],
+  submitText = '저장',
+  cancelText = '취소',
+} = {}) {
+  return new Promise((resolve) => {
+    let result = null;
+    const overlay = createOverlay('app-form-overlay', title || '정보 입력', () => resolve(result));
+    const body = overlay.querySelector('.app-modal-body');
+    const fieldHtml = fields.map((field, index) => {
+      const id = `app-modal-field-${index}`;
+      const attributes = [
+        `id="${id}"`,
+        `name="${escapeHtml(field.name)}"`,
+        `class="modal-input"`,
+        field.required ? 'required' : '',
+        field.placeholder ? `placeholder="${escapeHtml(field.placeholder)}"` : '',
+        field.min ? `min="${escapeHtml(field.min)}"` : '',
+        field.max ? `max="${escapeHtml(field.max)}"` : '',
+      ].filter(Boolean).join(' ');
+      const control = field.type === 'textarea'
+        ? `<textarea ${attributes}>${escapeHtml(field.value ?? '')}</textarea>`
+        : `<input type="${escapeHtml(field.type || 'text')}" value="${escapeHtml(field.value ?? '')}" ${attributes}>`;
+      return `<div class="modal-field"><label class="modal-label" for="${id}">${escapeHtml(field.label)}</label>${control}<p class="modal-field-error" data-error-for="${escapeHtml(field.name)}"></p></div>`;
+    }).join('');
+    body.innerHTML = `
+      ${description ? `<p class="modal-description">${escapeHtml(description)}</p>` : ''}
+      <form class="modal-form" novalidate>
+        ${fieldHtml}
+        <div class="modal-actions">
+          <button type="button" class="modal-button" data-cancel>${escapeHtml(cancelText)}</button>
+          <button type="submit" class="modal-button primary">${escapeHtml(submitText)}</button>
+        </div>
+      </form>`;
+    const form = body.querySelector('.modal-form');
+    body.querySelector('[data-cancel]').addEventListener('click', overlay.closeModal);
+    form.addEventListener('submit', (event) => {
+      event.preventDefault();
+      let valid = true;
+      const values = {};
+      fields.forEach((field) => {
+        const input = form.elements.namedItem(field.name);
+        const value = input?.value?.trim() ?? '';
+        const error = form.querySelector(`[data-error-for="${CSS.escape(field.name)}"]`);
+        let errorMessage = '';
+        if (field.required && !value) errorMessage = `${field.label}을(를) 입력해 주세요.`;
+        else if (input && !input.validity.valid) errorMessage = `${field.label} 형식을 확인해 주세요.`;
+        if (error) error.textContent = errorMessage;
+        input?.classList.toggle('invalid', Boolean(errorMessage));
+        if (errorMessage) valid = false;
+        values[field.name] = value;
+      });
+      if (!valid) {
+        form.querySelector('.modal-input.invalid')?.focus();
+        return;
+      }
+      result = values;
+      overlay.closeModal();
+    });
+    form.querySelector('.modal-input')?.focus();
+  });
 }
 
 async function runGlobalSearch(context, query) {
@@ -175,7 +289,7 @@ function configureSearch(context) {
     input.addEventListener('keydown', async (event) => {
       if (event.key !== 'Enter') return;
       event.preventDefault();
-      try { await runGlobalSearch(context, input.value); } catch (error) { window.alert(error.message); }
+      try { await runGlobalSearch(context, input.value); } catch (error) { await showAppAlert(error.message, { title: '검색 실패' }); }
     });
   });
 }
@@ -206,17 +320,29 @@ function configureTeamMenu(context) {
       window.location.reload();
     });
     body.querySelector('[data-rename-team]').addEventListener('click', async () => {
-      const name = window.prompt('새 팀 이름을 입력하세요.', context.team.name)?.trim();
-      if (!name) return;
+      const values = await showAppForm({
+        title: '팀 이름 변경',
+        description: '팀원들에게 표시할 새로운 팀 이름을 입력해 주세요.',
+        fields: [{ name: 'name', label: '팀 이름', value: context.team.name, placeholder: '예: 팀가치', required: true }],
+        submitText: '변경하기',
+      });
+      if (!values) return;
+      const name = values.name;
       const { error } = await supabase.from('teams').update({ name }).eq('id', context.team.id);
-      if (error) return window.alert(error.message);
+      if (error) return showAppAlert(error.message, { title: '팀 이름 변경 실패' });
       window.location.reload();
     });
     body.querySelector('[data-create-team]').addEventListener('click', async () => {
-      const name = window.prompt('새 팀 이름을 입력하세요.')?.trim();
-      if (!name) return;
+      const values = await showAppForm({
+        title: '새 팀 만들기',
+        description: '새 프로젝트를 함께할 팀의 이름을 정해 주세요.',
+        fields: [{ name: 'name', label: '팀 이름', placeholder: '예: 시너지온', required: true }],
+        submitText: '팀 만들기',
+      });
+      if (!values) return;
+      const name = values.name;
       const { data, error } = await supabase.from('teams').insert({ name, owner_id: context.user.id }).select('id').single();
-      if (error) return window.alert(error.message);
+      if (error) return showAppAlert(error.message, { title: '팀 생성 실패' });
       window.localStorage.setItem('teamgachi.activeTeamId', data.id);
       window.location.reload();
     });
@@ -248,9 +374,9 @@ export function setupShell(context) {
   });
 
   document.querySelectorAll('.sidebar-menu a[href="#"]').forEach((link) => {
-    link.addEventListener('click', (event) => {
+    link.addEventListener('click', async (event) => {
       event.preventDefault();
-      window.alert(`${link.textContent.trim()} 화면은 다음 단계에서 추가됩니다.`);
+      await showAppAlert(`${link.textContent.trim()} 화면은 다음 단계에서 추가됩니다.`, { title: '준비 중인 기능' });
     });
   });
 
