@@ -27,6 +27,8 @@
 - 메인 사이트: <https://teamgachi.netlify.app>
 - 로그인: <https://teamgachi.netlify.app/login.html>
 
+> 2026-08-14 기준 Netlify 운영 크레딧 소진으로 신규 Production Deploy가 일시 정지되어 있습니다. 최신 로고·프로필·AI 연결 코드는 GitHub에 반영되었으며, 다음 결제 주기 또는 플랜 갱신 후 자동 배포됩니다.
+
 - 팀 저장소: <https://github.com/gkatjgml3/teamgachi>
 - 통합 프론트엔드: `teamgachi/web/`
 
