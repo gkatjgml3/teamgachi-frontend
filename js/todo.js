@@ -130,6 +130,28 @@ function render() {
       await loadTodos();
     });
   });
+  card.querySelectorAll('[data-todo-detail-id]').forEach((button) => {
+    button.addEventListener('click', () => {
+      const todo = todos.find((item) => item.id === button.dataset.todoDetailId);
+      if (!todo) return;
+      const collaborators = (collaboratorMap.get(todo.id) ?? [])
+        .map((id) => memberMap.get(id)?.name)
+        .filter(Boolean)
+        .join(', ');
+      showAppDetails({
+        title: '할 일 상세',
+        heading: todo.title,
+        badge: statusLabel[todo.status],
+        rows: [
+          { label: '자세한 내용', value: todo.details || '등록된 상세 내용이 없습니다.' },
+          { label: '담당자', value: memberMap.get(todo.assignee_id)?.name || '미배정' },
+          { label: '공동 작업자', value: collaborators || '없음' },
+          { label: '마감', value: dueDateLabel(todo.due_at) },
+          { label: '증빙', value: todo.requires_evidence ? '완료할 때 파일 업로드 필수' : '필수 아님' },
+        ],
+      });
+    });
+  });
 
   const mine = todos.filter((todo) => isMine(todo) && todo.status !== 'canceled');
   const mineDone = mine.filter((todo) => todo.status === 'done').length;
@@ -161,28 +183,6 @@ function chooseEvidenceFile() {
         resolve(null);
       }
     }, 60000);
-  });
-  card.querySelectorAll('[data-todo-detail-id]').forEach((button) => {
-    button.addEventListener('click', () => {
-      const todo = todos.find((item) => item.id === button.dataset.todoDetailId);
-      if (!todo) return;
-      const collaborators = (collaboratorMap.get(todo.id) ?? [])
-        .map((id) => memberMap.get(id)?.name)
-        .filter(Boolean)
-        .join(', ');
-      showAppDetails({
-        title: '할 일 상세',
-        heading: todo.title,
-        badge: statusLabel[todo.status],
-        rows: [
-          { label: '자세한 내용', value: todo.details || '등록된 상세 내용이 없습니다.' },
-          { label: '담당자', value: memberMap.get(todo.assignee_id)?.name || '미배정' },
-          { label: '공동 작업자', value: collaborators || '없음' },
-          { label: '마감', value: dueDateLabel(todo.due_at) },
-          { label: '증빙', value: todo.requires_evidence ? '완료할 때 파일 업로드 필수' : '필수 아님' },
-        ],
-      });
-    });
   });
 }
 
