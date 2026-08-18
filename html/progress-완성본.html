@@ -1,0 +1,305 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>TeamGachi - 업무 · 진척도</title>
+  <link rel="stylesheet" href="style_progress.css">
+</head>
+<body>
+  <div class="app-container">
+    
+    <aside class="sidebar">
+      <div class="sidebar-brand">
+        <img src="logo.png" alt="Logo" class="brand-logo-img">
+        <span class="brand-title">TeamGachi</span>
+      </div>
+
+      <nav class="sidebar-menu">
+        <a href="TeamGachi.dashboard.html" class="menu-item">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/></svg>
+          <span>대시보드</span>
+        </a>
+        <a href="todo.html" class="menu-item">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/></svg>
+          <span>할 일</span>
+        </a>
+        <a href="chat.html" class="menu-item">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
+          <span>채팅 · 자료함</span>
+        </a>
+        <a href="calendar.html" class="menu-item">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+          <span>캘린더</span>
+        </a>
+        <a href="progress.html" class="menu-item active">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 20V10"/><path d="M12 20V4"/><path d="M6 20v-6"/></svg>
+          <span>업무 · 진척도</span>
+        </a>
+        <a href="timer.html" class="menu-item">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+          <span>집중 타이머</span>
+        </a>
+        <a href="notice.html" class="menu-item">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 01-3.46 0"/></svg>
+          <span>공지사항</span>
+        </a>
+      </nav>
+
+      <div class="sidebar-profile">
+        <img src="profile.png" alt="Profile" class="profile-avatar">
+        <div>
+          <div class="profile-name">박서아</div>
+          <div class="profile-role">기획 · 디자인</div>
+        </div>
+      </div>
+    </aside>
+
+    <main class="main-content">
+      <header class="main-header">
+        <h1 class="header-page-name">업무 · 진척도</h1>
+        <div class="header-right-tools">
+          <div class="header-search">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
+            <input type="text" placeholder="검색...">
+          </div>
+          <button class="header-btn-icon">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 01-3.46 0"/></svg>
+          </button>
+          <img src="profile.png" alt="Profile" class="header-profile-avatar">
+        </div>
+      </header>
+
+      <div class="content-body">
+        
+        <div class="card">
+          <div class="card-header-flex" style="margin-bottom: 0;">
+            <span class="card-title">프로젝트 전체 진행률</span>
+            <span class="card-subtitle">마감 2026.08.20 · D-14</span>
+          </div>
+          <div class="overall-progress-box">
+            <span class="overall-percentage">68%</span>
+            <div class="overall-bar-container">
+              <div class="overall-bar-fill"></div>
+            </div>
+            <div class="progress-legend">
+              <span><span class="legend-dot completed"></span>완료 <strong>27</strong></span>
+              <span><span class="legend-dot ongoing"></span>진행 중 <strong>8</strong></span>
+              <span><span class="legend-dot waiting"></span>대기 <strong>5</strong></span>
+            </div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-header-flex">
+            <span class="card-title">팀원별 업무 현황</span>
+            <div style="display: flex; gap: 8px;">
+              <select class="select-filter-sm"><option>전체 기간</option></select>
+              <button class="btn-secondary">업무 배정</button>
+            </div>
+          </div>
+
+          <table class="progress-table">
+            <thead>
+              <tr>
+                <th style="width: 18%;">팀원</th>
+                <th style="width: 20%;">담당 영역</th>
+                <th style="width: 32%;">주요 업무</th>
+                <th style="width: 18%;">진행률</th>
+                <th style="width: 6%;">완료</th>
+                <th style="width: 6%;">지연</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>
+                  <div class="member-info">
+                    <img src="profile.png" alt="Profile" class="member-avatar">
+                    <span class="member-name">박서아</span>
+                  </div>
+                </td>
+                <td style="color: #636366;">기획 · 디자인</td>
+                <td style="color: #636366;">와이어프레임 · 기능명세 · QA</td>
+                <td>
+                  <div style="display: flex; align-items: center; gap: 8px;">
+                    <div class="table-progress-bar"><div class="table-progress-fill" style="width: 75%;"></div></div>
+                    <span style="font-weight: 700; color: #1c1c1e;">75%</span>
+                  </div>
+                </td>
+                <td style="color: #636366;">9 / 12</td>
+                <td><span class="badge-delay-zero">0건</span></td>
+              </tr>
+              <tr>
+                <td>
+                  <div class="member-info">
+                    <img src="profile.png" alt="Profile" class="member-avatar">
+                    <span class="member-name">이시윤</span>
+                  </div>
+                </td>
+                <td style="color: #636366;">프론트엔드</td>
+                <td style="color: #636366;">HTML/CSS 퍼블리싱 · JS 연동</td>
+                <td>
+                  <div style="display: flex; align-items: center; gap: 8px;">
+                    <div class="table-progress-bar"><div class="table-progress-fill" style="width: 55%;"></div></div>
+                    <span style="font-weight: 700; color: #1c1c1e;">55%</span>
+                  </div>
+                </td>
+                <td style="color: #636366;">6 / 11</td>
+                <td><span class="badge-delay-exist">1건</span></td>
+              </tr>
+              <tr>
+                <td>
+                  <div class="member-info">
+                    <img src="profile.png" alt="Profile" class="member-avatar">
+                    <span class="member-name">함서희</span>
+                  </div>
+                </td>
+                <td style="color: #636366;">백엔드</td>
+                <td style="color: #636366;">Supabase · Auth · AI 함수</td>
+                <td>
+                  <div style="display: flex; align-items: center; gap: 8px;">
+                    <div class="table-progress-bar"><div class="table-progress-fill" style="width: 70%;"></div></div>
+                    <span style="font-weight: 700; color: #1c1c1e;">70%</span>
+                  </div>
+                </td>
+                <td style="color: #636366;">12 / 17</td>
+                <td><span class="badge-delay-zero">0건</span></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="card">
+          <div class="card-header-flex" style="margin-bottom: 8px;">
+            <span class="card-title">업무 분담 보드</span>
+            <span class="card-subtitle">드래그해서 상태를 변경할 수 있습니다</span>
+          </div>
+
+          <div class="kanban-board">
+            
+            <div class="kanban-column">
+              <div class="kanban-col-header">
+                <span class="kanban-col-title">대기 <span class="count-badge">5</span></span>
+                <button class="kanban-add-btn">+</button>
+              </div>
+
+              <div class="kanban-card">
+                <span class="kanban-card-tag tag-plan">기획</span>
+                <div class="kanban-card-title">캘린더 화면 기획</div>
+                <div class="kanban-card-footer">
+                  <div class="kanban-assignee">
+                    <img src="profile.png" alt="Profile" class="kanban-assignee-img">
+                    <span>박서아</span>
+                  </div>
+                  <span class="kanban-dday">D-8</span>
+                </div>
+              </div>
+
+              <div class="kanban-card">
+                <span class="kanban-card-tag tag-front">프론트</span>
+                <div class="kanban-card-title">공지사항 UI 구현</div>
+                <div class="kanban-card-footer">
+                  <div class="kanban-assignee">
+                    <img src="profile.png" alt="Profile" class="kanban-assignee-img">
+                    <span>이시윤</span>
+                  </div>
+                  <span class="kanban-dday">D-9</span>
+                </div>
+              </div>
+
+              <div class="kanban-card">
+                <span class="kanban-card-tag tag-back">백엔드</span>
+                <div class="kanban-card-title">Storage 파일 업로드</div>
+                <div class="kanban-card-footer">
+                  <div class="kanban-assignee">
+                    <img src="profile.png" alt="Profile" class="kanban-assignee-img">
+                    <span>함서희</span>
+                  </div>
+                  <span class="kanban-dday">D-7</span>
+                </div>
+              </div>
+            </div>
+
+            <div class="kanban-column">
+              <div class="kanban-col-header">
+                <span class="kanban-col-title">진행 중 <span class="count-badge">8</span></span>
+                <button class="kanban-add-btn">+</button>
+              </div>
+
+              <div class="kanban-card">
+                <span class="kanban-card-tag tag-front">프론트</span>
+                <div class="kanban-card-title">대시보드 퍼블리싱</div>
+                <div class="kanban-card-footer">
+                  <div class="kanban-assignee">
+                    <img src="profile.png" alt="Profile" class="kanban-assignee-img">
+                    <span>이시윤</span>
+                  </div>
+                  <span class="kanban-dday">D-2</span>
+                </div>
+              </div>
+
+              <div class="kanban-card">
+                <span class="kanban-card-tag tag-back">백엔드</span>
+                <div class="kanban-card-title">DB 스키마 확정</div>
+                <div class="kanban-card-footer">
+                  <div class="kanban-assignee">
+                    <img src="profile.png" alt="Profile" class="kanban-assignee-img">
+                    <span>함서희</span>
+                  </div>
+                  <span class="kanban-dday urgent">오늘</span>
+                </div>
+              </div>
+
+              <div class="kanban-card">
+                <span class="kanban-card-tag tag-plan">기획</span>
+                <div class="kanban-card-title">기능 명세서 검토</div>
+                <div class="kanban-card-footer">
+                  <div class="kanban-assignee">
+                    <img src="profile.png" alt="Profile" class="kanban-assignee-img">
+                    <span>박서아</span>
+                  </div>
+                  <span class="kanban-dday urgent">오늘</span>
+                </div>
+              </div>
+            </div>
+
+            <div class="kanban-column">
+              <div class="kanban-col-header">
+                <span class="kanban-col-title">완료 <span class="count-badge">27</span></span>
+                <button class="kanban-add-btn">+</button>
+              </div>
+
+              <div class="kanban-card">
+                <span class="kanban-card-tag tag-plan">기획</span>
+                <div class="kanban-card-title">와이어프레임 초안</div>
+                <div class="kanban-card-footer">
+                  <div class="kanban-assignee">
+                    <img src="profile.png" alt="Profile" class="kanban-assignee-img">
+                    <span>박서아</span>
+                  </div>
+                  <span class="kanban-dday">08/05</span>
+                </div>
+              </div>
+
+              <div class="kanban-card">
+                <span class="kanban-card-tag tag-back">백엔드</span>
+                <div class="kanban-card-title">Supabase 프로젝트 생성</div>
+                <div class="kanban-card-footer">
+                  <div class="kanban-assignee">
+                    <img src="profile.png" alt="Profile" class="kanban-assignee-img">
+                    <span>함서희</span>
+                  </div>
+                  <span class="kanban-dday">08/04</span>
+                </div>
+              </div>
+            </div>
+
+          </div>
+        </div>
+
+      </div>
+    </main>
+
+  </div>
+</body>
+</html>
