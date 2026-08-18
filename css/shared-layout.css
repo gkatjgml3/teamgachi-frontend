@@ -583,6 +583,25 @@ textarea.form-input-todo {
 .search-result-item span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .team-menu-button { font-size: 22px; }
 
+.feature-guide-button {
+  display: grid;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+  border: 1px solid #dfdbea;
+  border-radius: 50%;
+  background: #fff;
+  color: #6558e8;
+  font-size: 14px;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.feature-guide-button:hover {
+  border-color: #6558e8;
+  background: #f4f2ff;
+}
+
 @media (max-width: 900px) {
   :root {
     --teamgachi-sidebar-width: 200px;

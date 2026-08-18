@@ -809,3 +809,20 @@ body, html {
   display: flex;
   gap: 6px;
 }
+.link-action {
+  color: #8e8e93;
+  font-size: 11px;
+  text-decoration: none;
+}
+
+.link-action:hover {
+  color: #534be8;
+  text-decoration: underline;
+}
+
+.inline-link-button {
+  padding: 0;
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+}

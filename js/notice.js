@@ -20,6 +20,7 @@ let context;
 let notices = [];
 let readIds = new Set();
 let activeFilter = 'all';
+let sortOrder = 'newest';
 let realtimeChannel;
 
 function authorName(userId) {
@@ -32,8 +33,8 @@ function categoryBadge(notice) {
 }
 
 function filteredNotices() {
-  if (activeFilter === 'all') return notices;
-  return notices.filter((notice) => notice.category === activeFilter);
+  const rows = activeFilter === 'all' ? [...notices] : notices.filter((notice) => notice.category === activeFilter);
+  return rows.sort((a, b) => sortOrder === 'oldest' ? new Date(a.created_at) - new Date(b.created_at) : new Date(b.created_at) - new Date(a.created_at));
 }
 
 function renderFilterCounts() {
@@ -178,6 +179,10 @@ function configureActions() {
     });
   });
   document.querySelector('[data-create-notice]')?.addEventListener('click', createNotice);
+  document.querySelector('[data-notice-sort]')?.addEventListener('change', (event) => {
+    sortOrder = event.target.value;
+    renderNotices();
+  });
   document.querySelector('[data-notice-grid]')?.addEventListener('click', (event) => {
     if (event.target.closest('[data-mark-all-read]')) return markAllRead();
     const target = event.target.closest('[data-notice-id]');
@@ -207,7 +212,16 @@ async function initialize() {
     context = await getAppContext();
     if (!context) return;
     setupShell(context);
-    if (!['owner', 'admin'].includes(context.team.role)) document.querySelector('[data-create-notice]')?.remove();
+    if (!['owner', 'admin'].includes(context.team.role)) {
+      const createButton = document.querySelector('[data-create-notice]');
+      if (createButton) {
+        createButton.disabled = true;
+        createButton.textContent = '팀장·관리자만 작성';
+        createButton.title = '공지 작성은 팀장 또는 관리자 권한이 필요합니다.';
+      }
+      const help = document.querySelector('[data-notice-author-help]');
+      if (help) help.textContent = '공지는 팀장·관리자가 작성합니다. 팀원은 공지를 열어 확인하고 읽음 처리할 수 있습니다.';
+    }
     configureActions();
     await loadNotices();
     subscribeRealtime();

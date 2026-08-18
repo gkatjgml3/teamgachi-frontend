@@ -388,6 +388,88 @@ function configureTeamMenu(context) {
   });
 }
 
+const featureGuides = {
+  dashboard: {
+    title: '대시보드 기능 안내',
+    heading: '팀의 현재 상태를 한눈에 확인하는 시작 화면',
+    rows: [
+      { label: '요약 카드', value: '전체 진행률, 내 할 일, 완료 업무, 읽지 않은 공지를 표시합니다.' },
+      { label: '우선순위', value: '마감일과 중요도를 기준으로 지금 먼저 할 업무를 보여줍니다.' },
+      { label: '전체 보기', value: '진척도·캘린더·채팅·공지사항의 해당 전체 화면으로 이동합니다.' },
+    ],
+  },
+  todo: {
+    title: '할 일 기능 안내',
+    heading: '업무를 등록하고 담당자·마감일·완료 상태를 관리합니다.',
+    rows: [
+      { label: '내 할 일', value: '내가 담당하거나 공동 작업자로 지정된 업무만 모아봅니다.' },
+      { label: '완료 처리', value: '체크박스로 완료하며, 증빙 필수 업무는 파일을 올려야 완료됩니다.' },
+      { label: 'AI 추천', value: 'AI가 연결되면 추천 결과를, 미연결 시 중요도와 마감일 자동 정렬을 사용합니다.' },
+    ],
+  },
+  chat: {
+    title: '채팅·자료함 기능 안내',
+    heading: '팀 대화와 파일·이미지·링크를 한 공간에서 공유합니다.',
+    rows: [
+      { label: '실시간 채팅', value: '팀원이 보낸 메시지가 새로고침 없이 표시됩니다.' },
+      { label: '자료함', value: '팀 파일, 이미지와 웹 링크를 업로드하고 열거나 내려받습니다.' },
+      { label: 'AI 요약', value: '최근 대화를 AI로 요약하며 API 미연결 시 자동 규칙 요약을 제공합니다.' },
+    ],
+  },
+  calendar: {
+    title: '캘린더 기능 안내',
+    heading: '팀 일정과 할 일 마감일을 월·주·일 단위로 확인합니다.',
+    rows: [
+      { label: '월·주·일', value: '오른쪽 보기 버튼으로 달력 범위를 전환하고 날짜를 누르면 일 보기로 이동합니다.' },
+      { label: '마감 연동', value: '마감일이 있는 할 일은 캘린더와 다가오는 마감에 자동 표시됩니다.' },
+      { label: '일정 추가', value: '날짜와 시작 시간을 지정해 팀 일정을 직접 등록합니다.' },
+    ],
+  },
+  progress: {
+    title: '업무·진척도 기능 안내',
+    heading: '팀원별 업무 배정과 완료율을 비교합니다.',
+    rows: [
+      { label: '진행률', value: '담당 업무 중 완료한 업무 비율을 팀원별로 계산합니다.' },
+      { label: '업무 현황', value: '대기·진행 중·완료 상태를 기준으로 프로젝트 흐름을 확인합니다.' },
+      { label: '필터', value: '팀원 또는 상태별로 필요한 업무만 골라봅니다.' },
+    ],
+  },
+  timer: {
+    title: '집중 타이머 기능 안내',
+    heading: '15·25·45·60분 집중 세션과 작업 인증 기록을 관리합니다.',
+    rows: [
+      { label: '집중 시간', value: '시작 전에 원하는 시간을 선택하며 25분으로만 제한되지 않습니다.' },
+      { label: '통계', value: '완료한 세션으로 오늘·주간 집중 시간과 팀 랭킹을 계산합니다.' },
+      { label: '인증 피드', value: '완료 세션을 선택해 작업 사진과 설명을 올리고 팀원이 응원할 수 있습니다.' },
+    ],
+  },
+  notice: {
+    title: '공지사항 기능 안내',
+    heading: '중요한 팀 소식을 분류해 공유하고 읽음 여부를 관리합니다.',
+    rows: [
+      { label: '공지 작성', value: '팀장·관리자가 화면 오른쪽 위 + 공지 작성 버튼에서 등록합니다.' },
+      { label: '분류', value: '필독·일정·일반 탭과 최신순·오래된순 정렬을 사용할 수 있습니다.' },
+      { label: '확인', value: '공지를 열면 읽음 처리되며 미확인 공지를 따로 확인할 수 있습니다.' },
+    ],
+  },
+};
+
+function configureFeatureGuide() {
+  const page = window.location.pathname.split('/').pop()?.replace('.html', '') || 'dashboard';
+  const guide = featureGuides[page];
+  const tools = document.querySelector('.header-right-tools');
+  if (!guide || !tools || tools.querySelector('[data-feature-guide]')) return;
+  const button = document.createElement('button');
+  button.type = 'button';
+  button.className = 'feature-guide-button';
+  button.dataset.featureGuide = page;
+  button.setAttribute('aria-label', '이 화면 기능 안내');
+  button.title = '이 화면 기능 안내';
+  button.textContent = '?';
+  tools.prepend(button);
+  button.addEventListener('click', () => showAppDetails({ ...guide, badge: '기능 안내' }));
+}
+
 export function setupShell(context) {
   const { profile, team } = context;
   document.querySelectorAll('.profile-name, [data-profile-name], [data-welcome-name]').forEach((element) => {
@@ -421,6 +503,7 @@ export function setupShell(context) {
 
   configureSearch(context);
   configureTeamMenu(context);
+  configureFeatureGuide();
 
   window.lucide?.createIcons();
 }

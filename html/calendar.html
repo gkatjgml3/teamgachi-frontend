@@ -86,15 +86,15 @@
               </div>
               <div style="display: flex; gap: 10px; align-items: center;">
                 <div class="view-toggle-group">
-                  <button class="view-btn active">월</button>
-                  <button class="view-btn">주</button>
-                  <button class="view-btn">일</button>
+                  <button class="view-btn active" data-calendar-view="month" aria-pressed="true">월</button>
+                  <button class="view-btn" data-calendar-view="week" aria-pressed="false">주</button>
+                  <button class="view-btn" data-calendar-view="day" aria-pressed="false">일</button>
                 </div>
                 <button class="btn-primary" data-add-schedule>+ 일정 추가</button>
               </div>
             </div>
 
-            <table class="calendar-table">
+            <table class="calendar-table" data-calendar-table>
               <thead>
                 <tr>
                   <th class="sun">일</th>
@@ -108,6 +108,7 @@
               </thead>
               <tbody data-calendar-body></tbody>
             </table>
+            <div class="calendar-agenda" data-calendar-agenda hidden></div>
           </div>
 
           <div class="side-panel">

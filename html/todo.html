@@ -147,13 +147,13 @@
 
             <div class="card">
               <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
-                <span class="card-title">내 완료율 <span style="font-size:11px; color:#8e8e93; font-weight:400; margin-left:4px;">이번 주</span></span>
-                <span style="font-size:11px; color:#8e8e93; cursor:pointer;">할 일 보기</span>
+                <span class="card-title">내 완료율 <span style="font-size:11px; color:#8e8e93; font-weight:400; margin-left:4px;">전체</span></span>
+                <button type="button" class="link-action inline-link-button" data-show-my-todos>할 일 보기</button>
               </div>
               <div style="display:flex; align-items:center; gap:10px;">
-                <span class="rate-percent" style="font-size:18px; font-weight:800;">0%</span>
-                <div class="progress-bar-bg" style="flex:1;"><div class="progress-bar-fill bar-fill" style="width: 0%;"></div></div>
-                <span class="rate-fraction" style="font-size:11px; color:#8e8e93;">0 / 0</span>
+                <span class="rate-percent" data-my-rate style="font-size:18px; font-weight:800;">0%</span>
+                <div class="progress-bar-bg" style="flex:1;"><div class="progress-bar-fill bar-fill" data-my-rate-bar style="width: 0%;"></div></div>
+                <span class="rate-fraction" data-my-rate-fraction style="font-size:11px; color:#8e8e93;">0 / 0</span>
               </div>
             </div>
 

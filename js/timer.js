@@ -4,20 +4,25 @@ import {
   setupShell,
   showAppAlert,
   showAppConfirm,
+  showAppForm,
   showPageError,
   supabase,
 } from './app-context.js';
 
-const SESSION_SECONDS = 25 * 60;
+const DEFAULT_SESSION_SECONDS = 25 * 60;
 const DAILY_GOAL_SECONDS = 4 * 60 * 60;
 const dayLabels = ['월', '화', '수', '목', '금', '토', '일'];
 
 let context;
 let todos = [];
 let timers = [];
+let certifications = [];
+let certificationLikes = [];
+let certificationFiles = new Map();
 let activeTimer = null;
 let timerState = 'idle';
-let remainingSeconds = SESSION_SECONDS;
+let sessionSeconds = DEFAULT_SESSION_SECONDS;
+let remainingSeconds = sessionSeconds;
 let intervalId = null;
 
 function localDayKey(value) {
@@ -42,7 +47,7 @@ function formatDuration(seconds) {
 }
 
 function elapsedSeconds() {
-  return Math.max(0, SESSION_SECONDS - remainingSeconds);
+  return Math.max(0, sessionSeconds - remainingSeconds);
 }
 
 function renderTimer() {
@@ -65,10 +70,17 @@ function renderTimer() {
   if (progress) {
     const circumference = 2 * Math.PI * 80;
     progress.style.strokeDasharray = `${circumference}`;
-    progress.style.strokeDashoffset = `${circumference * (1 - remainingSeconds / SESSION_SECONDS)}`;
+    progress.style.strokeDashoffset = `${circumference * (1 - remainingSeconds / sessionSeconds)}`;
   }
   const taskSelect = document.querySelector('[data-timer-task]');
   if (taskSelect) taskSelect.disabled = timerState !== 'idle';
+  const durationSelect = document.querySelector('[data-timer-duration]');
+  if (durationSelect) {
+    durationSelect.disabled = timerState !== 'idle';
+    durationSelect.value = String(sessionSeconds);
+  }
+  const durationLabel = document.querySelector('[data-timer-duration-label]');
+  if (durationLabel) durationLabel.textContent = `뽀모도로 ${Math.round(sessionSeconds / 60)}분`;
 }
 
 function stopInterval() {
@@ -85,7 +97,7 @@ function runInterval() {
     if (remainingSeconds === 0) {
       stopInterval();
       await finishSession('completed');
-      await showAppAlert('25분 집중 세션을 완료했습니다!', { title: '집중 완료' });
+      await showAppAlert(`${Math.round(sessionSeconds / 60)}분 집중 세션을 완료했습니다. 작업 인증 피드에 사진을 올릴 수 있어요.`, { title: '집중 완료' });
     }
   }, 1000);
 }
@@ -99,7 +111,8 @@ async function startOrPause() {
       todo_id: todoId,
       status: 'running',
       duration_seconds: 0,
-    }).select('id, team_id, user_id, todo_id, status, started_at, ended_at, duration_seconds, created_at, updated_at').single();
+      target_seconds: sessionSeconds,
+    }).select('id, team_id, user_id, todo_id, status, started_at, ended_at, duration_seconds, target_seconds, created_at, updated_at').single();
     if (error) return showAppAlert(error.message, { title: '타이머 시작 실패' });
     activeTimer = data;
     timerState = 'running';
@@ -129,7 +142,7 @@ async function finishSession(status = 'completed') {
   stopInterval();
   activeTimer = null;
   timerState = 'idle';
-  remainingSeconds = SESSION_SECONDS;
+  remainingSeconds = sessionSeconds;
   await loadTimerData();
 }
 
@@ -149,7 +162,7 @@ async function resetTimer() {
   stopInterval();
   activeTimer = null;
   timerState = 'idle';
-  remainingSeconds = SESSION_SECONDS;
+  remainingSeconds = sessionSeconds;
   renderTimer();
   await loadTimerData();
 }
@@ -196,29 +209,143 @@ function renderStatistics() {
   })).sort((a, b) => b.seconds - a.seconds);
   document.querySelector('[data-timer-ranking]').innerHTML = ranking.length ? ranking.map((member, index) => `<li class="rank-item"><span class="rank-num">${index + 1}</span><span class="avatar-circle avatar-sm"></span><span class="rank-name">${escapeHtml(member.name)}</span><span class="rank-time">${formatDuration(member.seconds)}</span></li>`).join('') : '<li class="empty-state">팀원 기록이 없습니다.</li>';
 
+  renderCertificationFeed();
+}
+
+function relativeTime(value) {
+  const seconds = Math.max(0, Math.floor((Date.now() - new Date(value).getTime()) / 1000));
+  if (seconds < 60) return '방금 전';
+  if (seconds < 3600) return `${Math.floor(seconds / 60)}분 전`;
+  if (seconds < 86400) return `${Math.floor(seconds / 3600)}시간 전`;
+  return `${Math.floor(seconds / 86400)}일 전`;
+}
+
+function renderCertificationFeed() {
   const feed = document.querySelector('[data-timer-feed]');
-  if (feed) feed.innerHTML = '<div class="empty-state">완료한 집중 세션의 작업 인증 기능은 다음 단계에서 연결됩니다.</div>';
+  if (!feed) return;
+  const timerMap = new Map(timers.map((timer) => [timer.id, timer]));
+  const todoMap = new Map(todos.map((todo) => [todo.id, todo]));
+  const memberMap = new Map(context.members.map((member) => [member.userId, member]));
+  feed.innerHTML = certifications.length ? certifications.map((certification) => {
+    const timer = timerMap.get(certification.timer_id);
+    const file = certificationFiles.get(certification.file_id);
+    const likes = certificationLikes.filter((like) => like.certification_id === certification.id);
+    const liked = likes.some((like) => like.user_id === context.user.id);
+    const userName = memberMap.get(certification.user_id)?.name ?? '팀원';
+    const taskName = timer?.todo_id ? todoMap.get(timer.todo_id)?.title : '';
+    return `<article class="feed-item">
+      ${file?.signedUrl ? `<img class="feed-image" src="${escapeHtml(file.signedUrl)}" alt="${escapeHtml(userName)}님의 작업 인증">` : '<div class="feed-img-placeholder"></div>'}
+      <div class="feed-content">
+        <div class="feed-user"><span class="avatar-circle avatar-sm"></span><div class="user-meta"><span class="feed-name">${escapeHtml(userName)}</span><span class="feed-time">${formatDuration(Number(timer?.duration_seconds || 0))} · ${relativeTime(certification.created_at)}</span></div></div>
+        <p class="feed-desc">${escapeHtml(certification.note)}</p>
+        <div class="feed-footer"><button type="button" class="btn-like ${liked ? 'active' : ''}" data-certification-like="${certification.id}">응원 ${likes.length}</button>${taskName ? `<span class="feed-session-task">${escapeHtml(taskName)}</span>` : ''}</div>
+      </div>
+    </article>`;
+  }).join('') : '<div class="empty-state">아직 작업 인증이 없습니다. 집중 세션을 완료한 뒤 사진과 기록을 올려보세요.</div>';
+}
+
+function chooseCertificationImage() {
+  return new Promise((resolve) => {
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = 'image/png,image/jpeg,image/webp';
+    input.hidden = true;
+    document.body.append(input);
+    input.addEventListener('change', () => {
+      const file = input.files?.[0] ?? null;
+      input.remove();
+      resolve(file);
+    }, { once: true });
+    input.click();
+    window.setTimeout(() => {
+      if (document.body.contains(input) && !input.files?.length) {
+        input.remove();
+        resolve(null);
+      }
+    }, 60000);
+  });
+}
+
+async function createCertification() {
+  const usedTimerIds = new Set(certifications.map((item) => item.timer_id));
+  const eligible = timers.filter((timer) => timer.user_id === context.user.id && timer.status === 'completed' && Number(timer.duration_seconds || 0) > 0 && !usedTimerIds.has(timer.id));
+  if (!eligible.length) return showAppAlert('인증할 수 있는 완료 세션이 없습니다. 집중 세션을 먼저 완료해 주세요.', { title: '작업 인증' });
+  const todoMap = new Map(todos.map((todo) => [todo.id, todo]));
+  const values = await showAppForm({
+    title: '작업 인증 올리기',
+    description: '완료한 집중 세션을 선택하고 작업 내용을 적은 뒤 인증 사진을 첨부합니다.',
+    fields: [
+      { name: 'timerId', label: '완료 세션', type: 'select', required: true, options: eligible.map((timer) => ({ value: timer.id, label: `${formatDuration(Number(timer.duration_seconds || 0))} · ${todoMap.get(timer.todo_id)?.title ?? '작업 미선택'} · ${relativeTime(timer.ended_at ?? timer.created_at)}` })) },
+      { name: 'note', label: '작업 내용', type: 'textarea', placeholder: '이번 집중 시간에 완료한 작업을 적어 주세요.', required: true },
+    ],
+    submitText: '사진 선택',
+  });
+  if (!values) return;
+  const file = await chooseCertificationImage();
+  if (!file) return;
+  if (!['image/png', 'image/jpeg', 'image/webp'].includes(file.type)) return showAppAlert('PNG, JPG, WEBP 이미지만 올릴 수 있습니다.', { title: '파일 형식 확인' });
+  if (file.size > 25 * 1024 * 1024) return showAppAlert('파일 크기는 25MB 이하여야 합니다.', { title: '파일 크기 확인' });
+  const extension = file.name.split('.').pop()?.toLowerCase() || 'jpg';
+  const storagePath = `${context.team.id}/${context.user.id}/timer/${crypto.randomUUID()}.${extension}`;
+  const { error: uploadError } = await supabase.storage.from('team-files').upload(storagePath, file, { contentType: file.type, upsert: false });
+  if (uploadError) return showAppAlert(uploadError.message, { title: '인증 사진 업로드 실패' });
+  const { data: fileRow, error: fileError } = await supabase.from('files').insert({ team_id: context.team.id, uploaded_by: context.user.id, original_name: file.name, storage_path: storagePath, mime_type: file.type, size_bytes: file.size, kind: 'image' }).select('id').single();
+  if (fileError) {
+    await supabase.storage.from('team-files').remove([storagePath]);
+    return showAppAlert(fileError.message, { title: '인증 정보 저장 실패' });
+  }
+  const { error } = await supabase.from('timer_certifications').insert({ team_id: context.team.id, timer_id: values.timerId, user_id: context.user.id, file_id: fileRow.id, note: values.note });
+  if (error) {
+    await supabase.from('files').delete().eq('id', fileRow.id);
+    await supabase.storage.from('team-files').remove([storagePath]);
+    return showAppAlert(error.message, { title: '작업 인증 저장 실패' });
+  }
+  await loadTimerData();
+}
+
+async function toggleCertificationLike(certificationId) {
+  const liked = certificationLikes.some((like) => like.certification_id === certificationId && like.user_id === context.user.id);
+  const query = liked
+    ? supabase.from('timer_certification_likes').delete().eq('certification_id', certificationId).eq('user_id', context.user.id)
+    : supabase.from('timer_certification_likes').insert({ certification_id: certificationId, user_id: context.user.id });
+  const { error } = await query;
+  if (error) return showAppAlert(error.message, { title: '응원 처리 실패' });
+  await loadTimerData();
 }
 
 async function loadTimerData() {
-  const [{ data: todoRows, error: todoError }, { data: timerRows, error: timerError }] = await Promise.all([
+  const [todoResult, timerResult, certificationResult, likeResult] = await Promise.all([
     supabase.from('todos').select('id, title, status').eq('team_id', context.team.id).order('created_at'),
-    supabase.from('timers').select('id, team_id, user_id, todo_id, status, started_at, ended_at, duration_seconds, created_at, updated_at').eq('team_id', context.team.id).order('created_at', { ascending: false }).limit(500),
+    supabase.from('timers').select('id, team_id, user_id, todo_id, status, started_at, ended_at, duration_seconds, target_seconds, created_at, updated_at').eq('team_id', context.team.id).order('created_at', { ascending: false }).limit(500),
+    supabase.from('timer_certifications').select('id, team_id, timer_id, user_id, file_id, note, created_at').eq('team_id', context.team.id).order('created_at', { ascending: false }).limit(60),
+    supabase.from('timer_certification_likes').select('certification_id, user_id'),
   ]);
-  if (todoError) throw todoError;
-  if (timerError) throw timerError;
-  todos = todoRows ?? [];
-  timers = timerRows ?? [];
+  for (const result of [todoResult, timerResult, certificationResult, likeResult]) if (result.error) throw result.error;
+  todos = todoResult.data ?? [];
+  timers = timerResult.data ?? [];
+  certifications = certificationResult.data ?? [];
+  certificationLikes = likeResult.data ?? [];
+  certificationFiles = new Map();
+  const fileIds = [...new Set(certifications.map((item) => item.file_id))];
+  if (fileIds.length) {
+    const { data: fileRows, error: fileError } = await supabase.from('files').select('id, storage_path').in('id', fileIds);
+    if (fileError) throw fileError;
+    const paths = (fileRows ?? []).map((file) => file.storage_path);
+    const { data: signedRows, error: signedError } = await supabase.storage.from('team-files').createSignedUrls(paths, 3600);
+    if (signedError) throw signedError;
+    (fileRows ?? []).forEach((file, index) => certificationFiles.set(file.id, { ...file, signedUrl: signedRows?.[index]?.signedUrl ?? '' }));
+  }
   activeTimer = timers.find((timer) => timer.user_id === context.user.id && ['running', 'paused'].includes(timer.status)) ?? null;
   if (activeTimer) {
+    sessionSeconds = Number(activeTimer.target_seconds || DEFAULT_SESSION_SECONDS);
     let elapsed = Number(activeTimer.duration_seconds || 0);
     if (activeTimer.status === 'running') elapsed += Math.max(0, Math.floor((Date.now() - new Date(activeTimer.updated_at).getTime()) / 1000));
-    remainingSeconds = Math.max(SESSION_SECONDS - elapsed, 0);
+    remainingSeconds = Math.max(sessionSeconds - elapsed, 0);
     timerState = activeTimer.status;
     if (timerState === 'running' && remainingSeconds > 0) runInterval();
   } else {
     timerState = 'idle';
-    remainingSeconds = SESSION_SECONDS;
+    remainingSeconds = sessionSeconds;
   }
   renderTasks();
   renderStatistics();
@@ -238,6 +365,17 @@ async function initialize() {
     document.querySelector('[data-timer-toggle]').addEventListener('click', startOrPause);
     document.querySelector('[data-timer-end]').addEventListener('click', endSession);
     document.querySelector('[data-timer-reset]').addEventListener('click', resetTimer);
+    document.querySelector('[data-timer-duration]').addEventListener('change', (event) => {
+      if (timerState !== 'idle') return;
+      sessionSeconds = Number(event.target.value || DEFAULT_SESSION_SECONDS);
+      remainingSeconds = sessionSeconds;
+      renderTimer();
+    });
+    document.querySelector('[data-timer-certify]').addEventListener('click', createCertification);
+    document.querySelector('[data-timer-feed]').addEventListener('click', (event) => {
+      const button = event.target.closest('[data-certification-like]');
+      if (button) toggleCertificationLike(button.dataset.certificationLike);
+    });
     await loadTimerData();
   } catch (error) {
     showPageError(error);

@@ -30,10 +30,14 @@ function dueDateLabel(value) {
   return `${formatDate(value)} (${suffix})`;
 }
 
+function isMine(todo) {
+  return todo.assignee_id === context.user.id || (collaboratorMap.get(todo.id) ?? []).includes(context.user.id);
+}
+
 function filteredTodos() {
   let rows = todos.filter((todo) => todo.status !== 'canceled');
-  if (activeFilter === '내 할 일') rows = rows.filter((todo) => todo.assignee_id === context.user.id);
-  if (activeFilter === '팀 할 일') rows = rows.filter((todo) => todo.assignee_id !== context.user.id);
+  if (activeFilter === '내 할 일') rows = rows.filter(isMine);
+  if (activeFilter === '팀 할 일') rows = rows.filter((todo) => !isMine(todo));
   if (aiSorted) {
     rows = [...rows].sort((a, b) => {
       if (aiRankingMap.size) {
@@ -125,12 +129,12 @@ function render() {
     });
   });
 
-  const mine = todos.filter((todo) => todo.assignee_id === context.user.id && todo.status !== 'canceled');
+  const mine = todos.filter((todo) => isMine(todo) && todo.status !== 'canceled');
   const mineDone = mine.filter((todo) => todo.status === 'done').length;
   const rate = mine.length ? Math.round((mineDone / mine.length) * 100) : 0;
-  const rateElement = document.querySelector('.rate-percent');
-  const fractionElement = document.querySelector('.rate-fraction');
-  const barElement = document.querySelector('.completion-rate-box .bar-fill');
+  const rateElement = document.querySelector('[data-my-rate]');
+  const fractionElement = document.querySelector('[data-my-rate-fraction]');
+  const barElement = document.querySelector('[data-my-rate-bar]');
   if (rateElement) rateElement.textContent = `${rate}%`;
   if (fractionElement) fractionElement.textContent = `${mineDone}/${mine.length}`;
   if (barElement) barElement.style.width = `${rate}%`;
@@ -326,6 +330,12 @@ function configureFilters() {
   });
   document.querySelector('[data-open-todo-form]')?.addEventListener('click', () => {
     document.querySelector('[data-todo-title]')?.focus();
+  });
+  document.querySelector('[data-show-my-todos]')?.addEventListener('click', () => {
+    activeFilter = '내 할 일';
+    document.querySelectorAll('.tab-btn').forEach((button) => button.classList.toggle('active', button.textContent.trim() === activeFilter));
+    render();
+    document.querySelector('.todo-list-card')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
   });
 }
 

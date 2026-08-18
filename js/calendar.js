@@ -13,8 +13,21 @@ import {
 
 let context;
 let schedules = [];
-let visibleMonth = new Date();
-visibleMonth.setDate(1);
+let upcomingSchedules = [];
+let visibleDate = new Date();
+let currentView = 'month';
+
+function startOfDay(value) {
+  const date = new Date(value);
+  date.setHours(0, 0, 0, 0);
+  return date;
+}
+
+function addDays(value, amount) {
+  const date = new Date(value);
+  date.setDate(date.getDate() + amount);
+  return date;
+}
 
 function dayKey(value) {
   const date = new Date(value);
@@ -22,18 +35,23 @@ function dayKey(value) {
 }
 
 function dDay(value) {
-  const days = Math.ceil((new Date(value).setHours(0, 0, 0, 0) - new Date().setHours(0, 0, 0, 0)) / 86400000);
+  const days = Math.ceil((startOfDay(value) - startOfDay(new Date())) / 86400000);
   return days === 0 ? '오늘' : days > 0 ? `D-${days}` : `D+${Math.abs(days)}`;
 }
 
-function renderCalendar() {
-  const year = visibleMonth.getFullYear();
-  const month = visibleMonth.getMonth();
-  document.querySelector('.current-month-text').textContent = `${year}년 ${month + 1}월`;
-  const monthLabel = document.querySelector('[data-month-label]');
-  if (monthLabel) monthLabel.textContent = `${year}.${String(month + 1).padStart(2, '0')}`;
-  const first = new Date(year, month, 1);
-  const gridStart = new Date(year, month, 1 - first.getDay());
+function viewLabel() {
+  if (currentView === 'month') return `${visibleDate.getFullYear()}년 ${visibleDate.getMonth() + 1}월`;
+  if (currentView === 'day') return `${visibleDate.getFullYear()}년 ${visibleDate.getMonth() + 1}월 ${visibleDate.getDate()}일`;
+  const start = addDays(startOfDay(visibleDate), -visibleDate.getDay());
+  const end = addDays(start, 6);
+  return `${start.getFullYear()}년 ${start.getMonth() + 1}월 ${start.getDate()}일 – ${end.getMonth() + 1}월 ${end.getDate()}일`;
+}
+
+function scheduleButton(item) {
+  return `<button type="button" class="event-bar schedule-detail-trigger ${item.todo_id ? 'event-orange' : 'event-purple'}" data-schedule-id="${escapeHtml(item.id)}" title="${escapeHtml(item.title)} 상세 보기">${escapeHtml(item.title)}</button>`;
+}
+
+function schedulesByDay() {
   const byDay = new Map();
   schedules.forEach((schedule) => {
     const key = dayKey(schedule.starts_at);
@@ -41,38 +59,86 @@ function renderCalendar() {
     list.push(schedule);
     byDay.set(key, list);
   });
+  return byDay;
+}
+
+function renderMonth(byDay) {
+  const year = visibleDate.getFullYear();
+  const month = visibleDate.getMonth();
+  const first = new Date(year, month, 1);
+  const gridStart = new Date(year, month, 1 - first.getDay());
   const rows = [];
   for (let week = 0; week < 6; week += 1) {
     const cells = [];
     for (let day = 0; day < 7; day += 1) {
-      const date = new Date(gridStart);
-      date.setDate(gridStart.getDate() + week * 7 + day);
+      const date = addDays(gridStart, week * 7 + day);
       const items = byDay.get(dayKey(date)) ?? [];
       const classes = [date.getMonth() !== month ? 'other-month' : '', dayKey(date) === dayKey(new Date()) ? 'today' : ''].filter(Boolean).join(' ');
-      cells.push(`<td class="${classes}"><div class="date-number">${date.getDate()}</div>${items.slice(0, 3).map((item) => `<button type="button" class="event-bar schedule-detail-trigger ${item.todo_id ? 'event-orange' : 'event-purple'}" data-schedule-id="${escapeHtml(item.id)}" title="${escapeHtml(item.title)} 상세 보기">${escapeHtml(item.title)}</button>`).join('')}</td>`);
+      const dateMarkup = dayKey(date) === dayKey(new Date()) ? `<span class="date-num-badge">${date.getDate()}</span>` : date.getDate();
+      cells.push(`<td class="${classes}" data-calendar-date="${dayKey(date)}"><button type="button" class="date-number calendar-date-button" data-open-day="${dayKey(date)}">${dateMarkup}</button>${items.slice(0, 3).map(scheduleButton).join('')}${items.length > 3 ? `<span class="calendar-more">+${items.length - 3}개</span>` : ''}</td>`);
     }
     rows.push(`<tr>${cells.join('')}</tr>`);
   }
   document.querySelector('[data-calendar-body]').innerHTML = rows.join('');
-  const monthRows = schedules.filter((item) => new Date(item.starts_at).getFullYear() === year && new Date(item.starts_at).getMonth() === month);
+}
+
+function renderWeek(byDay) {
+  const start = addDays(startOfDay(visibleDate), -visibleDate.getDay());
+  const days = Array.from({ length: 7 }, (_, index) => addDays(start, index));
+  document.querySelector('[data-calendar-agenda]').innerHTML = `<div class="week-grid">${days.map((date) => {
+    const items = byDay.get(dayKey(date)) ?? [];
+    return `<section class="week-day ${dayKey(date) === dayKey(new Date()) ? 'today' : ''}">
+      <button type="button" class="week-day-heading" data-open-day="${dayKey(date)}"><span>${['일','월','화','수','목','금','토'][date.getDay()]}</span><strong>${date.getDate()}</strong></button>
+      <div class="week-events">${items.length ? items.map((item) => `<div class="agenda-time">${formatTime(item.starts_at)}</div>${scheduleButton(item)}`).join('') : '<span class="agenda-empty">일정 없음</span>'}</div>
+    </section>`;
+  }).join('')}</div>`;
+}
+
+function renderDay(byDay) {
+  const items = byDay.get(dayKey(visibleDate)) ?? [];
+  document.querySelector('[data-calendar-agenda]').innerHTML = `<div class="day-agenda">
+    <div class="day-agenda-heading"><strong>${formatDate(visibleDate, { year: 'numeric', month: 'long', day: 'numeric', weekday: 'long' })}</strong><span>${items.length}개 일정</span></div>
+    <div class="day-event-list">${items.length ? items.map((item) => `<article class="day-event ${item.todo_id ? 'todo-deadline' : ''}"><time>${formatTime(item.starts_at)}</time><div>${scheduleButton(item)}<span>${item.todo_id ? '할 일 마감' : '팀 일정'}</span></div></article>`).join('') : '<div class="empty-state">이 날에 등록된 일정이 없습니다.</div>'}</div>
+  </div>`;
+}
+
+function renderSummary() {
+  const year = visibleDate.getFullYear();
+  const month = visibleDate.getMonth();
+  const monthRows = schedules.filter((item) => {
+    const date = new Date(item.starts_at);
+    return date.getFullYear() === year && date.getMonth() === month;
+  });
+  document.querySelector('[data-month-label]').textContent = `${year}.${String(month + 1).padStart(2, '0')}`;
   document.querySelector('[data-month-count]').textContent = `${monthRows.length}건`;
   document.querySelector('[data-todo-count]').textContent = `${monthRows.filter((item) => item.todo_id).length}건`;
-  const upcoming = schedules.filter((item) => new Date(item.starts_at) >= new Date()).slice(0, 8);
-  document.querySelector('[data-upcoming]').innerHTML = upcoming.length ? upcoming.map((item) => `<button type="button" class="dday-item schedule-detail-trigger ${item.todo_id ? 'warning' : 'info'}" data-schedule-id="${escapeHtml(item.id)}" title="${escapeHtml(item.title)} 상세 보기"><span><span class="dday-title">${escapeHtml(item.title)}</span><span class="dday-date">${formatDate(item.starts_at)}</span></span><span class="badge-dday">${dDay(item.starts_at)}</span></button>`).join('') : '<div class="empty-state">등록된 일정이 없습니다.</div>';
+  const upcoming = document.querySelector('[data-upcoming]');
+  upcoming.innerHTML = upcomingSchedules.length ? upcomingSchedules.map((item) => `<button type="button" class="dday-item schedule-detail-trigger ${item.todo_id ? 'warning' : 'info'}" data-schedule-id="${escapeHtml(item.id)}" title="${escapeHtml(item.title)} 상세 보기"><span><span class="dday-title">${escapeHtml(item.title)}</span><span class="dday-date">${formatDate(item.starts_at)}</span></span><span class="badge-dday">${dDay(item.starts_at)}</span></button>`).join('') : '<div class="empty-state">다가오는 일정이나 할 일 마감이 없습니다.</div>';
+}
+
+function renderCalendar() {
+  document.querySelector('.current-month-text').textContent = viewLabel();
+  document.querySelectorAll('[data-calendar-view]').forEach((button) => {
+    const active = button.dataset.calendarView === currentView;
+    button.classList.toggle('active', active);
+    button.setAttribute('aria-pressed', String(active));
+  });
+  const table = document.querySelector('[data-calendar-table]');
+  const agenda = document.querySelector('[data-calendar-agenda]');
+  table.hidden = currentView !== 'month';
+  agenda.hidden = currentView === 'month';
+  const byDay = schedulesByDay();
+  if (currentView === 'month') renderMonth(byDay);
+  if (currentView === 'week') renderWeek(byDay);
+  if (currentView === 'day') renderDay(byDay);
+  renderSummary();
 }
 
 function showScheduleDetails(scheduleId) {
   const schedule = schedules.find((item) => item.id === scheduleId);
   if (!schedule) return;
-  const dateText = formatDate(schedule.starts_at, {
-    year: 'numeric',
-    month: 'long',
-    day: 'numeric',
-    weekday: 'short',
-  });
-  const timeText = schedule.ends_at
-    ? `${formatTime(schedule.starts_at)} ~ ${formatTime(schedule.ends_at)}`
-    : formatTime(schedule.starts_at);
+  const dateText = formatDate(schedule.starts_at, { year: 'numeric', month: 'long', day: 'numeric', weekday: 'short' });
+  const timeText = schedule.ends_at ? `${formatTime(schedule.starts_at)} ~ ${formatTime(schedule.ends_at)}` : formatTime(schedule.starts_at);
   showAppDetails({
     title: '일정 상세',
     heading: schedule.title,
@@ -88,17 +154,40 @@ function showScheduleDetails(scheduleId) {
 
 function configureScheduleDetails() {
   document.querySelector('.content-body')?.addEventListener('click', (event) => {
+    const dayTrigger = event.target.closest('[data-open-day]');
+    if (dayTrigger) {
+      visibleDate = new Date(`${dayTrigger.dataset.openDay}T12:00:00`);
+      currentView = 'day';
+      renderCalendar();
+      return;
+    }
     const trigger = event.target.closest('[data-schedule-id]');
     if (trigger) showScheduleDetails(trigger.dataset.scheduleId);
   });
 }
 
+function mergeUnique(items) {
+  const map = new Map();
+  items.forEach((item) => {
+    const key = item.todo_id ? `todo:${item.todo_id}` : `schedule:${item.id}`;
+    if (!map.has(key)) map.set(key, item);
+  });
+  return [...map.values()].sort((a, b) => new Date(a.starts_at) - new Date(b.starts_at));
+}
+
 async function loadSchedules() {
-  const start = new Date(visibleMonth.getFullYear(), visibleMonth.getMonth() - 1, 1).toISOString();
-  const end = new Date(visibleMonth.getFullYear(), visibleMonth.getMonth() + 2, 1).toISOString();
-  const { data, error } = await supabase.from('schedules').select('id, title, starts_at, ends_at, todo_id').eq('team_id', context.team.id).gte('starts_at', start).lt('starts_at', end).order('starts_at');
-  if (error) throw error;
-  schedules = data ?? [];
+  const rangeStart = new Date(visibleDate.getFullYear(), visibleDate.getMonth() - 1, 1).toISOString();
+  const rangeEnd = new Date(visibleDate.getFullYear(), visibleDate.getMonth() + 2, 1).toISOString();
+  const today = startOfDay(new Date()).toISOString();
+  const [visibleResult, upcomingResult, todoResult] = await Promise.all([
+    supabase.from('schedules').select('id, title, starts_at, ends_at, todo_id').eq('team_id', context.team.id).gte('starts_at', rangeStart).lt('starts_at', rangeEnd).order('starts_at'),
+    supabase.from('schedules').select('id, title, starts_at, ends_at, todo_id').eq('team_id', context.team.id).gte('starts_at', today).order('starts_at').limit(12),
+    supabase.from('todos').select('id, title, due_at, status').eq('team_id', context.team.id).gte('due_at', today).neq('status', 'canceled').order('due_at').limit(12),
+  ]);
+  for (const result of [visibleResult, upcomingResult, todoResult]) if (result.error) throw result.error;
+  const todoDeadlines = (todoResult.data ?? []).map((todo) => ({ id: `todo-${todo.id}`, title: todo.title, starts_at: todo.due_at, ends_at: todo.due_at, todo_id: todo.id }));
+  upcomingSchedules = mergeUnique([...(upcomingResult.data ?? []), ...todoDeadlines]).slice(0, 8);
+  schedules = mergeUnique([...(visibleResult.data ?? []), ...upcomingSchedules]);
   renderCalendar();
 }
 
@@ -108,21 +197,25 @@ async function addSchedule() {
     description: '일정 이름과 정확한 날짜·시작 시간을 입력해 주세요.',
     fields: [
       { name: 'title', label: '일정 이름', placeholder: '예: 중간 점검 회의', required: true },
-      { name: 'date', label: '날짜', type: 'date', value: dayKey(new Date()), required: true },
+      { name: 'date', label: '날짜', type: 'date', value: dayKey(visibleDate), required: true },
       { name: 'time', label: '시작 시간', type: 'time', value: '09:00', required: true },
     ],
     submitText: '일정 추가',
   });
   if (!values) return;
-  const { title, date: dateText, time: timeText } = values;
-  const startsAt = new Date(`${dateText}T${timeText}:00`);
-  if (Number.isNaN(startsAt.getTime())) {
-    await showAppAlert('날짜와 시간을 다시 확인해 주세요.', { title: '일정 확인' });
-    return;
-  }
+  const startsAt = new Date(`${values.date}T${values.time}:00`);
+  if (Number.isNaN(startsAt.getTime())) return showAppAlert('날짜와 시간을 다시 확인해 주세요.', { title: '일정 확인' });
   const endsAt = new Date(startsAt.getTime() + 60 * 60 * 1000);
-  const { error } = await supabase.from('schedules').insert({ team_id: context.team.id, title, starts_at: startsAt.toISOString(), ends_at: endsAt.toISOString(), created_by: context.user.id });
+  const { error } = await supabase.from('schedules').insert({ team_id: context.team.id, title: values.title, starts_at: startsAt.toISOString(), ends_at: endsAt.toISOString(), created_by: context.user.id });
   if (error) return showAppAlert(error.message, { title: '일정 추가 실패' });
+  visibleDate = startsAt;
+  await loadSchedules();
+}
+
+async function moveCalendar(direction) {
+  if (currentView === 'month') visibleDate.setMonth(visibleDate.getMonth() + direction);
+  if (currentView === 'week') visibleDate.setDate(visibleDate.getDate() + direction * 7);
+  if (currentView === 'day') visibleDate.setDate(visibleDate.getDate() + direction);
   await loadSchedules();
 }
 
@@ -131,9 +224,10 @@ async function initialize() {
     context = await getAppContext();
     if (!context) return;
     setupShell(context);
-    document.querySelector('[data-prev]').addEventListener('click', async () => { visibleMonth.setMonth(visibleMonth.getMonth() - 1); await loadSchedules(); });
-    document.querySelector('[data-next]').addEventListener('click', async () => { visibleMonth.setMonth(visibleMonth.getMonth() + 1); await loadSchedules(); });
-    document.querySelector('[data-today]').addEventListener('click', async () => { visibleMonth = new Date(); visibleMonth.setDate(1); await loadSchedules(); });
+    document.querySelector('[data-prev]').addEventListener('click', () => moveCalendar(-1));
+    document.querySelector('[data-next]').addEventListener('click', () => moveCalendar(1));
+    document.querySelector('[data-today]').addEventListener('click', async () => { visibleDate = new Date(); await loadSchedules(); });
+    document.querySelectorAll('[data-calendar-view]').forEach((button) => button.addEventListener('click', async () => { currentView = button.dataset.calendarView; await loadSchedules(); }));
     document.querySelector('[data-add-schedule]').addEventListener('click', addSchedule);
     configureScheduleDetails();
     await loadSchedules();

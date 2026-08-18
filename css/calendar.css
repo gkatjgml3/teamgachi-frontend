@@ -324,6 +324,63 @@ body, html {
   margin-bottom: 4px;
 }
 
+.calendar-date-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+  font: inherit;
+}
+
+.calendar-more {
+  display: block;
+  padding: 2px 5px;
+  color: #8e8e93;
+  font-size: 10px;
+}
+
+.calendar-agenda {
+  min-height: 560px;
+}
+
+.week-grid {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  min-height: 560px;
+  overflow: hidden;
+  border: 1px solid #eeeef2;
+  border-radius: 10px;
+}
+
+.week-day {
+  min-width: 0;
+  padding: 10px 7px;
+  border-right: 1px solid #eeeef2;
+  background: #fff;
+}
+
+.week-day:last-child { border-right: 0; }
+.week-day.today { background: #faf9ff; }
+.week-day-heading { display: flex; flex-direction: column; align-items: center; gap: 5px; width: 100%; padding: 5px; border: 0; background: transparent; color: #77727f; cursor: pointer; }
+.week-day-heading strong { display: grid; place-items: center; width: 28px; height: 28px; border-radius: 50%; color: #23212a; font-size: 14px; }
+.week-day.today .week-day-heading strong { background: #534be8; color: #fff; }
+.week-events { display: flex; flex-direction: column; gap: 4px; margin-top: 10px; }
+.agenda-time { margin-top: 5px; color: #9a97a3; font-size: 9px; }
+.agenda-empty { display: block; padding-top: 18px; color: #bbb8c2; text-align: center; font-size: 10px; }
+
+.day-agenda { min-height: 500px; border: 1px solid #eeeef2; border-radius: 10px; overflow: hidden; }
+.day-agenda-heading { display: flex; justify-content: space-between; align-items: center; padding: 18px 20px; border-bottom: 1px solid #eeeef2; background: #faf9ff; }
+.day-agenda-heading strong { font-size: 15px; }
+.day-agenda-heading span { color: #8e8e93; font-size: 11px; }
+.day-event-list { padding: 8px 18px 24px; }
+.day-event { display: grid; grid-template-columns: 76px 1fr; gap: 14px; padding: 16px 0; border-bottom: 1px solid #f0eff4; }
+.day-event time { color: #66616e; font-size: 12px; font-weight: 700; }
+.day-event .event-bar { display: block; width: 100%; padding: 8px 10px; border: 0; text-align: left; }
+.day-event div > span { display: block; margin-top: 5px; color: #9a97a3; font-size: 10px; }
+.day-event.todo-deadline { border-left: 3px solid #e65100; padding-left: 12px; }
+
 .other-month {
   color: #c7c7cc !important;
 }
@@ -473,6 +530,13 @@ body, html {
 
 .summary-label { color: #8e8e93; }
 .summary-value { font-weight: 700; color: #1c1c1e; }
+
+@media (max-width: 1050px) {
+  .calendar-layout { grid-template-columns: 1fr; }
+  .side-panel { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .week-grid { min-width: 760px; }
+  .calendar-agenda { overflow-x: auto; }
+}
 
 /* TeamGachi 공통 기능 UI */
 .brand-logo-img { width:36px; height:36px; object-fit:contain; flex:0 0 36px; }

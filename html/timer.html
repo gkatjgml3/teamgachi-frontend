@@ -117,10 +117,17 @@
           <div class="card timer-card">
             <div class="timer-card-header">
               <h2 class="card-title">집중 타이머</h2>
-              <span class="badge-pomo">뽀모도로 25분</span>
+              <span class="badge-pomo" data-timer-duration-label>뽀모도로 25분</span>
             </div>
 
             <div class="select-box">
+              <span class="select-label">집중 시간:</span>
+              <select class="task-select duration-select" data-timer-duration aria-label="집중 시간">
+                <option value="900">15분</option>
+                <option value="1500" selected>25분</option>
+                <option value="2700">45분</option>
+                <option value="3600">60분</option>
+              </select>
               <span class="select-label">작업 선택:</span>
               <select class="task-select" data-timer-task>
                 <option value="">작업을 불러오는 중입니다.</option>
@@ -249,7 +256,7 @@
         <div class="card feed-card">
           <div class="feed-header">
             <h3 class="feed-title">작업 인증 피드</h3>
-            <button class="btn-text">+ 인증 올리기</button>
+            <button class="btn-text" data-timer-certify>+ 인증 올리기</button>
           </div>
 
           <div class="feed-grid" data-timer-feed hidden>
