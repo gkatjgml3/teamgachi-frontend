@@ -548,7 +548,57 @@ body, html {
   flex-direction: column;
   align-items: center;
   gap: 6px;
+  cursor: pointer;
+  transition: border-color .18s ease, background .18s ease;
 }
+
+.file-dropzone:hover,
+.file-dropzone:focus-visible,
+.file-dropzone.is-dragging {
+  border-color: #6558e8;
+  background: #f4f2ff;
+  outline: none;
+}
+
+.drive-upload-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.drive-upload-button {
+  flex: 1;
+  min-height: 36px;
+  padding: 8px 12px;
+  border: 1px solid #5b4df5;
+  border-radius: 8px;
+  background: #5b4df5;
+  color: #fff;
+  font-size: 11.5px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.drive-upload-button.secondary {
+  border-color: #ddd9f5;
+  background: #fff;
+  color: #534be8;
+}
+
+.drive-upload-button:disabled {
+  cursor: wait;
+  opacity: .58;
+}
+
+.drive-upload-status {
+  min-height: 32px;
+  margin: -6px 0 0;
+  color: #777780;
+  font-size: 10.5px;
+  line-height: 1.5;
+}
+
+.drive-upload-status.success { color: #267a4b; }
+.drive-upload-status.error { color: #c43d4b; }
 
 .dropzone-icon {
   width: 24px;

@@ -1,8 +1,10 @@
 import {
   escapeHtml,
   formatDate,
+  formatTime,
   getAppContext,
   setupShell,
+  showAppDetails,
   showPageError,
   supabase,
 } from './app-context.js';
@@ -69,12 +71,28 @@ function renderSchedules(schedules) {
   if (!container) return;
   container.innerHTML = schedules.length
     ? schedules.map((schedule) => `
-      <div class="schedule-item">
-        <span class="item-meta">${formatDate(schedule.starts_at)}</span>
+      <button type="button" class="schedule-item dashboard-schedule-button" data-schedule-id="${schedule.id}">
+        <span class="item-meta">${formatDate(schedule.starts_at)} ${formatTime(schedule.starts_at)}</span>
         <span>${escapeHtml(schedule.title)}</span>
         <span class="badge-purple">${dDay(schedule.starts_at)}</span>
-      </div>`).join('')
+      </button>`).join('')
     : '<div class="empty-state">다가오는 일정이 없습니다.</div>';
+  container.querySelectorAll('[data-schedule-id]').forEach((button) => {
+    button.addEventListener('click', () => {
+      const schedule = schedules.find((item) => item.id === button.dataset.scheduleId);
+      if (!schedule) return;
+      showAppDetails({
+        title: '다가오는 일정',
+        heading: schedule.title,
+        badge: dDay(schedule.starts_at),
+        rows: [
+          { label: '날짜', value: formatDate(schedule.starts_at, { year: 'numeric' }) },
+          { label: '시간', value: formatTime(schedule.starts_at) },
+          { label: '이동', value: '캘린더에서 전체 일정과 상세 내용을 확인할 수 있습니다.' },
+        ],
+      });
+    });
+  });
 }
 
 function renderNotices(notices) {
@@ -97,7 +115,7 @@ async function initialize() {
 
     const [todosResult, schedulesResult, noticesResult, readsResult] = await Promise.all([
       supabase.from('todos').select('id, title, status, priority, due_at, assignee_id').eq('team_id', context.team.id).order('position'),
-      supabase.from('schedules').select('id, title, starts_at').eq('team_id', context.team.id).gte('starts_at', new Date().toISOString()).order('starts_at').limit(4),
+      supabase.from('schedules').select('id, title, starts_at').eq('team_id', context.team.id).gte('starts_at', new Date().toISOString()).order('starts_at').limit(6),
       supabase.from('notices').select('id, title, category, created_at').eq('team_id', context.team.id).order('pinned', { ascending: false }).order('created_at', { ascending: false }).limit(3),
       supabase.from('notice_reads').select('notice_id').eq('user_id', context.user.id),
     ]);

@@ -325,11 +325,36 @@ async function runGlobalSearch(context, query) {
 
 function configureSearch(context) {
   document.querySelectorAll('.header-search input, .search-box input').forEach((input) => {
-    input.addEventListener('keydown', async (event) => {
+    if (input.dataset.searchReady === 'true') return;
+    input.dataset.searchReady = 'true';
+    input.setAttribute('aria-label', '팀 자료 통합 검색');
+    const wrapper = input.closest('.header-search, .search-box');
+    let button = wrapper?.querySelector('[data-search-submit]');
+    if (!button && wrapper) {
+      button = document.createElement('button');
+      button.type = 'button';
+      button.className = 'header-search-submit';
+      button.dataset.searchSubmit = '';
+      button.textContent = '검색';
+      button.setAttribute('aria-label', '검색 실행');
+      wrapper.append(button);
+    }
+    const search = async () => {
+      if (!input.value.trim()) {
+        input.focus();
+        return showAppAlert('검색어를 입력해 주세요.', { title: '통합 검색' });
+      }
+      if (button) button.disabled = true;
+      try { await runGlobalSearch(context, input.value); }
+      catch (error) { await showAppAlert(error.message, { title: '검색 실패' }); }
+      finally { if (button) button.disabled = false; }
+    };
+    input.addEventListener('keydown', (event) => {
       if (event.key !== 'Enter') return;
       event.preventDefault();
-      try { await runGlobalSearch(context, input.value); } catch (error) { await showAppAlert(error.message, { title: '검색 실패' }); }
+      search();
     });
+    button?.addEventListener('click', search);
   });
 }
 
@@ -350,10 +375,12 @@ function configureTeamMenu(context) {
       <label class="modal-label">현재 팀</label>
       <select class="modal-input" data-switch-team>${context.teams.map((team) => `<option value="${team.id}" ${team.id === context.team.id ? 'selected' : ''}>${escapeHtml(team.name)}</option>`).join('')}</select>
       <div class="modal-actions">
-        <button type="button" class="modal-button" data-rename-team>팀 이름 변경</button>
+        <button type="button" class="modal-button" data-rename-team ${['owner', 'admin'].includes(context.team.role) ? '' : 'disabled'}>팀 이름 변경</button>
         <button type="button" class="modal-button primary" data-create-team>새 팀 만들기</button>
       </div>
-      <p class="modal-help">초대 코드: <strong>${escapeHtml(context.team.inviteCode)}</strong></p>`;
+      <button type="button" class="modal-button" data-join-team>초대 코드로 팀 참여</button>
+      <p class="modal-help team-invite-line">초대 코드: <strong>${escapeHtml(context.team.inviteCode)}</strong> <button type="button" class="inline-copy-button" data-copy-invite>복사</button></p>
+      ${['owner', 'admin'].includes(context.team.role) ? '' : '<p class="modal-help">팀 이름은 팀장·관리자만 변경할 수 있습니다.</p>'}`;
     body.querySelector('[data-switch-team]').addEventListener('change', (event) => {
       window.localStorage.setItem('teamgachi.activeTeamId', event.target.value);
       window.location.reload();
@@ -371,6 +398,32 @@ function configureTeamMenu(context) {
       if (error) return showAppAlert(error.message, { title: '팀 이름 변경 실패' });
       window.location.reload();
     });
+    body.querySelector('[data-copy-invite]').addEventListener('click', async () => {
+      try {
+        await navigator.clipboard.writeText(context.team.inviteCode);
+        await showAppAlert('초대 코드를 복사했습니다.', { title: '초대 코드' });
+      } catch {
+        await showAppAlert(`초대 코드: ${context.team.inviteCode}`, { title: '초대 코드' });
+      }
+    });
+    body.querySelector('[data-join-team]').addEventListener('click', async () => {
+      const values = await showAppForm({
+        title: '초대 코드로 팀 참여',
+        description: '팀장에게 받은 8자리 초대 코드를 입력해 주세요.',
+        fields: [{ name: 'code', label: '초대 코드', placeholder: '예: A1B2C3D4', required: true }],
+        submitText: '팀 참여하기',
+      });
+      if (!values) return;
+      const code = values.code.replace(/\s/g, '').toUpperCase();
+      if (!/^[A-F0-9]{8}$/.test(code)) {
+        return showAppAlert('영문 A~F와 숫자로 된 8자리 초대 코드를 입력해 주세요.', { title: '초대 코드 확인' });
+      }
+      const { data, error } = await supabase.rpc('join_team_by_invite', { p_invite_code: code });
+      if (error) return showAppAlert(error.message, { title: '팀 참여 실패' });
+      const joined = Array.isArray(data) ? data[0] : data;
+      if (joined?.team_id) window.localStorage.setItem('teamgachi.activeTeamId', joined.team_id);
+      window.location.reload();
+    });
     body.querySelector('[data-create-team]').addEventListener('click', async () => {
       const values = await showAppForm({
         title: '새 팀 만들기',
@@ -384,6 +437,50 @@ function configureTeamMenu(context) {
       if (error) return showAppAlert(error.message, { title: '팀 생성 실패' });
       window.localStorage.setItem('teamgachi.activeTeamId', data.id);
       window.location.reload();
+    });
+  });
+}
+
+function configureProfileMenu(context) {
+  const targets = document.querySelectorAll('.header-profile-avatar, .sidebar-profile, [data-profile-menu]');
+  targets.forEach((target) => {
+    target.setAttribute('role', 'button');
+    target.setAttribute('tabindex', '0');
+    target.setAttribute('title', '내 프로필');
+    const open = () => {
+      const overlay = createOverlay('profile-menu-overlay', '내 프로필');
+      const body = overlay.querySelector('.app-modal-body');
+      body.innerHTML = `
+        <div class="profile-menu-summary"><span class="profile-menu-avatar pastel-avatar"></span><div><strong>${escapeHtml(context.profile.name)}</strong><span>${escapeHtml(context.user.email ?? '')}</span></div></div>
+        <div class="modal-actions">
+          <button type="button" class="modal-button" data-edit-profile>이름 변경</button>
+          <button type="button" class="modal-button danger" data-profile-logout>로그아웃</button>
+        </div>`;
+      body.querySelector('[data-edit-profile]').addEventListener('click', async () => {
+        const values = await showAppForm({
+          title: '프로필 이름 변경',
+          description: '팀 화면에 표시할 이름을 입력해 주세요.',
+          fields: [{ name: 'name', label: '이름', value: context.profile.name, required: true }],
+          submitText: '변경하기',
+        });
+        if (!values) return;
+        const name = values.name.trim().slice(0, 50);
+        const { error } = await supabase.from('profiles').update({ display_name: name }).eq('id', context.user.id);
+        if (error) return showAppAlert(error.message, { title: '프로필 변경 실패' });
+        window.location.reload();
+      });
+      body.querySelector('[data-profile-logout]').addEventListener('click', async () => {
+        const confirmed = await showAppConfirm('팀가치에서 로그아웃할까요?', { title: '로그아웃', confirmText: '로그아웃' });
+        if (!confirmed) return;
+        await supabase.auth.signOut();
+        window.location.replace('./login.html');
+      });
+    };
+    target.addEventListener('click', open);
+    target.addEventListener('keydown', (event) => {
+      if (event.key !== 'Enter' && event.key !== ' ') return;
+      event.preventDefault();
+      open();
     });
   });
 }
@@ -479,18 +576,12 @@ export function setupShell(context) {
     element.textContent = `${roleLabel(team.role)} · ${team.name}`;
   });
 
-  const logoutTargets = document.querySelectorAll('.header-profile-avatar, [data-logout]');
-  logoutTargets.forEach((target) => {
-    target.setAttribute('role', 'button');
-    target.setAttribute('tabindex', '0');
-    target.setAttribute('title', '로그아웃');
-    const logout = async () => {
+  configureProfileMenu(context);
+
+  document.querySelectorAll('[data-logout]').forEach((target) => {
+    target.addEventListener('click', async () => {
       await supabase.auth.signOut();
       window.location.replace('./login.html');
-    };
-    target.addEventListener('click', logout);
-    target.addEventListener('keydown', (event) => {
-      if (event.key === 'Enter' || event.key === ' ') logout();
     });
   });
 

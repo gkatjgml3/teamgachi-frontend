@@ -1,10 +1,12 @@
 import {
   escapeHtml,
   formatDate,
+  formatTime,
   getAppContext,
   setupShell,
   showAppAlert,
   showAppConfirm,
+  showAppDetails,
   showPageError,
   supabase,
 } from './app-context.js';
@@ -27,7 +29,7 @@ function dueDateLabel(value) {
   const due = new Date(value);
   const days = Math.ceil((due.getTime() - Date.now()) / 86400000);
   const suffix = days === 0 ? '오늘' : days > 0 ? `D-${days}` : `D+${Math.abs(days)}`;
-  return `${formatDate(value)} (${suffix})`;
+  return `${formatDate(value)} ${formatTime(value)} (${suffix})`;
 }
 
 function isMine(todo) {
@@ -65,7 +67,7 @@ function todoRow(todo, memberMap) {
     <tr class="todo-item-row ${done ? 'done' : ''}" data-todo-id="${todo.id}">
       <td class="col-task">
         <input type="checkbox" id="todo-${todo.id}" ${done ? 'checked' : ''}>
-        <label for="todo-${todo.id}">${escapeHtml(todo.title)}</label>
+        <button type="button" class="todo-title-button" data-todo-detail-id="${todo.id}">${escapeHtml(todo.title)}</button>
         ${todo.details ? `<div class="todo-details">${escapeHtml(todo.details)}</div>` : ''}
         ${todo.requires_evidence ? '<span class="evidence-required">증빙 파일 필수</span>' : ''}
       </td>
@@ -160,6 +162,28 @@ function chooseEvidenceFile() {
       }
     }, 60000);
   });
+  card.querySelectorAll('[data-todo-detail-id]').forEach((button) => {
+    button.addEventListener('click', () => {
+      const todo = todos.find((item) => item.id === button.dataset.todoDetailId);
+      if (!todo) return;
+      const collaborators = (collaboratorMap.get(todo.id) ?? [])
+        .map((id) => memberMap.get(id)?.name)
+        .filter(Boolean)
+        .join(', ');
+      showAppDetails({
+        title: '할 일 상세',
+        heading: todo.title,
+        badge: statusLabel[todo.status],
+        rows: [
+          { label: '자세한 내용', value: todo.details || '등록된 상세 내용이 없습니다.' },
+          { label: '담당자', value: memberMap.get(todo.assignee_id)?.name || '미배정' },
+          { label: '공동 작업자', value: collaborators || '없음' },
+          { label: '마감', value: dueDateLabel(todo.due_at) },
+          { label: '증빙', value: todo.requires_evidence ? '완료할 때 파일 업로드 필수' : '필수 아님' },
+        ],
+      });
+    });
+  });
 }
 
 async function uploadEvidence(todo) {
@@ -245,13 +269,15 @@ function configureForm() {
   assigneeSelect.value = context.user.id;
   collaboratorSelect.innerHTML = context.members
     .map((member) => `<option value="${member.userId}">${escapeHtml(member.name)}</option>`).join('');
+  const now = new Date(Date.now() - new Date().getTimezoneOffset() * 60000);
+  dueInput.min = now.toISOString().slice(0, 16);
 
   submitButton.addEventListener('click', async () => {
     const title = titleInput.value.trim();
     if (!title) return showAppAlert('할 일을 입력해 주세요.', { title: '할 일 확인' });
     let dueAt = null;
     if (dueInput.value) {
-      const date = new Date(`${dueInput.value}T23:59:00`);
+      const date = new Date(dueInput.value);
       dueAt = date.toISOString();
     }
     const collaboratorIds = [...collaboratorSelect.selectedOptions]

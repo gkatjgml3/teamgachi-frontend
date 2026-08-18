@@ -110,11 +110,18 @@
               <button class="drive-tab">이미지</button>
             </div>
 
-            <div class="file-dropzone upload-dropzone" role="button" tabindex="0">
+            <div class="file-dropzone upload-dropzone" role="button" tabindex="0" aria-label="자료 업로드">
               <div class="dropzone-icon"></div>
               <div class="dropzone-text upload-text">파일을 끌어다 놓거나 클릭해 업로드</div>
               <div class="dropzone-subtext">최대 20MB · PDF, 이미지, 문서</div>
             </div>
+
+            <input type="file" data-drive-file-input hidden multiple>
+            <div class="drive-upload-actions">
+              <button type="button" class="drive-upload-button" data-drive-upload>파일 선택</button>
+              <button type="button" class="drive-upload-button secondary" data-drive-link hidden>링크 주소 입력</button>
+            </div>
+            <p class="drive-upload-status" data-drive-status aria-live="polite">파일 탭에서는 문서와 압축 파일을, 이미지 탭에서는 사진을 올릴 수 있습니다.</p>
 
             <div class="drive-file-list file-list"><div class="empty-state">업로드한 자료가 없습니다.</div></div>
 

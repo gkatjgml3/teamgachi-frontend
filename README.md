@@ -8,6 +8,13 @@
 
 ## 최근 수정사항
 
+- 2026-08-19 자료함에 파일·이미지 다중 선택 버튼, 링크 입력 버튼, 드래그 상태와 업로드 성공·실패 안내를 추가
+- 할 일 마감 입력을 날짜+시간으로 변경하고 제목 클릭 상세 보기, 공동 작업자, 완료 증빙 업로드 흐름을 보강
+- 상단 검색에 실행 버튼을 추가하고 Enter와 클릭 모두 팀 할 일·일정·채팅·자료 통합 검색이 되도록 수정
+- 세로 말줄임표 팀 관리에 새 팀 생성, 팀 전환, 팀 이름 변경, 초대 코드 복사와 초대 코드 참여 기능을 연결
+- 프로필 원을 누르면 이름 변경·로그아웃을 선택하는 프로필 메뉴가 열리도록 수정
+- 대시보드에 가까운 일정 최대 6개와 정확한 시간을 표시하고 일정 상세 팝업을 연결
+- Supabase AI 함수에 Gemini 우선 호출과 OpenAI 보조 호출을 추가하고, API 키가 없을 때는 기존 자동 정리·정렬을 유지
 - 2026-08-19 GitHub에 추가된 `*-완성본.html` 7개를 최신 디자인 기준으로 확인하고 실제 서비스 HTML·CSS·JavaScript에 기능형으로 통합
 - 캘린더에 월·주·일 보기, 날짜 클릭 일 보기, 보기 단위별 이전·다음 이동을 추가
 - 캘린더 `다가오는 마감`을 현재 달 조회와 분리하고 일정과 할 일 마감일을 함께 조회하도록 수정
@@ -91,7 +98,15 @@ GitHub에 추가된 `logo.png`를 공통 사이드바에 적용하고 캘린더 
 
 브라우저 탭의 기본 지구본 아이콘 대신 `logo.png`를 파비콘으로 표시합니다.
 
-AI 버튼은 Supabase Edge Function의 OpenAI 호출을 먼저 시도합니다. `OPENAI_API_KEY`가 없거나 호출에 실패하면 오류 화면 대신 최근 대화 자동 정리와 우선순위·마감일 자동 정렬로 전환됩니다. 18세 미만 사용자는 보호자 동의와 대회 규정을 확인한 뒤 API를 사용합니다.
+AI 버튼은 Supabase Edge Function에서 `GEMINI_API_KEY`를 먼저 사용하고, 필요하면 `OPENAI_API_KEY`를 보조로 사용합니다. 두 키가 없거나 호출에 실패하면 오류 화면 대신 최근 대화 자동 정리와 우선순위·마감일 자동 정렬로 전환됩니다. 18세 미만 사용자는 보호자 동의와 대회 규정을 확인한 뒤 API를 사용합니다.
+
+Gemini 키는 프론트 코드나 GitHub에 넣지 않고 다음처럼 Supabase Secret으로만 저장합니다.
+
+```powershell
+npx.cmd supabase secrets set GEMINI_API_KEY=발급받은_키 --project-ref yezdalggrwjtjemkcehj
+npx.cmd supabase functions deploy summarize-chat --project-ref yezdalggrwjtjemkcehj
+npx.cmd supabase functions deploy recommend-priority --project-ref yezdalggrwjtjemkcehj
+```
 
 ## 로컬 실행
 

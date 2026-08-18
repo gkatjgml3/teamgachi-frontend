@@ -124,10 +124,13 @@
                 <textarea class="form-input-todo" data-todo-details rows="3" placeholder="자세한 내용을 입력하세요"></textarea>
                 <div class="form-row">
                   <select class="select-filter" data-todo-assignee style="flex:1;"><option>담당자</option></select>
-                  <input type="date" class="select-filter" data-todo-date style="flex:1;">
+                  <label class="todo-due-field">마감 날짜·시간
+                    <input type="datetime-local" class="select-filter" data-todo-date step="900">
+                  </label>
                 </div>
                 <label class="form-helper">공동 작업자<select class="select-filter" data-todo-collaborators multiple></select></label>
                 <label class="evidence-option"><input type="checkbox" data-todo-evidence> 완료할 때 증빙 파일 업로드 필수</label>
+                <p class="todo-form-note">마감 날짜·시간은 캘린더에 자동으로 표시됩니다. 증빙 필수 업무는 완료 체크 시 파일 선택 창이 열립니다.</p>
                 <button class="btn-primary btn-submit-add" type="button" style="margin-top: 4px;">추가하기</button>
               </div>
             </div>
@@ -147,13 +150,13 @@
 
             <div class="card">
               <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
-                <span class="card-title">내 완료율 <span style="font-size:11px; color:#8e8e93; font-weight:400; margin-left:4px;">이번 주</span></span>
-                <span style="font-size:11px; color:#8e8e93; cursor:pointer;">할 일 보기</span>
+                <span class="card-title">내 완료율 <span style="font-size:11px; color:#8e8e93; font-weight:400; margin-left:4px;">전체</span></span>
+                <button type="button" class="link-action inline-link-button" data-show-my-todos>할 일 보기</button>
               </div>
               <div style="display:flex; align-items:center; gap:10px;">
-                <span class="rate-percent" style="font-size:18px; font-weight:800;">0%</span>
-                <div class="progress-bar-bg" style="flex:1;"><div class="progress-bar-fill bar-fill" style="width: 0%;"></div></div>
-                <span class="rate-fraction" style="font-size:11px; color:#8e8e93;">0 / 0</span>
+                <span class="rate-percent" data-my-rate style="font-size:18px; font-weight:800;">0%</span>
+                <div class="progress-bar-bg" style="flex:1;"><div class="progress-bar-fill bar-fill" data-my-rate-bar style="width: 0%;"></div></div>
+                <span class="rate-fraction" data-my-rate-fraction style="font-size:11px; color:#8e8e93;">0 / 0</span>
               </div>
             </div>
 

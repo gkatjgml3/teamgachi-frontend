@@ -18,6 +18,14 @@ let summaryText = '요약할 대화가 없습니다.';
 let realtimeChannel;
 let activeDriveKind = 'file';
 
+function setDriveStatus(message, tone = '') {
+  const status = document.querySelector('[data-drive-status]');
+  if (!status) return;
+  status.textContent = message;
+  status.classList.toggle('success', tone === 'success');
+  status.classList.toggle('error', tone === 'error');
+}
+
 function memberName(userId) {
   return context.members.find((member) => member.userId === userId)?.name ?? '팀원';
 }
@@ -96,7 +104,12 @@ function renderFiles() {
       if (file.kind === 'link') return window.open(file.external_url, '_blank', 'noopener');
       const { data, error } = await supabase.storage.from('team-files').createSignedUrl(file.storage_path, 60);
       if (error) return showAppAlert(error.message, { title: '자료 열기 실패' });
-      window.open(data.signedUrl, '_blank', 'noopener');
+      const anchor = document.createElement('a');
+      anchor.href = data.signedUrl;
+      anchor.target = '_blank';
+      anchor.rel = 'noopener';
+      anchor.download = file.original_name;
+      anchor.click();
     });
   });
   list.querySelectorAll('[data-delete-id]').forEach((button) => {
@@ -157,9 +170,14 @@ async function sendMessage() {
 }
 
 async function uploadFile(file, requestedKind = activeDriveKind) {
-  if (!file) return;
+  if (!file) return false;
   if (file.size > 20 * 1024 * 1024) {
-    return showAppAlert('파일은 최대 20MB까지 업로드할 수 있습니다.', { title: '파일 용량 확인' });
+    await showAppAlert(`${file.name}: 파일은 최대 20MB까지 업로드할 수 있습니다.`, { title: '파일 용량 확인' });
+    return false;
+  }
+  if (requestedKind === 'image' && !file.type.startsWith('image/')) {
+    await showAppAlert(`${file.name}: 이미지 탭에는 이미지 파일만 올릴 수 있습니다.`, { title: '파일 형식 확인' });
+    return false;
   }
   const extension = file.name.includes('.') ? `.${file.name.split('.').pop()}` : '';
   const kind = requestedKind === 'image' || file.type.startsWith('image/') ? 'image' : 'file';
@@ -167,7 +185,10 @@ async function uploadFile(file, requestedKind = activeDriveKind) {
   const { error: uploadError } = await supabase.storage
     .from('team-files')
     .upload(storagePath, file, { contentType: file.type, upsert: false });
-  if (uploadError) return showAppAlert(uploadError.message, { title: '파일 업로드 실패' });
+  if (uploadError) {
+    await showAppAlert(`${file.name}: ${uploadError.message}`, { title: '파일 업로드 실패' });
+    return false;
+  }
 
   const { error: recordError } = await supabase.from('files').insert({
     team_id: context.team.id,
@@ -180,9 +201,32 @@ async function uploadFile(file, requestedKind = activeDriveKind) {
   });
   if (recordError) {
     await supabase.storage.from('team-files').remove([storagePath]);
-    return showAppAlert(recordError.message, { title: '파일 저장 실패' });
+    await showAppAlert(`${file.name}: ${recordError.message}`, { title: '파일 저장 실패' });
+    return false;
   }
-  await loadFiles();
+  return true;
+}
+
+async function uploadFiles(fileList, requestedKind = activeDriveKind) {
+  const selected = [...(fileList ?? [])];
+  if (!selected.length) return;
+  const uploadButton = document.querySelector('[data-drive-upload]');
+  if (uploadButton) uploadButton.disabled = true;
+  let succeeded = 0;
+  setDriveStatus(`${selected.length}개 자료를 업로드하는 중입니다...`);
+  try {
+    for (const file of selected) {
+      if (await uploadFile(file, requestedKind)) succeeded += 1;
+    }
+    await loadFiles();
+    if (succeeded === selected.length) {
+      setDriveStatus(`${succeeded}개 자료를 업로드했습니다.`, 'success');
+    } else {
+      setDriveStatus(`${succeeded}/${selected.length}개 자료를 업로드했습니다. 실패한 파일을 확인해 주세요.`, 'error');
+    }
+  } finally {
+    if (uploadButton) uploadButton.disabled = false;
+  }
 }
 
 async function addLink() {
@@ -216,6 +260,7 @@ async function addLink() {
   });
   if (error) return showAppAlert(error.message, { title: '링크 추가 실패' });
   await loadFiles();
+  setDriveStatus('링크를 자료함에 추가했습니다.', 'success');
 }
 
 function configureActions() {
@@ -228,25 +273,35 @@ function configureActions() {
     }
   });
 
-  const fileInput = document.createElement('input');
-  fileInput.type = 'file';
-  fileInput.hidden = true;
+  const fileInput = document.querySelector('[data-drive-file-input]');
+  if (!fileInput) return;
   fileInput.accept = '.png,.jpg,.jpeg,.webp,.pdf,.txt,.csv,.zip,.docx,.xlsx,.pptx';
-  document.body.append(fileInput);
   fileInput.addEventListener('change', async () => {
-    await uploadFile(fileInput.files?.[0]);
+    await uploadFiles(fileInput.files, activeDriveKind);
     fileInput.value = '';
   });
   document.querySelector('.btn-attach')?.addEventListener('click', () => fileInput.click());
+  document.querySelector('[data-drive-upload]')?.addEventListener('click', () => fileInput.click());
+  document.querySelector('[data-drive-link]')?.addEventListener('click', addLink);
   const dropzone = document.querySelector('.upload-dropzone');
   dropzone?.addEventListener('click', () => activeDriveKind === 'link' ? addLink() : fileInput.click());
-  dropzone?.addEventListener('dragover', (event) => event.preventDefault());
+  dropzone?.addEventListener('keydown', (event) => {
+    if (event.key !== 'Enter' && event.key !== ' ') return;
+    event.preventDefault();
+    activeDriveKind === 'link' ? addLink() : fileInput.click();
+  });
+  dropzone?.addEventListener('dragover', (event) => {
+    event.preventDefault();
+    dropzone.classList.add('is-dragging');
+  });
+  dropzone?.addEventListener('dragleave', () => dropzone.classList.remove('is-dragging'));
   dropzone?.addEventListener('drop', async (event) => {
     event.preventDefault();
+    dropzone.classList.remove('is-dragging');
     if (activeDriveKind === 'link') {
       return showAppAlert('링크 탭에서는 업로드 영역을 클릭해 주소를 입력해 주세요.', { title: '링크 추가 방법' });
     }
-    uploadFile(event.dataTransfer.files?.[0]);
+    await uploadFiles(event.dataTransfer.files, activeDriveKind);
   });
 
   document.querySelectorAll('.drive-tab').forEach((button, index) => {
@@ -257,10 +312,22 @@ function configureActions() {
       fileInput.accept = activeDriveKind === 'image'
         ? 'image/png,image/jpeg,image/webp'
         : '.png,.jpg,.jpeg,.webp,.pdf,.txt,.csv,.zip,.docx,.xlsx,.pptx';
+      const uploadButton = document.querySelector('[data-drive-upload]');
+      const linkButton = document.querySelector('[data-drive-link]');
+      if (uploadButton) {
+        uploadButton.hidden = activeDriveKind === 'link';
+        uploadButton.textContent = activeDriveKind === 'image' ? '이미지 선택' : '파일 선택';
+      }
+      if (linkButton) linkButton.hidden = activeDriveKind !== 'link';
       const text = document.querySelector('.upload-text');
       if (text) text.textContent = activeDriveKind === 'link'
         ? '클릭해 링크 주소 추가'
         : activeDriveKind === 'image' ? '이미지를 끌어 놓거나 클릭해 업로드' : '파일을 끌어 놓거나 클릭해 업로드';
+      setDriveStatus(activeDriveKind === 'link'
+        ? 'https:// 또는 http://로 시작하는 링크를 등록할 수 있습니다.'
+        : activeDriveKind === 'image'
+          ? 'PNG, JPG, WEBP 이미지를 최대 20MB까지 올릴 수 있습니다.'
+          : '문서·이미지·압축 파일을 한 번에 여러 개 선택할 수 있습니다.');
       renderFiles();
     });
   });
