@@ -73,95 +73,33 @@
         </div>
       </header>
 
-      <div class="content-body">
-
-        <div class="dashboard-title-area">
+      <div class="content-body dashboard-final">
+        <div class="dashboard-top-bar">
           <div>
-            <h2>안녕하세요, <span data-welcome-name>팀원</span>님 👋</h2>
+            <h2 class="welcome-title">반가워요, <span data-welcome-name>팀원</span>님! 👋</h2>
+            <p class="welcome-sub" data-welcome-sub>팀 정보를 불러오는 중입니다.</p>
             <p class="project-tag-info">팀 정보를 불러오는 중입니다.</p>
           </div>
           <button class="btn-primary" id="add-task-btn">+ 할 일 추가</button>
         </div>
-
-        <div class="grid-summary">
-          <div class="summary-card">
-            <div class="summary-label">전체 진행률</div>
-            <div class="summary-value">0%</div>
-            <div class="summary-sub">새 팀은 0%에서 시작합니다</div>
-          </div>
-          <div class="summary-card">
-            <div class="summary-label">내 할 일</div>
-            <div class="summary-value">0건</div>
-            <div class="summary-sub">오늘 마감 0건</div>
-          </div>
-          <div class="summary-card">
-            <div class="summary-label">팀 완료 업무</div>
-            <div class="summary-value">0 / 0</div>
-            <div class="summary-sub">팀 전체 기준</div>
-          </div>
-          <div class="summary-card">
-            <div class="summary-label">읽지 않은 알림</div>
-            <div class="summary-value">0</div>
-            <div class="summary-sub">새 공지 0건</div>
+        <div class="stats-grid">
+          <div class="card stat-card"><div><div class="stat-label">전체 진척도</div><div class="stat-main-val" data-stat-progress>0<span class="stat-denom">%</span></div><div class="stat-sub-val" data-stat-progress-sub>새 팀은 0%에서 시작합니다</div></div><div class="donut-chart" data-progress-donut style="--percent:0"><div class="donut-inner"></div></div></div>
+          <div class="card stat-card"><div><div class="stat-label">오늘 할 일</div><div class="stat-main-val" data-stat-today>0<span class="stat-denom">/0</span></div><div class="stat-sub-val" data-stat-today-sub>완료 0건</div></div><div class="stat-icon-box purple-bg">✓</div></div>
+          <div class="card stat-card"><div><div class="stat-label">남은 D-Day</div><div class="stat-main-val" data-stat-dday>-</div><div class="stat-sub-val" data-stat-dday-sub>다가오는 일정이 없습니다</div></div><div class="stat-icon-box orange-bg">📅</div></div>
+          <div class="card stat-card"><div><div class="stat-label">팀 활동성</div><div class="stat-main-val" data-stat-activity>0<span class="stat-denom">건</span></div><div class="stat-sub-val">최근 7일 메시지</div></div><div class="stat-icon-box green-bg">🔥</div></div>
+        </div>
+        <div class="card ai-banner-card">
+          <div class="ai-banner-header"><div class="ai-badge-title"><span class="badge-ai-purple">AI</span><span class="ai-title-text">맞춤형 스마트 추천</span><span class="ai-subtitle-text">프로젝트 진행 데이터를 기반으로 생성되었습니다.</span></div><a class="btn-ai-view" href="progress.html">전체 분석 보기</a></div>
+          <div class="ai-cards-grid">
+            <div class="ai-sub-card"><div class="ai-card-icon">💡</div><div><div class="ai-card-title">우선순위 제안</div><div class="ai-card-desc" data-ai-priority>등록된 할 일을 분석하고 있습니다.</div><a href="todo.html" class="ai-card-link">할 일 확인하기 →</a></div></div>
+            <div class="ai-sub-card"><div class="ai-card-icon">💬</div><div><div class="ai-card-title">주요 대화 요약</div><ul class="ai-card-desc chat-summary-list"><li>채팅 요약을 불러오는 중입니다.</li></ul><a href="chat.html" class="ai-card-link">채팅 바로가기 →</a></div></div>
+            <div class="ai-sub-card"><div class="ai-card-icon">⏱️</div><div><div class="ai-card-title">집중 모드 추천</div><div class="ai-card-desc">25분 집중 세션으로 가장 중요한 업무부터 시작해 보세요.</div><a href="timer.html" class="ai-card-link">타이머 시작 →</a></div></div>
           </div>
         </div>
-
-        <div class="grid-main">
-
-          <div class="column-left">
-
-            <div class="card">
-              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
-                <div class="card-title">오늘의 우선순위 <span class="badge-purple">AI 추천</span></div>
-                <button style="background: none; border: none; font-size: 11px; color: #8e8e93; cursor: pointer; display: flex; align-items: center; gap: 4px; padding: 0;">
-                    <span>다시 추천</span>
-                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                            <path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"/>
-                        </svg>
-                </button>
-            </div>
-
-              <div class="task-rows"><div class="empty-state">등록된 할 일이 없습니다.</div></div>
-            </div>
-
-            <div class="card">
-              <div style="display: flex; justify-content: space-between; align-items: center;">
-                <div class="card-title">팀원별 진척도</div>
-                <a class="link-action" href="progress.html">전체 보기 ›</a>
-              </div>
-
-              <div class="member-rows"><div class="empty-state">팀원 진행률을 불러오는 중입니다.</div></div>
-            </div>
-
-          </div>
-
-          <div class="column-right">
-
-            <div class="card">
-              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
-                <div class="card-title">다가오는 일정</div>
-                <a class="link-action" href="calendar.html">캘린더 ›</a>
-              </div>
-              <div class="schedule-rows"><div class="empty-state">다가오는 일정이 없습니다.</div></div>
-            </div>
-
-            <div class="card">
-              <div style="display:flex;justify-content:space-between;align-items:center"><div class="card-title">채팅 요약 <span class="badge-purple">AI</span></div><a class="link-action" href="chat.html">전체 대화 ›</a></div>
-              <ul class="chat-summary-list bullet-list"><li>요약할 팀 대화가 없습니다.</li></ul>
-            </div>
-
-            <div class="card">
-              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
-                <div class="card-title">공지사항</div>
-                <a class="link-action" href="notice.html">전체 ›</a>
-              </div>
-              <div class="notice-rows"><div class="empty-state">등록된 공지가 없습니다.</div></div>
-            </div>
-
-          </div>
-
+        <div class="two-column-grid">
+          <div class="card"><div class="card-header-flex"><div><span class="card-title">오늘의 우선순위</span><span class="badge-ai-sm">AI 추천 순서</span></div><a href="todo.html" class="view-all-link">전체보기</a></div><div class="task-list task-rows"><div class="empty-state">등록된 할 일이 없습니다.</div></div></div>
+          <div class="card"><div class="card-header-flex"><span class="card-title">다가오는 주요 일정</span><a href="calendar.html" class="view-all-link">캘린더 보기</a></div><div class="schedule-list schedule-rows"><div class="empty-state">다가오는 일정이 없습니다.</div></div></div>
         </div>
-
       </div>
     </main>
 

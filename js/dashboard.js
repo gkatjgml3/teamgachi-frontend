@@ -11,7 +11,7 @@ import {
 
 const priorityOrder = { urgent: 0, high: 1, medium: 2, low: 3 };
 const priorityLabel = { urgent: '긴급', high: '높음', medium: '보통', low: '낮음' };
-const priorityClass = { urgent: 'high', high: 'high', medium: 'mid', low: 'low' };
+const priorityClass = { urgent: 'tag-very-high', high: 'tag-high', medium: 'tag-medium', low: 'tag-low' };
 
 function cachedChatSummary(teamId) {
   try {
@@ -48,12 +48,6 @@ function dDay(value) {
   return days > 0 ? `D-${days}` : `D+${Math.abs(days)}`;
 }
 
-function setMetric(card, value, subtext) {
-  if (!card) return;
-  card.querySelector('.summary-value').textContent = value;
-  card.querySelector('.summary-sub').textContent = subtext;
-}
-
 function renderPriorities(todos, memberMap) {
   const container = document.querySelector('.task-rows');
   if (!container) return;
@@ -68,10 +62,10 @@ function renderPriorities(todos, memberMap) {
 
   container.innerHTML = active.length
     ? active.map((todo, index) => `
-      <div class="priority-item">
-        <div><b>${index + 1}.</b>&nbsp; ${escapeHtml(todo.title)}</div>
-        <div><span class="item-meta">${escapeHtml(memberMap.get(todo.assignee_id)?.name ?? '미배정')} · ${dDay(todo.due_at)}</span>
-        <span class="badge-purple">${priorityLabel[todo.priority]}</span></div>
+      <div class="task-item" title="${escapeHtml(memberMap.get(todo.assignee_id)?.name ?? '미배정')} · ${dDay(todo.due_at)}">
+        <span class="task-num">${index + 1}</span>
+        <span class="task-title">${escapeHtml(todo.title)}</span>
+        <span class="priority-tag ${priorityClass[todo.priority]}">${priorityLabel[todo.priority]}</span>
       </div>`).join('')
     : '<div class="empty-state">등록된 할 일이 없습니다.</div>';
 }
@@ -100,9 +94,9 @@ function renderSchedules(schedules) {
   container.innerHTML = schedules.length
     ? schedules.map((schedule) => `
       <button type="button" class="schedule-item dashboard-schedule-button" data-schedule-id="${schedule.id}">
-        <span class="item-meta">${formatDate(schedule.starts_at)} ${formatTime(schedule.starts_at)}</span>
-        <span>${escapeHtml(schedule.title)}</span>
-        <span class="badge-purple">${dDay(schedule.starts_at)}</span>
+        <span class="date-badge">${new Date(schedule.starts_at).toLocaleDateString('en-US', { month: '2-digit', day: '2-digit' })}</span>
+        <span class="schedule-title">${escapeHtml(schedule.title)}</span>
+        <span class="dday-text">${dDay(schedule.starts_at)}</span>
       </button>`).join('')
     : '<div class="empty-state">다가오는 일정이 없습니다.</div>';
   container.querySelectorAll('[data-schedule-id]').forEach((button) => {
@@ -141,12 +135,14 @@ async function initialize() {
     if (!context) return;
     setupShell(context);
 
-    const [todosResult, schedulesResult, noticesResult, readsResult, chatSummaryResult] = await Promise.all([
+    const recentSince = new Date(Date.now() - (7 * 86400000)).toISOString();
+    const [todosResult, schedulesResult, noticesResult, readsResult, chatSummaryResult, messagesResult] = await Promise.all([
       supabase.from('todos').select('id, title, status, priority, due_at, assignee_id').eq('team_id', context.team.id).order('position'),
       supabase.from('schedules').select('id, title, starts_at').eq('team_id', context.team.id).gte('starts_at', new Date().toISOString()).order('starts_at').limit(6),
       supabase.from('notices').select('id, title, category, created_at').eq('team_id', context.team.id).order('pinned', { ascending: false }).order('created_at', { ascending: false }).limit(3),
       supabase.from('notice_reads').select('notice_id').eq('user_id', context.user.id),
       supabase.from('chat_summaries').select('summary, updated_at').eq('team_id', context.team.id).maybeSingle(),
+      supabase.from('messages').select('id', { count: 'exact', head: true }).eq('team_id', context.team.id).gte('created_at', recentSince),
     ]);
     for (const result of [todosResult, schedulesResult, noticesResult, readsResult]) {
       if (result.error) throw result.error;
@@ -163,28 +159,43 @@ async function initialize() {
     const today = new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Seoul' });
     const todayDue = myActive.filter((todo) => todo.due_at && new Date(todo.due_at).toLocaleDateString('en-CA', { timeZone: 'Asia/Seoul' }) === today).length;
     const unread = notices.filter((notice) => !readIds.has(notice.id)).length;
+    const todayAssigned = activeTodos.filter((todo) => todo.assignee_id === context.user.id
+      && todo.due_at
+      && new Date(todo.due_at).toLocaleDateString('en-CA', { timeZone: 'Asia/Seoul' }) === today);
+    const todayOpen = todayAssigned.filter((todo) => todo.status !== 'done').length;
+    const todayDone = todayAssigned.filter((todo) => todo.status === 'done').length;
+    const nearestSchedule = schedules[0];
+    const rankedTodos = todos
+      .filter((todo) => !['done', 'canceled'].includes(todo.status))
+      .sort((a, b) => (priorityOrder[a.priority] - priorityOrder[b.priority])
+        || (new Date(a.due_at ?? '9999-12-31') - new Date(b.due_at ?? '9999-12-31')));
 
     const projectTag = document.querySelector('.project-tag-info');
     if (projectTag) projectTag.textContent = `${context.team.name} · 팀원 ${context.members.length}명 · 초대 코드 ${context.team.inviteCode}`;
-    const cards = document.querySelectorAll('.summary-card');
-    setMetric(cards[0], `${overall}%`, activeTodos.length ? `완료 ${done}건` : '새 팀은 0%에서 시작합니다');
-    setMetric(cards[1], `${myActive.length}건`, `오늘 마감 ${todayDue}건`);
-    setMetric(cards[2], `${done} / ${activeTodos.length}`, '팀 전체 기준');
-    setMetric(cards[3], `${unread}`, `새 공지 ${unread}건`);
+    const welcomeSub = document.querySelector('[data-welcome-sub]');
+    if (welcomeSub) welcomeSub.textContent = myActive.length
+      ? `지금 해결해야 할 우선순위 업무가 ${myActive.length}건 있습니다.`
+      : '현재 남아 있는 내 업무가 없습니다.';
+    document.querySelector('[data-stat-progress]').innerHTML = `${overall}<span class="stat-denom">%</span>`;
+    document.querySelector('[data-stat-progress-sub]').textContent = activeTodos.length ? `완료 ${done} / 전체 ${activeTodos.length}` : '새 팀은 0%에서 시작합니다';
+    document.querySelector('[data-progress-donut]')?.style.setProperty('--percent', overall);
+    document.querySelector('[data-stat-today]').innerHTML = `${todayOpen}<span class="stat-denom">/${todayAssigned.length}</span>`;
+    document.querySelector('[data-stat-today-sub]').textContent = `완료 ${todayDone}건`;
+    document.querySelector('[data-stat-dday]').textContent = nearestSchedule ? dDay(nearestSchedule.starts_at) : '-';
+    document.querySelector('[data-stat-dday-sub]').textContent = nearestSchedule?.title ?? '다가오는 일정이 없습니다';
+    document.querySelector('[data-stat-activity]').innerHTML = `${messagesResult.count ?? 0}<span class="stat-denom">건</span>`;
+    document.querySelector('[data-ai-priority]').textContent = rankedTodos[0]
+      ? `${rankedTodos[0].title} 업무를 먼저 확인해 보세요.`
+      : '추천할 진행 중 업무가 없습니다.';
 
     const memberMap = new Map(context.members.map((member) => [member.userId, member]));
     renderPriorities(todos, memberMap);
-    renderMembers(context, todos);
     renderSchedules(schedules);
-    renderNotices(notices);
 
     if (chatSummaryResult.error) console.warn('대시보드 채팅 요약을 불러오지 못했습니다.', chatSummaryResult.error);
     renderChatSummary(chatSummaryResult.data?.summary || cachedChatSummary(context.team.id));
     document.querySelector('#add-task-btn')?.addEventListener('click', () => {
       window.location.href = './todo.html';
-    });
-    document.querySelectorAll('.link-action').forEach((link) => {
-      if (link.textContent.includes('전체 보기')) link.href = './progress.html';
     });
   } catch (error) {
     showPageError(error);
