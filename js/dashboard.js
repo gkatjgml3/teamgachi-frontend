@@ -1,4 +1,5 @@
 import {
+  daysFromToday,
   escapeHtml,
   formatDate,
   formatTime,
@@ -43,7 +44,7 @@ function renderChatSummary(value) {
 
 function dDay(value) {
   if (!value) return '-';
-  const days = Math.ceil((new Date(value).getTime() - Date.now()) / 86400000);
+  const days = daysFromToday(value);
   if (days === 0) return 'D-Day';
   return days > 0 ? `D-${days}` : `D+${Math.abs(days)}`;
 }

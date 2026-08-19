@@ -1,4 +1,5 @@
 import {
+  daysFromToday,
   escapeHtml,
   formatDate,
   formatTime,
@@ -27,8 +28,8 @@ let aiPriorityMap = new Map();
 function dueDateLabel(value) {
   if (!value) return '마감일 없음';
   const due = new Date(value);
-  const days = Math.ceil((due.getTime() - Date.now()) / 86400000);
-  const suffix = days === 0 ? '오늘' : days > 0 ? `D-${days}` : `D+${Math.abs(days)}`;
+  const days = daysFromToday(due);
+  const suffix = days === 0 ? 'D-Day' : days > 0 ? `D-${days}` : `D+${Math.abs(days)}`;
   return `${formatDate(value)} ${formatTime(value)} (${suffix})`;
 }
 

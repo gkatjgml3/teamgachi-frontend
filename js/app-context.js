@@ -121,6 +121,20 @@ async function loadAppContextOnce() {
   };
 }
 
+export function daysFromToday(value, now = new Date()) {
+  const dayNumber = (input) => {
+    const parts = new Intl.DateTimeFormat('en-US', {
+      timeZone: 'Asia/Seoul',
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+    }).formatToParts(new Date(input));
+    const values = Object.fromEntries(parts.map((part) => [part.type, part.value]));
+    return Date.UTC(Number(values.year), Number(values.month) - 1, Number(values.day));
+  };
+  return Math.round((dayNumber(value) - dayNumber(now)) / 86400000);
+}
+
 export async function getAppContext() {
   let lastError;
   for (let attempt = 0; attempt < 6; attempt += 1) {

@@ -1,4 +1,5 @@
 import {
+  daysFromToday,
   escapeHtml,
   formatDate,
   formatTime,
@@ -35,8 +36,8 @@ function dayKey(value) {
 }
 
 function dDay(value) {
-  const days = Math.ceil((startOfDay(value) - startOfDay(new Date())) / 86400000);
-  return days === 0 ? '오늘' : days > 0 ? `D-${days}` : `D+${Math.abs(days)}`;
+  const days = daysFromToday(value);
+  return days === 0 ? 'D-Day' : days > 0 ? `D-${days}` : `D+${Math.abs(days)}`;
 }
 
 function viewLabel() {

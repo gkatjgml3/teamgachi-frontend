@@ -1,4 +1,5 @@
 import {
+  daysFromToday,
   escapeHtml,
   formatDate,
   getAppContext,
@@ -13,8 +14,8 @@ let todos = [];
 
 function dDay(value) {
   if (!value) return '기한 없음';
-  const days = Math.ceil((new Date(value).getTime() - Date.now()) / 86400000);
-  if (days === 0) return '오늘';
+  const days = daysFromToday(value);
+  if (days === 0) return 'D-Day';
   return days > 0 ? `D-${days}` : `D+${Math.abs(days)}`;
 }
 
