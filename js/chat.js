@@ -52,22 +52,53 @@ function renderSummaryContent(value) {
   }).join('');
 }
 
-function renderMessages() {
-  const body = document.querySelector('.chat-body');
-  if (!body) return;
-  const messageHtml = messages.length
-    ? messages.map((message) => `
-      <div class="message-item ${message.author_id === context.user.id ? 'me' : ''}">
+function messageDayKey(value) {
+  return new Intl.DateTimeFormat('en-CA', {
+    timeZone: 'Asia/Seoul',
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+  }).format(new Date(value));
+}
+
+function renderMessageList() {
+  if (!messages.length) return '<div class="empty-state">첫 메시지를 보내 대화를 시작해 보세요.</div>';
+
+  let previousDay = '';
+  return messages.map((message) => {
+    const currentDay = messageDayKey(message.created_at);
+    const isOwnMessage = message.author_id === context.user.id;
+    const wasEdited = message.updated_at
+      && new Date(message.updated_at).getTime() - new Date(message.created_at).getTime() > 1000;
+    const dateDivider = currentDay === previousDay ? '' : `
+      <div class="chat-date-divider">
+        <span class="chat-date-text">${formatDate(message.created_at, { year: 'numeric', month: 'long', day: 'numeric' })}</span>
+      </div>`;
+    previousDay = currentDay;
+
+    return `${dateDivider}
+      <div class="message-item ${isOwnMessage ? 'me' : ''}">
         <div class="msg-avatar"></div>
         <div class="msg-content">
           <div class="msg-meta">
             <span class="msg-author">${escapeHtml(memberName(message.author_id))}</span>
             <span class="msg-time">${formatTime(message.created_at)}</span>
+            ${wasEdited ? '<span class="msg-edited">수정됨</span>' : ''}
+            ${isOwnMessage ? `<span class="msg-actions">
+              <button type="button" data-edit-message="${message.id}" aria-label="메시지 수정">수정</button>
+              <button type="button" data-delete-message="${message.id}" aria-label="메시지 삭제">삭제</button>
+            </span>` : ''}
           </div>
-          <div class="msg-bubble ${message.author_id === context.user.id ? 'my-bubble' : ''}">${escapeHtml(message.content)}</div>
+          <div class="msg-bubble ${isOwnMessage ? 'my-bubble' : ''}">${escapeHtml(message.content)}</div>
         </div>
-      </div>`).join('')
-    : '<div class="empty-state">첫 메시지를 보내 대화를 시작해 보세요.</div>';
+      </div>`;
+  }).join('');
+}
+
+function renderMessages() {
+  const body = document.querySelector('.chat-body');
+  if (!body) return;
+  const messageHtml = renderMessageList();
 
   body.innerHTML = `
     <div class="chat-ai-summary">
@@ -76,9 +107,54 @@ function renderMessages() {
       </div>
       <div class="summary-list">${renderSummaryContent(summaryText)}</div>
     </div>
-    <div class="chat-date-divider"><span class="chat-date-text">${formatDate(new Date(), { year: 'numeric', month: 'long', day: 'numeric' })}</span></div>
     ${messageHtml}`;
+  body.querySelectorAll('[data-edit-message]').forEach((button) => {
+    button.addEventListener('click', () => editMessage(button.dataset.editMessage));
+  });
+  body.querySelectorAll('[data-delete-message]').forEach((button) => {
+    button.addEventListener('click', () => deleteMessage(button.dataset.deleteMessage));
+  });
   body.scrollTop = body.scrollHeight;
+}
+
+async function editMessage(messageId) {
+  const message = messages.find((item) => item.id === messageId);
+  if (!message || message.author_id !== context.user.id) return;
+  const values = await showAppForm({
+    title: '메시지 수정',
+    description: '수정할 메시지를 입력해 주세요.',
+    fields: [{ name: 'content', label: '메시지', type: 'textarea', value: message.content, required: true }],
+    submitText: '수정하기',
+  });
+  if (!values) return;
+  if (values.content.length > 5000) {
+    return showAppAlert('메시지는 5,000자까지 입력할 수 있습니다.', { title: '메시지 길이 확인' });
+  }
+  const { error } = await supabase
+    .from('messages')
+    .update({ content: values.content })
+    .eq('id', messageId)
+    .eq('author_id', context.user.id);
+  if (error) return showAppAlert(error.message, { title: '메시지 수정 실패' });
+  await loadMessages();
+}
+
+async function deleteMessage(messageId) {
+  const message = messages.find((item) => item.id === messageId);
+  if (!message || message.author_id !== context.user.id) return;
+  const confirmed = await showAppConfirm('삭제한 메시지는 되돌릴 수 없습니다. 이 메시지를 삭제할까요?', {
+    title: '메시지 삭제',
+    confirmText: '삭제하기',
+    danger: true,
+  });
+  if (!confirmed) return;
+  const { error } = await supabase
+    .from('messages')
+    .delete()
+    .eq('id', messageId)
+    .eq('author_id', context.user.id);
+  if (error) return showAppAlert(error.message, { title: '메시지 삭제 실패' });
+  await loadMessages();
 }
 
 function humanFileSize(bytes) {
@@ -157,7 +233,7 @@ function renderFiles() {
 async function loadMessages() {
   const { data, error } = await supabase
     .from('messages')
-    .select('id, author_id, content, created_at')
+    .select('id, author_id, content, created_at, updated_at')
     .eq('team_id', context.team.id)
     .order('created_at')
     .limit(200);

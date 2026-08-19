@@ -396,6 +396,49 @@ body, html {
   color: #8e8e93;
 }
 
+.msg-edited {
+  font-size: 10px;
+  color: #aeaeb2;
+}
+
+.msg-actions {
+  display: inline-flex;
+  gap: 3px;
+  opacity: 0;
+  transition: opacity 0.15s ease;
+}
+
+.message-item:hover .msg-actions,
+.msg-actions:focus-within {
+  opacity: 1;
+}
+
+.msg-actions button {
+  border: 0;
+  padding: 1px 3px;
+  background: transparent;
+  color: #8e8e93;
+  font: inherit;
+  font-size: 10px;
+  cursor: pointer;
+}
+
+.msg-actions button:hover,
+.msg-actions button:focus-visible {
+  color: #534be8;
+}
+
+.msg-actions button[data-delete-message]:hover,
+.msg-actions button[data-delete-message]:focus-visible {
+  color: #e5484d;
+}
+
+@media (hover: none) {
+  .msg-actions {
+    opacity: 1;
+  }
+}
+
 .msg-bubble {
   background-color: #f2f2f7;
   padding: 10px 14px;
