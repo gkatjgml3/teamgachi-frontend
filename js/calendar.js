@@ -182,11 +182,14 @@ async function loadSchedules() {
   const [visibleResult, upcomingResult, todoResult] = await Promise.all([
     supabase.from('schedules').select('id, title, starts_at, ends_at, todo_id').eq('team_id', context.team.id).gte('starts_at', rangeStart).lt('starts_at', rangeEnd).order('starts_at'),
     supabase.from('schedules').select('id, title, starts_at, ends_at, todo_id').eq('team_id', context.team.id).gte('starts_at', today).order('starts_at').limit(12),
-    supabase.from('todos').select('id, title, due_at, status').eq('team_id', context.team.id).gte('due_at', today).neq('status', 'canceled').order('due_at').limit(12),
+    supabase.from('todos').select('id, title, due_at, status').eq('team_id', context.team.id).gte('due_at', today).in('status', ['todo', 'in_progress']).order('due_at').limit(12),
   ]);
   for (const result of [visibleResult, upcomingResult, todoResult]) if (result.error) throw result.error;
-  const todoDeadlines = (todoResult.data ?? []).map((todo) => ({ id: `todo-${todo.id}`, title: todo.title, starts_at: todo.due_at, ends_at: todo.due_at, todo_id: todo.id }));
-  upcomingSchedules = mergeUnique([...(upcomingResult.data ?? []), ...todoDeadlines]).slice(0, 8);
+  const activeTodos = todoResult.data ?? [];
+  const activeTodoIds = new Set(activeTodos.map((todo) => todo.id));
+  const todoDeadlines = activeTodos.map((todo) => ({ id: `todo-${todo.id}`, title: todo.title, starts_at: todo.due_at, ends_at: todo.due_at, todo_id: todo.id }));
+  const upcomingTeamSchedules = (upcomingResult.data ?? []).filter((schedule) => !schedule.todo_id || activeTodoIds.has(schedule.todo_id));
+  upcomingSchedules = mergeUnique([...upcomingTeamSchedules, ...todoDeadlines]).slice(0, 8);
   schedules = mergeUnique([...(visibleResult.data ?? []), ...upcomingSchedules]);
   renderCalendar();
 }
