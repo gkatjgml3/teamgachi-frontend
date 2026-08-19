@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>TeamGachi - 채팅 · 자료함</title>
+  <link rel="stylesheet" href="chat.css">
+</head>
+<body>
+  <div class="app-container">
+    
+    <aside class="sidebar">
+      <div class="sidebar-brand">
+        <img src="TeamGachi로고 수정본.png" alt="Logo" class="brand-logo-img" style="width:24px; height:24px; object-fit:contain;">
+        <span class="brand-title">TeamGachi</span>
+      </div>
+
+      <nav class="sidebar-menu">
+        <a href="dashboard.html" class="menu-item">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/></svg>
+          <span>대시보드</span>
+        </a>
+        <a href="todo.html" class="menu-item">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/></svg>
+          <span>할 일</span>
+        </a>
+        <a href="chat.html" class="menu-item active">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
+          <span>채팅 · 자료함</span>
+        </a>
+        <a href="calendar.html" class="menu-item">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+          <span>캘린더</span>
+        </a>
+        <a href="progress.html" class="menu-item">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 20V10"/><path d="M12 20V4"/><path d="M6 20v-6"/></svg>
+          <span>업무 · 진척도</span>
+        </a>
+        <a href="timer.html" class="menu-item">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+          <span>집중 타이머</span>
+        </a>
+        <a href="notice.html" class="menu-item">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 01-3.46 0"/></svg>
+          <span>공지사항</span>
+        </a>
+      </nav>
+
+      <div class="sidebar-profile">
+        <img src="profile.png" alt="Profile" class="profile-avatar">
+        <div>
+          <div class="profile-name">박서아</div>
+          <div class="profile-role">기획 · 디자인</div>
+        </div>
+      </div>
+    </aside>
+
+    <main class="main-content">
+      <header class="main-header">
+        <h1 class="header-page-name">채팅 · 자료함</h1>
+        <div class="header-right-tools">
+          <div class="header-search">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
+            <input type="text" placeholder="검색...">
+          </div>
+          <button class="header-btn-icon">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 01-3.46 0"/></svg>
+          </button>
+          <img src="profile.png" alt="Profile" class="header-profile-avatar">
+        </div>
+      </header>
+
+      <div class="content-body">
+        
+        <div class="chat-layout">
+          
+          <div class="card chat-card">
+            <div class="chat-header-bar">
+              <div class="chat-title-group">
+                <span class="chat-title"># 전체 팀 채팅</span>
+                <span class="chat-member-count">팀원 3명</span>
+              </div>
+              <button class="btn-primary">AI 대화 요약</button>
+            </div>
+
+            <div class="chat-ai-summary">
+              <div class="summary-header">
+                <span class="summary-title"><span class="badge-purple">AI</span> 오늘의 대화 요약 (메시지 42건)</span>
+                <span class="summary-fold-btn">접기 ^</span>
+              </div>
+              <ul class="summary-list">
+                <li>로그인 방식은 Supabase Auth(이메일)로 확정했습니다.</li>
+                <li>자료함은 앱 자체 용량 제한 없이 Supabase 프로젝트가 허용하는 크기까지 업로드할 수 있습니다.</li>
+                <li>내일(8/7) 19시에 화면 설계 리뷰 회의를 진행합니다.</li>
+              </ul>
+            </div>
+
+            <div class="chat-date-divider">
+              <span class="chat-date-text">2026년 8월 6일</span>
+            </div>
+
+            <div class="chat-messages">
+              
+              <div class="message-item">
+                <img src="profile.png" alt="Profile" class="msg-avatar">
+                <div class="msg-content">
+                  <div class="msg-meta">
+                    <span class="msg-author">함서희</span>
+                    <span class="msg-time">09:12</span>
+                  </div>
+                  <div class="msg-bubble">
+                    Supabase 테이블 스키마 초안 올렸습니다. User / Todo / Message 테이블 먼저 확인 부탁드려요!
+                    <div class="attached-file-card">
+                      <div class="file-info">
+                        <div class="file-icon-box">PDF</div>
+                        <div>
+                          <div class="file-name">schema_draft_v1.pdf</div>
+                          <div class="file-size">1.2MB · PDF</div>
+                        </div>
+                      </div>
+                      <a href="#" class="file-download-btn">다운로드</a>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="message-item">
+                <img src="profile.png" alt="Profile" class="msg-avatar">
+                <div class="msg-content">
+                  <div class="msg-meta">
+                    <span class="msg-author">이시윤</span>
+                    <span class="msg-time">09:20</span>
+                  </div>
+                  <div class="msg-bubble">
+                    로그인 화면부터 붙일게요. 디자인 시안은 언제쯤 받을 수 있을까요?
+                  </div>
+                </div>
+              </div>
+
+              <div class="message-item me">
+                <img src="profile.png" alt="Profile" class="msg-avatar">
+                <div class="msg-content">
+                  <div class="msg-meta">
+                    <span class="msg-author">박서아</span>
+                    <span class="msg-time">09:24</span>
+                  </div>
+                  <div class="msg-bubble">
+                    오늘 저녁까지 1차 시안 공유드릴게요. 와이어프레임은 자료함에 올려뒀습니다.
+                  </div>
+                </div>
+              </div>
+
+            </div>
+
+            <div class="typing-indicator">이시윤님이 입력 중...</div>
+
+            <div class="chat-input-wrapper">
+              <input type="text" placeholder="메시지를 입력하세요">
+              <div class="chat-input-tools">
+                <button class="btn-attach">첨부</button>
+                <button class="btn-primary" style="padding: 6px 14px;">전송</button>
+              </div>
+            </div>
+
+          </div>
+
+          <div class="card drive-card">
+            <div class="drive-header">
+              <span class="drive-title">자료 드라이브</span>
+              <span class="drive-total-count">전체 12개</span>
+            </div>
+
+            <div class="drive-tabs">
+              <button class="drive-tab active">파일</button>
+              <button class="drive-tab">링크</button>
+              <button class="drive-tab">이미지</button>
+            </div>
+
+            <div class="file-dropzone">
+              <div class="dropzone-icon"></div>
+              <div class="dropzone-text">파일을 끌어다 놓거나 클릭해 업로드</div>
+              <div class="dropzone-subtext">앱 자체 용량 제한 없음 · PDF, 이미지, 문서</div>
+            </div>
+
+            <div class="drive-file-list">
+              
+              <div class="drive-file-item">
+                <div class="drive-file-left">
+                  <div class="drive-file-icon"></div>
+                  <div class="drive-file-details">
+                    <span class="drive-file-name">schema_draft_v1.pdf</span>
+                    <span class="drive-file-meta">함서희 · 1.2MB · 08/06</span>
+                  </div>
+                </div>
+                <button class="drive-more-btn">⋮</button>
+              </div>
+
+              <div class="drive-file-item">
+                <div class="drive-file-left">
+                  <div class="drive-file-icon"></div>
+                  <div class="drive-file-details">
+                    <span class="drive-file-name">와이어프레임_v2.fig</span>
+                    <span class="drive-file-meta">박서아 · 4.8MB · 08/06</span>
+                  </div>
+                </div>
+                <button class="drive-more-btn">⋮</button>
+              </div>
+
+              <div class="drive-file-item">
+                <div class="drive-file-left">
+                  <div class="drive-file-icon"></div>
+                  <div class="drive-file-details">
+                    <span class="drive-file-name">기능명세서.docx</span>
+                    <span class="drive-file-meta">박서아 · 320KB · 08/05</span>
+                  </div>
+                </div>
+                <button class="drive-more-btn">⋮</button>
+              </div>
+
+              <div class="drive-file-item">
+                <div class="drive-file-left">
+                  <div class="drive-file-icon"></div>
+                  <div class="drive-file-details">
+                    <span class="drive-file-name">참고_UI_레퍼런스.png</span>
+                    <span class="drive-file-meta">이시윤 · 2.1MB · 08/04</span>
+                  </div>
+                </div>
+                <button class="drive-more-btn">⋮</button>
+              </div>
+
+            </div>
+
+            <div class="storage-info">
+              <div class="storage-labels">
+                <span class="storage-title">저장 공간</span>
+                <span class="storage-value">사용 중 340MB</span>
+              </div>
+            </div>
+
+          </div>
+
+        </div>
+
+      </div>
+    </main>
+
+  </div>
+</body>
+</html>
