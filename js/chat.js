@@ -18,6 +18,54 @@ let summaryText = '요약할 대화가 없습니다.';
 let realtimeChannel;
 let activeDriveKind = 'file';
 
+function summaryStorageKey() {
+  return `teamgachi-chat-summary:${context.team.id}`;
+}
+
+function cacheSummary(summary, messageCount = messages.length) {
+  try {
+    localStorage.setItem(summaryStorageKey(), JSON.stringify({ summary, messageCount, updatedAt: new Date().toISOString() }));
+  } catch (error) {
+    console.warn('채팅 요약의 브라우저 임시 저장을 건너뜁니다.', error);
+  }
+}
+
+async function loadLatestSummary() {
+  try {
+    const cached = JSON.parse(localStorage.getItem(summaryStorageKey()) || 'null');
+    if (cached?.summary) summaryText = cached.summary;
+  } catch (error) {
+    console.warn('임시 저장된 채팅 요약을 읽지 못했습니다.', error);
+  }
+
+  const { data, error } = await supabase
+    .from('chat_summaries')
+    .select('summary, message_count, updated_at')
+    .eq('team_id', context.team.id)
+    .maybeSingle();
+  if (error) {
+    console.warn('저장된 채팅 요약을 불러오지 못했습니다.', error);
+    renderMessages();
+    return;
+  }
+  if (data?.summary) {
+    summaryText = data.summary;
+    cacheSummary(data.summary, data.message_count);
+  }
+  renderMessages();
+}
+
+async function saveLatestSummary() {
+  cacheSummary(summaryText);
+  const { error } = await supabase.from('chat_summaries').upsert({
+    team_id: context.team.id,
+    summary: summaryText,
+    message_count: messages.length,
+    generated_by: context.user.id,
+  }, { onConflict: 'team_id' });
+  if (error) throw error;
+}
+
 function setDriveStatus(message, tone = '') {
   const status = document.querySelector('[data-drive-status]');
   if (!status) return;
@@ -449,6 +497,12 @@ function configureActions() {
     button.disabled = false;
     button.textContent = 'AI 대화 요약';
     renderMessages();
+    try {
+      await saveLatestSummary();
+    } catch (error) {
+      console.warn('채팅 요약의 대시보드 저장에 실패했습니다.', error);
+      await showAppAlert('요약은 생성됐지만 대시보드에 저장하지 못했습니다. 잠시 후 다시 시도해 주세요.', { title: '요약 저장 실패' });
+    }
   });
 }
 
@@ -477,7 +531,7 @@ async function initialize() {
     if (count) count.textContent = `팀원 ${context.members.length}명`;
     if (channelName) channelName.textContent = `# ${context.team.name}`;
     configureActions();
-    await Promise.all([loadMessages(), loadFiles()]);
+    await Promise.all([loadMessages(), loadFiles(), loadLatestSummary()]);
     subscribeRealtime();
   } catch (error) {
     showPageError(error);

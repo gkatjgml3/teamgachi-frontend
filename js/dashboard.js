@@ -13,6 +13,34 @@ const priorityOrder = { urgent: 0, high: 1, medium: 2, low: 3 };
 const priorityLabel = { urgent: '긴급', high: '높음', medium: '보통', low: '낮음' };
 const priorityClass = { urgent: 'high', high: 'high', medium: 'mid', low: 'low' };
 
+function cachedChatSummary(teamId) {
+  try {
+    return JSON.parse(localStorage.getItem(`teamgachi-chat-summary:${teamId}`) || 'null')?.summary ?? '';
+  } catch (error) {
+    console.warn('임시 저장된 채팅 요약을 읽지 못했습니다.', error);
+    return '';
+  }
+}
+
+function renderChatSummary(value) {
+  const summaryList = document.querySelector('.chat-summary-list');
+  if (!summaryList) return;
+  const lines = String(value || '')
+    .split('\n')
+    .map((line) => line
+      .replace(/^#{1,6}\s*/, '')
+      .replace(/^[-*•]\s*/, '')
+      .replace(/\*\*(.*?)\*\*/g, '$1')
+      .replace(/__(.*?)__/g, '$1')
+      .replace(/`([^`]+)`/g, '$1')
+      .trim())
+    .filter(Boolean)
+    .slice(0, 3);
+  summaryList.innerHTML = lines.length
+    ? lines.map((line) => `<li>${escapeHtml(line)}</li>`).join('')
+    : '<li>채팅에서 AI 대화 요약을 생성하면 여기에 표시됩니다.</li>';
+}
+
 function dDay(value) {
   if (!value) return '-';
   const days = Math.ceil((new Date(value).getTime() - Date.now()) / 86400000);
@@ -113,11 +141,12 @@ async function initialize() {
     if (!context) return;
     setupShell(context);
 
-    const [todosResult, schedulesResult, noticesResult, readsResult] = await Promise.all([
+    const [todosResult, schedulesResult, noticesResult, readsResult, chatSummaryResult] = await Promise.all([
       supabase.from('todos').select('id, title, status, priority, due_at, assignee_id').eq('team_id', context.team.id).order('position'),
       supabase.from('schedules').select('id, title, starts_at').eq('team_id', context.team.id).gte('starts_at', new Date().toISOString()).order('starts_at').limit(6),
       supabase.from('notices').select('id, title, category, created_at').eq('team_id', context.team.id).order('pinned', { ascending: false }).order('created_at', { ascending: false }).limit(3),
       supabase.from('notice_reads').select('notice_id').eq('user_id', context.user.id),
+      supabase.from('chat_summaries').select('summary, updated_at').eq('team_id', context.team.id).maybeSingle(),
     ]);
     for (const result of [todosResult, schedulesResult, noticesResult, readsResult]) {
       if (result.error) throw result.error;
@@ -149,8 +178,8 @@ async function initialize() {
     renderSchedules(schedules);
     renderNotices(notices);
 
-    const summaryList = document.querySelector('.bullet-list');
-    if (summaryList) summaryList.innerHTML = '<li>요약할 팀 대화가 없습니다.</li>';
+    if (chatSummaryResult.error) console.warn('대시보드 채팅 요약을 불러오지 못했습니다.', chatSummaryResult.error);
+    renderChatSummary(chatSummaryResult.data?.summary || cachedChatSummary(context.team.id));
     document.querySelector('#add-task-btn')?.addEventListener('click', () => {
       window.location.href = './todo.html';
     });
