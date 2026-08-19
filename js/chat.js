@@ -225,7 +225,7 @@ function renderFiles() {
     return file.kind === 'file' || file.kind === 'evidence' || !file.kind;
   });
   const used = files.filter((file) => file.kind !== 'link').reduce((sum, file) => sum + Number(file.size_bytes || 0), 0);
-  if (count) count.textContent = `전체 ${visibleFiles.length}개`;
+  if (count) count.textContent = `전체 ${files.length}개`;
   if (storageText) storageText.textContent = `사용 중 ${humanFileSize(used)}`;
   if (!list) return;
   list.innerHTML = visibleFiles.length
