@@ -24,6 +24,9 @@ let timerState = 'idle';
 let sessionSeconds = DEFAULT_SESSION_SECONDS;
 let remainingSeconds = sessionSeconds;
 let intervalId = null;
+let accumulatedSeconds = 0;
+let runningStartedAtMs = null;
+let timerTickPending = false;
 
 function localDayKey(value) {
   const date = new Date(value);
@@ -47,7 +50,16 @@ function formatDuration(seconds) {
 }
 
 function elapsedSeconds() {
-  return Math.max(0, sessionSeconds - remainingSeconds);
+  if (!activeTimer) return Math.max(0, sessionSeconds - remainingSeconds);
+  const runningSeconds = timerState === 'running' && Number.isFinite(runningStartedAtMs)
+    ? Math.max(0, Math.floor((Date.now() - runningStartedAtMs) / 1000))
+    : 0;
+  return Math.min(sessionSeconds, Math.max(0, accumulatedSeconds + runningSeconds));
+}
+
+function syncRemainingFromClock() {
+  if (!activeTimer) return;
+  remainingSeconds = Math.max(sessionSeconds - elapsedSeconds(), 0);
 }
 
 function renderTimer() {
@@ -88,18 +100,26 @@ function stopInterval() {
   intervalId = null;
 }
 
-function runInterval() {
-  stopInterval();
-  intervalId = window.setInterval(async () => {
-    if (timerState !== 'running') return;
-    remainingSeconds = Math.max(remainingSeconds - 1, 0);
+async function tickTimer() {
+  if (timerTickPending || timerState !== 'running' || !activeTimer) return;
+  timerTickPending = true;
+  try {
+    syncRemainingFromClock();
     renderTimer();
     if (remainingSeconds === 0) {
       stopInterval();
       await finishSession('completed');
       await showAppAlert(`${Math.round(sessionSeconds / 60)}분 집중 세션을 완료했습니다. 작업 인증 피드에 사진을 올릴 수 있어요.`, { title: '집중 완료' });
     }
-  }, 1000);
+  } finally {
+    timerTickPending = false;
+  }
+}
+
+function runInterval() {
+  stopInterval();
+  void tickTimer();
+  intervalId = window.setInterval(() => void tickTimer(), 1000);
 }
 
 async function startOrPause() {
@@ -116,16 +136,34 @@ async function startOrPause() {
     if (error) return showAppAlert(error.message, { title: '타이머 시작 실패' });
     activeTimer = data;
     timerState = 'running';
+    accumulatedSeconds = 0;
+    runningStartedAtMs = new Date(data.updated_at ?? data.started_at ?? Date.now()).getTime();
     runInterval();
   } else if (timerState === 'running') {
-    const { error } = await supabase.from('timers').update({ status: 'paused', duration_seconds: elapsedSeconds() }).eq('id', activeTimer.id);
+    const elapsed = elapsedSeconds();
+    const { data, error } = await supabase.from('timers')
+      .update({ status: 'paused', duration_seconds: elapsed })
+      .eq('id', activeTimer.id)
+      .select('status, duration_seconds, updated_at')
+      .single();
     if (error) return showAppAlert(error.message, { title: '타이머 일시정지 실패' });
+    activeTimer = { ...activeTimer, ...data };
     timerState = 'paused';
+    accumulatedSeconds = elapsed;
+    runningStartedAtMs = null;
     stopInterval();
   } else {
-    const { error } = await supabase.from('timers').update({ status: 'running', duration_seconds: elapsedSeconds() }).eq('id', activeTimer.id);
+    const elapsed = elapsedSeconds();
+    const { data, error } = await supabase.from('timers')
+      .update({ status: 'running', duration_seconds: elapsed })
+      .eq('id', activeTimer.id)
+      .select('status, duration_seconds, updated_at')
+      .single();
     if (error) return showAppAlert(error.message, { title: '타이머 재시작 실패' });
+    activeTimer = { ...activeTimer, ...data };
     timerState = 'running';
+    accumulatedSeconds = elapsed;
+    runningStartedAtMs = new Date(data.updated_at ?? Date.now()).getTime();
     runInterval();
   }
   renderTimer();
@@ -142,6 +180,8 @@ async function finishSession(status = 'completed') {
   stopInterval();
   activeTimer = null;
   timerState = 'idle';
+  accumulatedSeconds = 0;
+  runningStartedAtMs = null;
   remainingSeconds = sessionSeconds;
   await loadTimerData();
 }
@@ -162,6 +202,8 @@ async function resetTimer() {
   stopInterval();
   activeTimer = null;
   timerState = 'idle';
+  accumulatedSeconds = 0;
+  runningStartedAtMs = null;
   remainingSeconds = sessionSeconds;
   renderTimer();
   await loadTimerData();
@@ -175,13 +217,72 @@ function renderTasks() {
   if (activeTimer?.todo_id) select.value = activeTimer.todo_id;
 }
 
+function dateInputValue(value = new Date()) {
+  return `${value.getFullYear()}-${String(value.getMonth() + 1).padStart(2, '0')}-${String(value.getDate()).padStart(2, '0')}`;
+}
+
+async function createManualTimeRecord() {
+  const activeTodos = todos.filter((todo) => !['done', 'canceled'].includes(todo.status));
+  const values = await showAppForm({
+    title: '시간 직접 기록',
+    description: '타이머를 사용하지 않은 작업 시간을 날짜별 집중 통계에 기록합니다.',
+    fields: [
+      {
+        name: 'todoId',
+        label: '작업',
+        type: 'select',
+        options: [
+          { value: '', label: '작업 선택 안 함' },
+          ...activeTodos.map((todo) => ({ value: todo.id, label: todo.title })),
+        ],
+      },
+      { name: 'recordedDate', label: '기록 날짜', type: 'date', value: dateInputValue(), max: dateInputValue(), required: true },
+      { name: 'hours', label: '시간', type: 'number', value: '0', min: '0', max: '24', required: true },
+      { name: 'minutes', label: '분', type: 'number', value: '25', min: '0', max: '59', required: true },
+    ],
+    submitText: '시간 저장',
+  });
+  if (!values) return;
+
+  const hours = Number(values.hours);
+  const minutes = Number(values.minutes);
+  if (!Number.isInteger(hours) || !Number.isInteger(minutes) || hours < 0 || minutes < 0 || minutes > 59) {
+    return showAppAlert('시간과 분을 올바르게 입력해 주세요.', { title: '시간 기록 확인' });
+  }
+  const durationSeconds = (hours * 60 + minutes) * 60;
+  if (durationSeconds < 60 || durationSeconds > 24 * 60 * 60) {
+    return showAppAlert('1분 이상 24시간 이하로 기록해 주세요.', { title: '시간 기록 확인' });
+  }
+
+  const [year, month, day] = values.recordedDate.split('-').map(Number);
+  const startedAt = new Date(year, month - 1, day, 12, 0, 0, 0);
+  if (!Number.isFinite(startedAt.getTime()) || dateInputValue(startedAt) !== values.recordedDate) {
+    return showAppAlert('기록 날짜를 확인해 주세요.', { title: '시간 기록 확인' });
+  }
+  const endedAt = new Date(startedAt.getTime() + durationSeconds * 1000);
+  const { error } = await supabase.from('timers').insert({
+    team_id: context.team.id,
+    user_id: context.user.id,
+    todo_id: values.todoId || null,
+    status: 'completed',
+    started_at: startedAt.toISOString(),
+    ended_at: endedAt.toISOString(),
+    duration_seconds: durationSeconds,
+    target_seconds: durationSeconds,
+    created_at: startedAt.toISOString(),
+  });
+  if (error) return showAppAlert(error.message, { title: '시간 기록 실패' });
+  await loadTimerData();
+  await showAppAlert(`${formatDuration(durationSeconds)} 기록을 저장했습니다.`, { title: '시간 기록 완료' });
+}
+
 function renderStatistics() {
   document.querySelector('[data-weekly-chart]').hidden = false;
   document.querySelector('[data-timer-ranking]').hidden = false;
   document.querySelector('[data-timer-feed]').hidden = false;
   const completed = timers.filter((timer) => timer.status === 'completed');
   const todayKey = localDayKey(new Date());
-  const ownToday = completed.filter((timer) => timer.user_id === context.user.id && localDayKey(timer.created_at) === todayKey);
+  const ownToday = completed.filter((timer) => timer.user_id === context.user.id && localDayKey(timer.started_at ?? timer.created_at) === todayKey);
   const todaySeconds = ownToday.reduce((sum, timer) => sum + Number(timer.duration_seconds || 0), 0);
   const todayPercent = Math.min(Math.round((todaySeconds / DAILY_GOAL_SECONDS) * 100), 100);
   document.querySelector('[data-today-focus]').textContent = formatDuration(todaySeconds);
@@ -190,7 +291,7 @@ function renderStatistics() {
   document.querySelector('[data-session-count]').textContent = `오늘 완료 ${ownToday.length}회`;
 
   const start = weekStart();
-  const weekRows = completed.filter((timer) => new Date(timer.created_at) >= start);
+  const weekRows = completed.filter((timer) => new Date(timer.started_at ?? timer.created_at) >= start);
   const ownWeekSeconds = weekRows.filter((timer) => timer.user_id === context.user.id).reduce((sum, timer) => sum + Number(timer.duration_seconds || 0), 0);
   document.querySelector('[data-week-focus]').textContent = `이번 주 ${formatDuration(ownWeekSeconds)}`;
 
@@ -198,7 +299,7 @@ function renderStatistics() {
     const date = new Date(start);
     date.setDate(start.getDate() + index);
     const key = localDayKey(date);
-    return weekRows.filter((timer) => timer.user_id === context.user.id && localDayKey(timer.created_at) === key).reduce((sum, timer) => sum + Number(timer.duration_seconds || 0), 0);
+    return weekRows.filter((timer) => timer.user_id === context.user.id && localDayKey(timer.started_at ?? timer.created_at) === key).reduce((sum, timer) => sum + Number(timer.duration_seconds || 0), 0);
   });
   const maxDaily = Math.max(...daily, 1);
   document.querySelector('[data-weekly-chart]').innerHTML = daily.map((seconds, index) => `<div class="chart-bar-item ${localDayKey(new Date()) === localDayKey(new Date(start.getFullYear(), start.getMonth(), start.getDate() + index)) ? 'active' : ''}"><div class="bar-fill" style="height:${Math.max(Math.round((seconds / maxDaily) * 100), seconds ? 8 : 0)}%"></div><span class="day-label">${dayLabels[index]}</span></div>`).join('');
@@ -338,18 +439,20 @@ async function loadTimerData() {
   activeTimer = timers.find((timer) => timer.user_id === context.user.id && ['running', 'paused'].includes(timer.status)) ?? null;
   if (activeTimer) {
     sessionSeconds = Number(activeTimer.target_seconds || DEFAULT_SESSION_SECONDS);
-    let elapsed = Number(activeTimer.duration_seconds || 0);
-    if (activeTimer.status === 'running') elapsed += Math.max(0, Math.floor((Date.now() - new Date(activeTimer.updated_at).getTime()) / 1000));
-    remainingSeconds = Math.max(sessionSeconds - elapsed, 0);
+    accumulatedSeconds = Number(activeTimer.duration_seconds || 0);
     timerState = activeTimer.status;
-    if (timerState === 'running' && remainingSeconds > 0) runInterval();
+    runningStartedAtMs = timerState === 'running' ? new Date(activeTimer.updated_at).getTime() : null;
+    syncRemainingFromClock();
   } else {
     timerState = 'idle';
+    accumulatedSeconds = 0;
+    runningStartedAtMs = null;
     remainingSeconds = sessionSeconds;
   }
   renderTasks();
   renderStatistics();
   renderTimer();
+  if (timerState === 'running') runInterval();
 }
 
 async function initialize() {
@@ -365,6 +468,7 @@ async function initialize() {
     document.querySelector('[data-timer-toggle]').addEventListener('click', startOrPause);
     document.querySelector('[data-timer-end]').addEventListener('click', endSession);
     document.querySelector('[data-timer-reset]').addEventListener('click', resetTimer);
+    document.querySelector('[data-timer-manual]').addEventListener('click', createManualTimeRecord);
     document.querySelector('[data-timer-duration]').addEventListener('change', (event) => {
       if (timerState !== 'idle') return;
       sessionSeconds = Number(event.target.value || DEFAULT_SESSION_SECONDS);
@@ -383,4 +487,7 @@ async function initialize() {
 }
 
 window.addEventListener('beforeunload', stopInterval);
+document.addEventListener('visibilitychange', () => {
+  if (document.visibilityState === 'visible') void tickTimer();
+});
 initialize();
