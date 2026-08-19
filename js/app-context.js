@@ -430,7 +430,18 @@ function configureTeamMenu(context) {
       window.location.reload();
     });
   };
-  document.querySelectorAll('[data-team-menu]').forEach((button) => button.addEventListener('click', openTeamMenu));
+  let button = document.querySelector('[data-team-menu]');
+  if (!button) {
+    button = document.createElement('button');
+    button.type = 'button';
+    button.className = 'header-btn-icon team-menu-button';
+    button.dataset.teamMenu = '';
+    button.textContent = '⋮';
+    button.setAttribute('aria-label', '팀 관리');
+    button.title = '팀 관리';
+    document.querySelector('.header-right-tools')?.prepend(button);
+  }
+  button?.addEventListener('click', openTeamMenu);
   return openTeamMenu;
 }
 
