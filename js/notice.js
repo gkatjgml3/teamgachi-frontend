@@ -2,6 +2,7 @@ import {
   escapeHtml,
   formatDate,
   getAppContext,
+  profileColorStyle,
   setupShell,
   showAppAlert,
   showAppDetails,
@@ -74,7 +75,7 @@ function renderNotices() {
       ${pinned ? `<article class="pinned-card" data-notice-id="${escapeHtml(pinned.id)}" tabindex="0" role="button">
         <div class="pinned-header">${categoryBadge(pinned)}<span class="badge badge-pin">📌 상단 고정</span><h2 class="pinned-title">${escapeHtml(pinned.title)}</h2><span class="pinned-date">${formatDate(pinned.created_at)}</span></div>
         <p class="pinned-desc">${escapeHtml(pinned.content)}</p>
-        <div class="pinned-footer"><div class="author-info"><span class="avatar-circle avatar-sm"></span><span class="author-name">${escapeHtml(authorName(pinned.author_id))}</span></div><span class="read-pill ${readIds.has(pinned.id) ? 'active' : ''}">${readIds.has(pinned.id) ? '읽음' : '미확인'}</span></div>
+        <div class="pinned-footer"><div class="author-info"><span class="avatar-circle avatar-sm" style="${profileColorStyle(pinned.author_id)}"></span><span class="author-name">${escapeHtml(authorName(pinned.author_id))}</span></div><span class="read-pill ${readIds.has(pinned.id) ? 'active' : ''}">${readIds.has(pinned.id) ? '읽음' : '미확인'}</span></div>
       </article>` : ''}
       <div class="list-card">
         <div class="list-card-header"><h3>${activeFilter === 'all' ? '전체 공지' : `${categoryMeta[activeFilter].label} 공지`}</h3><span class="total-count">${visible.length}건</span></div>

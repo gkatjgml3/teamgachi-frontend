@@ -3,6 +3,7 @@ import {
   formatDate,
   formatTime,
   getAppContext,
+  profileColorStyle,
   setupShell,
   showAppAlert,
   showAppConfirm,
@@ -126,7 +127,7 @@ function renderMessageList() {
 
     return `${dateDivider}
       <div class="message-item ${isOwnMessage ? 'me' : ''}">
-        <div class="msg-avatar"></div>
+        <div class="msg-avatar" style="${profileColorStyle(message.author_id)}"></div>
         <div class="msg-content">
           <div class="msg-meta">
             <span class="msg-author">${escapeHtml(memberName(message.author_id))}</span>

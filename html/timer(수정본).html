@@ -117,13 +117,15 @@
           <div class="card timer-card">
             <div class="timer-card-header">
               <h2 class="card-title">집중 타이머</h2>
-              <div class="timer-card-actions">
-                <button type="button" class="btn-manual-record" data-timer-manual>+ 시간 기록</button>
-                <span class="badge-pomo" data-timer-duration-label>뽀모도로 25분</span>
-              </div>
+              <span class="badge-pomo" data-timer-duration-label>뽀모도로 25분</span>
             </div>
 
             <div class="select-box">
+              <span class="select-label">기록 방식:</span>
+              <select class="task-select mode-select" data-timer-mode aria-label="기록 방식">
+                <option value="countdown" selected>타이머</option>
+                <option value="stopwatch">시간 기록</option>
+              </select>
               <span class="select-label">작업 선택:</span>
               <select class="task-select" data-timer-task>
                 <option value="">작업을 불러오는 중입니다.</option>

@@ -4,6 +4,7 @@ import {
   formatDate,
   formatTime,
   getAppContext,
+  profileColorStyle,
   setupShell,
   showAppDetails,
   showPageError,
@@ -79,12 +80,12 @@ function renderMembers(context, todos) {
     const done = assigned.filter((todo) => todo.status === 'done').length;
     const percent = assigned.length ? Math.round((done / assigned.length) * 100) : 0;
     return `
-      <div class="progress-item">
+      <div class="progress-item" style="${profileColorStyle(member.userId)}">
         <div class="progress-header">
-          <span><b>${escapeHtml(member.name)}</b> (${member.role === 'owner' ? '팀장' : member.role === 'admin' ? '관리자' : '팀원'})</span>
+          <span><i class="dashboard-member-avatar"></i><b>${escapeHtml(member.name)}</b> (${member.role === 'owner' ? '팀장' : member.role === 'admin' ? '관리자' : '팀원'})</span>
           <span class="item-meta">${done} / ${assigned.length} (${percent}%)</span>
         </div>
-        <div class="progress-bar-bg"><div class="progress-bar-fill" style="width: ${percent}%;"></div></div>
+        <div class="progress-bar-bg"><div class="progress-bar-fill profile-colored-progress" style="width: ${percent}%;"></div></div>
       </div>`;
   }).join('');
 }

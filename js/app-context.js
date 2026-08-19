@@ -6,6 +6,16 @@ const roleLabels = {
   member: '팀원',
 };
 const JWT_CLOCK_ERROR = /jwt.*issued.*future|issued at future|not valid yet/i;
+const PROFILE_COLORS = [
+  '#f3bfd3',
+  '#cec5f6',
+  '#b9d8f5',
+  '#b9e4d8',
+  '#f6d3a5',
+  '#f3c1b4',
+  '#d7dfa9',
+  '#c9e6ad',
+];
 
 function wait(milliseconds) {
   return new Promise((resolve) => window.setTimeout(resolve, milliseconds));
@@ -45,6 +55,19 @@ export function formatTime(value) {
 
 export function roleLabel(role) {
   return roleLabels[role] ?? '팀원';
+}
+
+export function profileColor(userId = '') {
+  let hash = 0;
+  for (const character of String(userId)) {
+    hash = ((hash << 5) - hash) + character.charCodeAt(0);
+    hash |= 0;
+  }
+  return PROFILE_COLORS[Math.abs(hash) % PROFILE_COLORS.length];
+}
+
+export function profileColorStyle(userId = '') {
+  return `--profile-color:${profileColor(userId)}`;
 }
 
 async function loadMembers(teamId) {
@@ -469,7 +492,7 @@ function configureProfileMenu(context, { openTeamMenu, openFeatureGuide } = {}) 
       const overlay = createOverlay('profile-menu-overlay', '내 프로필');
       const body = overlay.querySelector('.app-modal-body');
       body.innerHTML = `
-        <div class="profile-menu-summary"><span class="profile-menu-avatar pastel-avatar"></span><div><strong>${escapeHtml(context.profile.name)}</strong><span>${escapeHtml(context.user.email ?? '')}</span></div></div>
+        <div class="profile-menu-summary"><span class="profile-menu-avatar pastel-avatar" style="${profileColorStyle(context.user.id)}"></span><div><strong>${escapeHtml(context.profile.name)}</strong><span>${escapeHtml(context.user.email ?? '')}</span></div></div>
         <div class="profile-menu-links">
           ${openTeamMenu ? '<button type="button" class="modal-button" data-profile-team>팀 관리</button>' : ''}
           ${openFeatureGuide ? '<button type="button" class="modal-button" data-profile-guide>화면 기능 안내</button>' : ''}
@@ -563,9 +586,10 @@ const featureGuides = {
   },
   timer: {
     title: '집중 타이머 기능 안내',
-    heading: '15·25·45·60분 집중 세션과 작업 인증 기록을 관리합니다.',
+    heading: '집중 타이머와 종료할 때까지 증가하는 시간 기록을 관리합니다.',
     rows: [
       { label: '집중 시간', value: '시작 전에 원하는 시간을 선택하며 25분으로만 제한되지 않습니다.' },
+      { label: '시간 기록', value: '0초부터 시작해 기록 종료를 누를 때까지 시간을 계속 측정합니다.' },
       { label: '통계', value: '완료한 세션으로 오늘·주간 집중 시간과 팀 랭킹을 계산합니다.' },
       { label: '인증 피드', value: '완료 세션을 선택해 작업 사진과 설명을 올리고 팀원이 응원할 수 있습니다.' },
     ],
@@ -590,6 +614,10 @@ function configureFeatureGuide() {
 
 export function setupShell(context) {
   const { profile, team } = context;
+  const ownProfileColor = profileColor(context.user.id);
+  document.querySelectorAll('.profile-avatar, .header-profile-avatar, .sidebar-profile .avatar-circle, [data-profile-avatar]').forEach((element) => {
+    element.style.setProperty('--profile-color', ownProfileColor);
+  });
   document.querySelectorAll('.profile-name, [data-profile-name], [data-welcome-name]').forEach((element) => {
     element.textContent = profile.name;
   });

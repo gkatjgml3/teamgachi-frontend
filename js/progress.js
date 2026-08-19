@@ -3,6 +3,7 @@ import {
   escapeHtml,
   formatDate,
   getAppContext,
+  profileColorStyle,
   setupShell,
   showAppAlert,
   showPageError,
@@ -48,11 +49,11 @@ function renderMembers() {
     const delayed = assigned.filter((todo) => todo.status !== 'done' && todo.due_at && new Date(todo.due_at) < new Date()).length;
     const percent = assigned.length ? Math.round((done / assigned.length) * 100) : 0;
     const titles = assigned.filter((todo) => todo.status !== 'done').slice(0, 2).map((todo) => todo.title).join(' · ') || '배정된 업무 없음';
-    return `<tr class="team-table-row">
+    return `<tr class="team-table-row" style="${profileColorStyle(member.userId)}">
       <td><div class="member-info"><span class="member-avatar pastel-avatar"></span><span class="member-name">${escapeHtml(member.name)}</span></div></td>
       <td>${member.role === 'owner' ? '팀장' : member.role === 'admin' ? '관리자' : '팀원'}</td>
       <td>${escapeHtml(titles)}</td>
-      <td><div class="table-progress-wrap"><div class="table-progress-bar"><div class="table-progress-fill" style="width:${percent}%"></div></div><strong>${percent}%</strong></div></td>
+      <td><div class="table-progress-wrap"><div class="table-progress-bar"><div class="table-progress-fill profile-colored-progress" style="width:${percent}%"></div></div><strong>${percent}%</strong></div></td>
       <td>${done} / ${assigned.length}</td>
       <td><span class="${delayed ? 'badge-delay-exist' : 'badge-delay-zero'}">${delayed}건</span></td>
     </tr>`;
@@ -62,7 +63,7 @@ function renderMembers() {
 function taskCard(todo) {
   const member = context.members.find((item) => item.userId === todo.assignee_id);
   return `
-    <div class="kanban-card" draggable="true" data-todo-id="${todo.id}">
+    <div class="kanban-card" draggable="true" data-todo-id="${todo.id}" style="${profileColorStyle(member?.userId ?? todo.id)}">
       <span class="kanban-card-tag ${todo.priority === 'high' || todo.priority === 'urgent' ? 'tag-back' : 'tag-plan'}">${todo.priority === 'urgent' ? '긴급' : todo.priority === 'high' ? '높음' : todo.priority === 'medium' ? '보통' : '낮음'}</span>
       <div class="kanban-card-title">${escapeHtml(todo.title)}</div>
       <div class="kanban-card-footer">

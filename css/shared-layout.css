@@ -167,7 +167,7 @@ body.dashboard-body {
 }
 
 .avatar-circle {
-  background: #d9d5f7 !important;
+  background: var(--profile-color, #d9d5f7) !important;
 }
 
 .avatar-img {
@@ -314,13 +314,35 @@ body.dashboard-body {
   padding: 0 !important;
   border: 1px solid rgba(91, 77, 245, 0.08) !important;
   border-radius: 50%;
-  background: #d9d5f7 !important;
+  background: var(--profile-color, #d9d5f7) !important;
 }
 
 .pastel-avatar {
   display: inline-block;
-  background: #d9d5f7;
+  background: var(--profile-color, #d9d5f7) !important;
   border: 1px solid rgba(91, 77, 245, 0.08);
+}
+
+.msg-avatar,
+.member-avatar,
+.kanban-assignee-img,
+.dashboard-member-avatar {
+  background: var(--profile-color, #d9d5f7) !important;
+}
+
+.profile-colored-progress {
+  background: var(--profile-color, #5b4df5) !important;
+}
+
+.dashboard-member-avatar {
+  display: inline-block;
+  width: 24px;
+  height: 24px;
+  flex: 0 0 24px;
+  margin-right: 8px;
+  border: 1px solid rgba(91, 77, 245, 0.08);
+  border-radius: 50%;
+  vertical-align: middle;
 }
 
 .item-meta {

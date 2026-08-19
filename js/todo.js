@@ -4,6 +4,7 @@ import {
   formatDate,
   formatTime,
   getAppContext,
+  profileColorStyle,
   setupShell,
   showAppAlert,
   showAppConfirm,
@@ -72,7 +73,7 @@ function todoRow(todo, memberMap) {
         ${todo.details ? `<div class="todo-details">${escapeHtml(todo.details)}</div>` : ''}
         ${todo.requires_evidence ? '<span class="evidence-required">증빙 파일 필수</span>' : ''}
       </td>
-      <td class="col-assignee"><span class="assignee-box"><span class="avatar-sm"></span> ${escapeHtml(assigneeText)}</span></td>
+      <td class="col-assignee"><span class="assignee-box"><span class="avatar-sm pastel-avatar" style="${profileColorStyle(todo.assignee_id ?? todo.id)}"></span> ${escapeHtml(assigneeText)}</span></td>
       <td class="col-duedate">${dueDateLabel(todo.due_at)}</td>
       <td class="col-priority"><span class="${displayedPriority === 'urgent' || displayedPriority === 'high' ? 'badge-red' : 'badge-gray'}">${priorityLabel[displayedPriority]}</span></td>
       <td class="col-status" style="text-align:right">

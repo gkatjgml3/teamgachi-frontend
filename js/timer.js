@@ -1,6 +1,7 @@
 import {
   escapeHtml,
   getAppContext,
+  profileColorStyle,
   setupShell,
   showAppAlert,
   showAppConfirm,
@@ -21,6 +22,7 @@ let certificationLikes = [];
 let certificationFiles = new Map();
 let activeTimer = null;
 let timerState = 'idle';
+let timerMode = 'countdown';
 let sessionSeconds = DEFAULT_SESSION_SECONDS;
 let remainingSeconds = sessionSeconds;
 let intervalId = null;
@@ -50,49 +52,70 @@ function formatDuration(seconds) {
 }
 
 function elapsedSeconds() {
-  if (!activeTimer) return Math.max(0, sessionSeconds - remainingSeconds);
+  if (!activeTimer) return timerMode === 'stopwatch' ? 0 : Math.max(0, sessionSeconds - remainingSeconds);
   const runningSeconds = timerState === 'running' && Number.isFinite(runningStartedAtMs)
     ? Math.max(0, Math.floor((Date.now() - runningStartedAtMs) / 1000))
     : 0;
-  return Math.min(sessionSeconds, Math.max(0, accumulatedSeconds + runningSeconds));
+  const elapsed = Math.max(0, accumulatedSeconds + runningSeconds);
+  return timerMode === 'stopwatch' ? elapsed : Math.min(sessionSeconds, elapsed);
 }
 
 function syncRemainingFromClock() {
   if (!activeTimer) return;
-  remainingSeconds = Math.max(sessionSeconds - elapsedSeconds(), 0);
+  remainingSeconds = timerMode === 'stopwatch' ? 0 : Math.max(sessionSeconds - elapsedSeconds(), 0);
+}
+
+function formatTimerClock(totalSeconds) {
+  const value = Math.max(0, Math.floor(totalSeconds));
+  const hours = Math.floor(value / 3600);
+  const minutes = Math.floor((value % 3600) / 60);
+  const seconds = value % 60;
+  if (hours) return `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+  return `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
 }
 
 function renderTimer() {
-  const minutes = Math.floor(remainingSeconds / 60);
-  const seconds = remainingSeconds % 60;
-  document.querySelector('[data-timer-display]').textContent = `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+  const displaySeconds = timerMode === 'stopwatch' ? elapsedSeconds() : remainingSeconds;
+  document.querySelector('[data-timer-display]').textContent = formatTimerClock(displaySeconds);
   const status = document.querySelector('[data-timer-status]');
   const toggle = document.querySelector('[data-timer-toggle]');
+  const endButton = document.querySelector('[data-timer-end]');
   if (timerState === 'running') {
-    status.textContent = '집중 중 · 현재 세션';
+    status.textContent = timerMode === 'stopwatch' ? '시간 기록 중 · 종료할 때까지 계속됩니다' : '집중 중 · 현재 세션';
     toggle.textContent = '일시정지';
   } else if (timerState === 'paused') {
-    status.textContent = '일시정지 · 다시 시작할 수 있습니다';
+    status.textContent = timerMode === 'stopwatch' ? '시간 기록 일시정지 · 다시 시작할 수 있습니다' : '일시정지 · 다시 시작할 수 있습니다';
     toggle.textContent = '계속하기';
   } else {
-    status.textContent = '준비됨 · 시작 버튼을 눌러주세요';
+    status.textContent = timerMode === 'stopwatch' ? '기록 준비됨 · 시작 후 기록 종료를 눌러주세요' : '준비됨 · 시작 버튼을 눌러주세요';
     toggle.textContent = '시작';
   }
+  if (endButton) endButton.textContent = timerMode === 'stopwatch' ? '기록 종료' : '세션 종료';
   const progress = document.querySelector('[data-timer-progress]');
   if (progress) {
     const circumference = 2 * Math.PI * 80;
     progress.style.strokeDasharray = `${circumference}`;
-    progress.style.strokeDashoffset = `${circumference * (1 - remainingSeconds / sessionSeconds)}`;
+    progress.style.strokeDashoffset = timerMode === 'stopwatch'
+      ? '0'
+      : `${circumference * (1 - remainingSeconds / sessionSeconds)}`;
   }
   const taskSelect = document.querySelector('[data-timer-task]');
   if (taskSelect) taskSelect.disabled = timerState !== 'idle';
   const durationSelect = document.querySelector('[data-timer-duration]');
+  const durationControl = document.querySelector('[data-timer-duration-control]');
   if (durationSelect) {
-    durationSelect.disabled = timerState !== 'idle';
+    durationSelect.hidden = timerMode === 'stopwatch';
+    durationSelect.disabled = timerState !== 'idle' || timerMode === 'stopwatch';
     durationSelect.value = String(sessionSeconds);
   }
+  if (durationControl) durationControl.hidden = timerMode === 'stopwatch';
+  const modeSelect = document.querySelector('[data-timer-mode]');
+  if (modeSelect) {
+    modeSelect.disabled = timerState !== 'idle';
+    modeSelect.value = timerMode;
+  }
   const durationLabel = document.querySelector('[data-timer-duration-label]');
-  if (durationLabel) durationLabel.textContent = `뽀모도로 ${Math.round(sessionSeconds / 60)}분`;
+  if (durationLabel) durationLabel.textContent = timerMode === 'stopwatch' ? '시간 기록' : `뽀모도로 ${Math.round(sessionSeconds / 60)}분`;
 }
 
 function stopInterval() {
@@ -106,7 +129,7 @@ async function tickTimer() {
   try {
     syncRemainingFromClock();
     renderTimer();
-    if (remainingSeconds === 0) {
+    if (timerMode === 'countdown' && remainingSeconds === 0) {
       stopInterval();
       await finishSession('completed');
       await showAppAlert(`${Math.round(sessionSeconds / 60)}분 집중 세션을 완료했습니다. 작업 인증 피드에 사진을 올릴 수 있어요.`, { title: '집중 완료' });
@@ -132,7 +155,8 @@ async function startOrPause() {
       status: 'running',
       duration_seconds: 0,
       target_seconds: sessionSeconds,
-    }).select('id, team_id, user_id, todo_id, status, started_at, ended_at, duration_seconds, target_seconds, created_at, updated_at').single();
+      mode: timerMode,
+    }).select('id, team_id, user_id, todo_id, status, mode, started_at, ended_at, duration_seconds, target_seconds, created_at, updated_at').single();
     if (error) return showAppAlert(error.message, { title: '타이머 시작 실패' });
     activeTimer = data;
     timerState = 'running';
@@ -217,65 +241,6 @@ function renderTasks() {
   if (activeTimer?.todo_id) select.value = activeTimer.todo_id;
 }
 
-function dateInputValue(value = new Date()) {
-  return `${value.getFullYear()}-${String(value.getMonth() + 1).padStart(2, '0')}-${String(value.getDate()).padStart(2, '0')}`;
-}
-
-async function createManualTimeRecord() {
-  const activeTodos = todos.filter((todo) => !['done', 'canceled'].includes(todo.status));
-  const values = await showAppForm({
-    title: '시간 직접 기록',
-    description: '타이머를 사용하지 않은 작업 시간을 날짜별 집중 통계에 기록합니다.',
-    fields: [
-      {
-        name: 'todoId',
-        label: '작업',
-        type: 'select',
-        options: [
-          { value: '', label: '작업 선택 안 함' },
-          ...activeTodos.map((todo) => ({ value: todo.id, label: todo.title })),
-        ],
-      },
-      { name: 'recordedDate', label: '기록 날짜', type: 'date', value: dateInputValue(), max: dateInputValue(), required: true },
-      { name: 'hours', label: '시간', type: 'number', value: '0', min: '0', max: '24', required: true },
-      { name: 'minutes', label: '분', type: 'number', value: '25', min: '0', max: '59', required: true },
-    ],
-    submitText: '시간 저장',
-  });
-  if (!values) return;
-
-  const hours = Number(values.hours);
-  const minutes = Number(values.minutes);
-  if (!Number.isInteger(hours) || !Number.isInteger(minutes) || hours < 0 || minutes < 0 || minutes > 59) {
-    return showAppAlert('시간과 분을 올바르게 입력해 주세요.', { title: '시간 기록 확인' });
-  }
-  const durationSeconds = (hours * 60 + minutes) * 60;
-  if (durationSeconds < 60 || durationSeconds > 24 * 60 * 60) {
-    return showAppAlert('1분 이상 24시간 이하로 기록해 주세요.', { title: '시간 기록 확인' });
-  }
-
-  const [year, month, day] = values.recordedDate.split('-').map(Number);
-  const startedAt = new Date(year, month - 1, day, 12, 0, 0, 0);
-  if (!Number.isFinite(startedAt.getTime()) || dateInputValue(startedAt) !== values.recordedDate) {
-    return showAppAlert('기록 날짜를 확인해 주세요.', { title: '시간 기록 확인' });
-  }
-  const endedAt = new Date(startedAt.getTime() + durationSeconds * 1000);
-  const { error } = await supabase.from('timers').insert({
-    team_id: context.team.id,
-    user_id: context.user.id,
-    todo_id: values.todoId || null,
-    status: 'completed',
-    started_at: startedAt.toISOString(),
-    ended_at: endedAt.toISOString(),
-    duration_seconds: durationSeconds,
-    target_seconds: durationSeconds,
-    created_at: startedAt.toISOString(),
-  });
-  if (error) return showAppAlert(error.message, { title: '시간 기록 실패' });
-  await loadTimerData();
-  await showAppAlert(`${formatDuration(durationSeconds)} 기록을 저장했습니다.`, { title: '시간 기록 완료' });
-}
-
 function renderStatistics() {
   document.querySelector('[data-weekly-chart]').hidden = false;
   document.querySelector('[data-timer-ranking]').hidden = false;
@@ -308,7 +273,7 @@ function renderStatistics() {
     ...member,
     seconds: weekRows.filter((timer) => timer.user_id === member.userId).reduce((sum, timer) => sum + Number(timer.duration_seconds || 0), 0),
   })).sort((a, b) => b.seconds - a.seconds);
-  document.querySelector('[data-timer-ranking]').innerHTML = ranking.length ? ranking.map((member, index) => `<li class="rank-item"><span class="rank-num">${index + 1}</span><span class="avatar-circle avatar-sm"></span><span class="rank-name">${escapeHtml(member.name)}</span><span class="rank-time">${formatDuration(member.seconds)}</span></li>`).join('') : '<li class="empty-state">팀원 기록이 없습니다.</li>';
+  document.querySelector('[data-timer-ranking]').innerHTML = ranking.length ? ranking.map((member, index) => `<li class="rank-item"><span class="rank-num">${index + 1}</span><span class="avatar-circle avatar-sm" style="${profileColorStyle(member.userId)}"></span><span class="rank-name">${escapeHtml(member.name)}</span><span class="rank-time">${formatDuration(member.seconds)}</span></li>`).join('') : '<li class="empty-state">팀원 기록이 없습니다.</li>';
 
   renderCertificationFeed();
 }
@@ -337,7 +302,7 @@ function renderCertificationFeed() {
     return `<article class="feed-item">
       ${file?.signedUrl ? `<img class="feed-image" src="${escapeHtml(file.signedUrl)}" alt="${escapeHtml(userName)}님의 작업 인증">` : '<div class="feed-img-placeholder"></div>'}
       <div class="feed-content">
-        <div class="feed-user"><span class="avatar-circle avatar-sm"></span><div class="user-meta"><span class="feed-name">${escapeHtml(userName)}</span><span class="feed-time">${formatDuration(Number(timer?.duration_seconds || 0))} · ${relativeTime(certification.created_at)}</span></div></div>
+        <div class="feed-user"><span class="avatar-circle avatar-sm" style="${profileColorStyle(certification.user_id)}"></span><div class="user-meta"><span class="feed-name">${escapeHtml(userName)}</span><span class="feed-time">${formatDuration(Number(timer?.duration_seconds || 0))} · ${relativeTime(certification.created_at)}</span></div></div>
         <p class="feed-desc">${escapeHtml(certification.note)}</p>
         <div class="feed-footer"><button type="button" class="btn-like ${liked ? 'active' : ''}" data-certification-like="${certification.id}">응원 ${likes.length}</button>${taskName ? `<span class="feed-session-task">${escapeHtml(taskName)}</span>` : ''}</div>
       </div>
@@ -417,7 +382,7 @@ async function toggleCertificationLike(certificationId) {
 async function loadTimerData() {
   const [todoResult, timerResult, certificationResult, likeResult] = await Promise.all([
     supabase.from('todos').select('id, title, status').eq('team_id', context.team.id).order('created_at'),
-    supabase.from('timers').select('id, team_id, user_id, todo_id, status, started_at, ended_at, duration_seconds, target_seconds, created_at, updated_at').eq('team_id', context.team.id).order('created_at', { ascending: false }).limit(500),
+    supabase.from('timers').select('id, team_id, user_id, todo_id, status, mode, started_at, ended_at, duration_seconds, target_seconds, created_at, updated_at').eq('team_id', context.team.id).order('created_at', { ascending: false }).limit(500),
     supabase.from('timer_certifications').select('id, team_id, timer_id, user_id, file_id, note, created_at').eq('team_id', context.team.id).order('created_at', { ascending: false }).limit(60),
     supabase.from('timer_certification_likes').select('certification_id, user_id'),
   ]);
@@ -439,6 +404,7 @@ async function loadTimerData() {
   activeTimer = timers.find((timer) => timer.user_id === context.user.id && ['running', 'paused'].includes(timer.status)) ?? null;
   if (activeTimer) {
     sessionSeconds = Number(activeTimer.target_seconds || DEFAULT_SESSION_SECONDS);
+    timerMode = activeTimer.mode === 'stopwatch' ? 'stopwatch' : 'countdown';
     accumulatedSeconds = Number(activeTimer.duration_seconds || 0);
     timerState = activeTimer.status;
     runningStartedAtMs = timerState === 'running' ? new Date(activeTimer.updated_at).getTime() : null;
@@ -447,7 +413,7 @@ async function loadTimerData() {
     timerState = 'idle';
     accumulatedSeconds = 0;
     runningStartedAtMs = null;
-    remainingSeconds = sessionSeconds;
+    remainingSeconds = timerMode === 'stopwatch' ? 0 : sessionSeconds;
   }
   renderTasks();
   renderStatistics();
@@ -468,7 +434,13 @@ async function initialize() {
     document.querySelector('[data-timer-toggle]').addEventListener('click', startOrPause);
     document.querySelector('[data-timer-end]').addEventListener('click', endSession);
     document.querySelector('[data-timer-reset]').addEventListener('click', resetTimer);
-    document.querySelector('[data-timer-manual]').addEventListener('click', createManualTimeRecord);
+    document.querySelector('[data-timer-mode]').addEventListener('change', (event) => {
+      if (timerState !== 'idle') return;
+      timerMode = event.target.value === 'stopwatch' ? 'stopwatch' : 'countdown';
+      accumulatedSeconds = 0;
+      remainingSeconds = timerMode === 'stopwatch' ? 0 : sessionSeconds;
+      renderTimer();
+    });
     document.querySelector('[data-timer-duration]').addEventListener('change', (event) => {
       if (timerState !== 'idle') return;
       sessionSeconds = Number(event.target.value || DEFAULT_SESSION_SECONDS);

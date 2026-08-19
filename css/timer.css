@@ -259,27 +259,6 @@ body {
   margin-bottom: 20px;
 }
 
-.timer-card-actions {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.btn-manual-record {
-  padding: 6px 10px;
-  border: 1px solid #dcd8ff;
-  border-radius: 8px;
-  background: #fff;
-  color: var(--primary-color);
-  font-size: 11px;
-  font-weight: 700;
-  cursor: pointer;
-}
-
-.btn-manual-record:hover {
-  background: var(--primary-light);
-}
-
 .card-title {
   font-size: 15px;
   font-weight: 700;
@@ -326,6 +305,11 @@ body {
   width: 68px;
   flex: 0 0 68px;
   padding-right: 4px;
+}
+
+.mode-select {
+  width: 82px;
+  flex: 0 0 82px;
 }
 
 .timer-circle-wrapper {
@@ -686,8 +670,6 @@ body {
 }
 
 @media (max-width: 680px) {
-  .timer-card-header { align-items: flex-start; }
-  .timer-card-actions { flex-wrap: wrap; justify-content: flex-end; }
   .select-box { flex-wrap: wrap; }
   .feed-grid { grid-template-columns: 1fr; }
 }
