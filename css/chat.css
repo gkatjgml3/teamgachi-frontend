@@ -288,20 +288,35 @@ body, html {
 }
 
 .summary-list {
-  list-style: none;
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
+  display: grid;
+  gap: 7px;
 }
 
-.summary-list li {
+.summary-list p,
+.summary-list h4 {
+  margin: 0;
+}
+
+.summary-intro,
+.summary-item {
   font-size: 12px;
   color: #3a3a3c;
-  position: relative;
-  padding-left: 10px;
+  line-height: 1.55;
 }
 
-.summary-list li::before {
+.summary-section-title {
+  margin-top: 5px !important;
+  font-size: 12px;
+  font-weight: 700;
+  color: #4038c9;
+}
+
+.summary-item {
+  position: relative;
+  padding-left: 12px;
+}
+
+.summary-item::before {
   content: "•";
   color: #534be8;
   position: absolute;

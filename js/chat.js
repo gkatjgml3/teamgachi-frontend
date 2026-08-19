@@ -30,10 +30,31 @@ function memberName(userId) {
   return context.members.find((member) => member.userId === userId)?.name ?? '팀원';
 }
 
+function renderSummaryContent(value) {
+  const lines = value.split('\n').map((line) => line.trim()).filter(Boolean);
+  if (!lines.length) return '<p class="summary-intro">요약할 대화가 없습니다.</p>';
+
+  return lines.map((rawLine, index) => {
+    const isHeading = /^#{1,6}\s+/.test(rawLine) || /^\*\*[^*]+\*\*:?$/.test(rawLine);
+    const hasBullet = /^[-*•]\s+/.test(rawLine);
+    const text = rawLine
+      .replace(/^#{1,6}\s*/, '')
+      .replace(/^[-*•]\s*/, '')
+      .replace(/\*\*(.*?)\*\*/g, '$1')
+      .replace(/__(.*?)__/g, '$1')
+      .replace(/`([^`]+)`/g, '$1')
+      .trim();
+
+    if (!text) return '';
+    if (isHeading) return `<h4 class="summary-section-title">${escapeHtml(text.replace(/:$/, ''))}</h4>`;
+    const className = index === 0 && !hasBullet ? 'summary-intro' : 'summary-item';
+    return `<p class="${className}">${escapeHtml(text)}</p>`;
+  }).join('');
+}
+
 function renderMessages() {
   const body = document.querySelector('.chat-body');
   if (!body) return;
-  const summaryLines = summaryText.split('\n').filter(Boolean);
   const messageHtml = messages.length
     ? messages.map((message) => `
       <div class="message-item ${message.author_id === context.user.id ? 'me' : ''}">
@@ -53,7 +74,7 @@ function renderMessages() {
       <div class="summary-header">
         <span class="summary-title"><span class="badge-purple">AI</span> 대화 요약 (메시지 ${messages.length}건)</span>
       </div>
-      <ul class="summary-list">${summaryLines.map((line) => `<li>${escapeHtml(line.replace(/^[-•]\s*/, ''))}</li>`).join('')}</ul>
+      <div class="summary-list">${renderSummaryContent(summaryText)}</div>
     </div>
     <div class="chat-date-divider"><span class="chat-date-text">${formatDate(new Date(), { year: 'numeric', month: 'long', day: 'numeric' })}</span></div>
     ${messageHtml}`;
