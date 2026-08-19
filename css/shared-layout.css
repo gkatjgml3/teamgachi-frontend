@@ -703,6 +703,17 @@ textarea.form-input-todo {
 .sidebar-profile,
 .header-profile-avatar { cursor: pointer; }
 
+.profile-menu-links {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+  margin-top: 14px;
+}
+
+.profile-menu-links .modal-button {
+  margin: 0;
+}
+
 .feature-guide-button {
   display: grid;
   place-items: center;

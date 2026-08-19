@@ -359,16 +359,7 @@ function configureSearch(context) {
 }
 
 function configureTeamMenu(context) {
-  let button = document.querySelector('.btn-more-options, [data-team-menu]');
-  if (!button) {
-    button = document.createElement('button');
-    button.type = 'button';
-    button.className = 'header-btn-icon team-menu-button';
-    button.dataset.teamMenu = '';
-    button.textContent = '⋮';
-    document.querySelector('.header-right-tools')?.prepend(button);
-  }
-  button.addEventListener('click', () => {
+  const openTeamMenu = () => {
     const overlay = createOverlay('team-menu-overlay', '팀 관리');
     const body = overlay.querySelector('.app-modal-body');
     body.innerHTML = `
@@ -438,10 +429,12 @@ function configureTeamMenu(context) {
       window.localStorage.setItem('teamgachi.activeTeamId', data.id);
       window.location.reload();
     });
-  });
+  };
+  document.querySelectorAll('[data-team-menu]').forEach((button) => button.addEventListener('click', openTeamMenu));
+  return openTeamMenu;
 }
 
-function configureProfileMenu(context) {
+function configureProfileMenu(context, { openTeamMenu, openFeatureGuide } = {}) {
   const targets = document.querySelectorAll('.header-profile-avatar, .sidebar-profile, [data-profile-menu]');
   targets.forEach((target) => {
     target.setAttribute('role', 'button');
@@ -452,10 +445,22 @@ function configureProfileMenu(context) {
       const body = overlay.querySelector('.app-modal-body');
       body.innerHTML = `
         <div class="profile-menu-summary"><span class="profile-menu-avatar pastel-avatar"></span><div><strong>${escapeHtml(context.profile.name)}</strong><span>${escapeHtml(context.user.email ?? '')}</span></div></div>
+        <div class="profile-menu-links">
+          ${openTeamMenu ? '<button type="button" class="modal-button" data-profile-team>팀 관리</button>' : ''}
+          ${openFeatureGuide ? '<button type="button" class="modal-button" data-profile-guide>화면 기능 안내</button>' : ''}
+        </div>
         <div class="modal-actions">
           <button type="button" class="modal-button" data-edit-profile>이름 변경</button>
           <button type="button" class="modal-button danger" data-profile-logout>로그아웃</button>
         </div>`;
+      body.querySelector('[data-profile-team]')?.addEventListener('click', () => {
+        overlay.closeModal();
+        openTeamMenu();
+      });
+      body.querySelector('[data-profile-guide]')?.addEventListener('click', () => {
+        overlay.closeModal();
+        openFeatureGuide();
+      });
       body.querySelector('[data-edit-profile]').addEventListener('click', async () => {
         const values = await showAppForm({
           title: '프로필 이름 변경',
@@ -554,17 +559,8 @@ const featureGuides = {
 function configureFeatureGuide() {
   const page = window.location.pathname.split('/').pop()?.replace('.html', '') || 'dashboard';
   const guide = featureGuides[page];
-  const tools = document.querySelector('.header-right-tools');
-  if (!guide || !tools || tools.querySelector('[data-feature-guide]')) return;
-  const button = document.createElement('button');
-  button.type = 'button';
-  button.className = 'feature-guide-button';
-  button.dataset.featureGuide = page;
-  button.setAttribute('aria-label', '이 화면 기능 안내');
-  button.title = '이 화면 기능 안내';
-  button.textContent = '?';
-  tools.prepend(button);
-  button.addEventListener('click', () => showAppDetails({ ...guide, badge: '기능 안내' }));
+  if (!guide) return null;
+  return () => showAppDetails({ ...guide, badge: '기능 안내' });
 }
 
 export function setupShell(context) {
@@ -575,8 +571,6 @@ export function setupShell(context) {
   document.querySelectorAll('.profile-role, [data-profile-role]').forEach((element) => {
     element.textContent = `${roleLabel(team.role)} · ${team.name}`;
   });
-
-  configureProfileMenu(context);
 
   document.querySelectorAll('[data-logout]').forEach((target) => {
     target.addEventListener('click', async () => {
@@ -593,8 +587,9 @@ export function setupShell(context) {
   });
 
   configureSearch(context);
-  configureTeamMenu(context);
-  configureFeatureGuide();
+  const openTeamMenu = configureTeamMenu(context);
+  const openFeatureGuide = configureFeatureGuide();
+  configureProfileMenu(context, { openTeamMenu, openFeatureGuide });
 
   window.lucide?.createIcons();
 }
