@@ -767,3 +767,74 @@ body, html {
   background-color: #534be8;
   border-radius: 3px;
 }
+
+/* 채팅 화면은 뷰포트 안에 고정하고 메시지 목록만 세로로 스크롤합니다. */
+.dashboard-body {
+  overflow: hidden;
+}
+
+.dashboard-body .app-container,
+.dashboard-body .main-content {
+  height: 100vh;
+  min-height: 0;
+}
+
+.dashboard-body .content-body {
+  flex: 1 1 auto;
+  min-height: 0 !important;
+  overflow: hidden;
+}
+
+.chat-layout {
+  height: 100%;
+  min-height: 0;
+  align-items: stretch;
+}
+
+.chat-card,
+.drive-card {
+  height: 100%;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.chat-header-bar,
+.chat-input-wrapper {
+  flex: 0 0 auto;
+}
+
+.chat-messages {
+  min-height: 0;
+  padding-right: 6px;
+  overflow-x: hidden;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-gutter: stable;
+  scrollbar-width: thin;
+  scrollbar-color: #c9c5ee transparent;
+}
+
+.chat-messages::-webkit-scrollbar,
+.drive-file-list::-webkit-scrollbar {
+  width: 6px;
+}
+
+.chat-messages::-webkit-scrollbar-thumb,
+.drive-file-list::-webkit-scrollbar-thumb {
+  border-radius: 999px;
+  background: #c9c5ee;
+}
+
+.drive-file-list {
+  min-height: 0;
+  overflow-x: hidden;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-width: thin;
+  scrollbar-color: #c9c5ee transparent;
+}
+
+.storage-info {
+  flex: 0 0 auto;
+  margin-top: auto;
+}
