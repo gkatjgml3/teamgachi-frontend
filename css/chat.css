@@ -799,8 +799,13 @@ body, html {
 }
 
 .chat-header-bar,
+.chat-summary-slot,
 .chat-input-wrapper {
   flex: 0 0 auto;
+}
+
+.chat-summary-slot:empty {
+  display: none;
 }
 
 .chat-messages {

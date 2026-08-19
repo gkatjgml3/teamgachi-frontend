@@ -143,19 +143,23 @@ function renderMessageList() {
   }).join('');
 }
 
-function renderMessages() {
-  const body = document.querySelector('.chat-body');
-  if (!body) return;
-  const messageHtml = renderMessageList();
-
-  body.innerHTML = `
+function renderSummary() {
+  const slot = document.querySelector('.chat-summary-slot');
+  if (!slot) return;
+  slot.innerHTML = `
     <div class="chat-ai-summary">
       <div class="summary-header">
         <span class="summary-title"><span class="badge-purple">AI</span> 대화 요약 (메시지 ${messages.length}건)</span>
       </div>
       <div class="summary-list">${renderSummaryContent(summaryText)}</div>
-    </div>
-    ${messageHtml}`;
+    </div>`;
+}
+
+function renderMessages() {
+  const body = document.querySelector('.chat-body');
+  if (!body) return;
+  renderSummary();
+  body.innerHTML = renderMessageList();
   body.querySelectorAll('[data-edit-message]').forEach((button) => {
     button.addEventListener('click', () => editMessage(button.dataset.editMessage));
   });
