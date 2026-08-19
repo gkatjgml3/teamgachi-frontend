@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>TeamGachi - 할 일</title>
+  <link rel="stylesheet" href="todo.css">
+</head>
+<body>
+  <div class="app-container">
+    
+    <aside class="sidebar">
+      <div class="sidebar-brand">
+        <img src="TeamGachi로고 수정본.png" alt="Logo" class="brand-logo-img" style="width:24px; height:24px; object-fit:contain;">
+        <span class="brand-title">TeamGachi</span>
+      </div>
+
+      <nav class="sidebar-menu">
+        <a href="dashboard.html" class="menu-item">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/></svg>
+          <span>대시보드</span>
+        </a>
+        <a href="todo.html" class="menu-item active">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/></svg>
+          <span>할 일</span>
+        </a>
+        <a href="chat.html" class="menu-item">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
+          <span>채팅 · 자료함</span>
+        </a>
+        <a href="calendar.html" class="menu-item">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+          <span>캘린더</span>
+        </a>
+        <a href="progress.html" class="menu-item">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 20V10"/><path d="M12 20V4"/><path d="M6 20v-6"/></svg>
+          <span>업무 · 진척도</span>
+        </a>
+        <a href="timer.html" class="menu-item">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+          <span>집중 타이머</span>
+        </a>
+        <a href="notice.html" class="menu-item">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 01-3.46 0"/></svg>
+          <span>공지사항</span>
+        </a>
+      </nav>
+
+      <div class="sidebar-profile">
+        <img src="profile.png" alt="Profile" class="profile-avatar">
+        <div>
+          <div class="profile-name">박서아</div>
+          <div class="profile-role">기획 · 디자인</div>
+        </div>
+      </div>
+    </aside>
+
+    <main class="main-content">
+      <header class="main-header">
+        <h1 class="header-page-name">할 일</h1>
+        <div class="header-right-tools">
+          <div class="header-search">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
+            <input type="text" placeholder="검색...">
+          </div>
+          <button class="header-btn-icon">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 01-3.46 0"/></svg>
+          </button>
+          <img src="profile.png" alt="Profile" class="header-profile-avatar">
+        </div>
+      </header>
+
+      <div class="content-body">
+        
+        <div class="todo-top-nav">
+          <div class="todo-tabs">
+            <button class="todo-tab active">전체</button>
+            <button class="todo-tab">내 할 일</button>
+            <button class="todo-tab">팀 할 일</button>
+          </div>
+          <div class="todo-filters">
+            <select class="select-filter"><option>정렬: AI 추천순</option></select>
+            <button class="btn-primary" style="background: #534be8;">AI 우선순위 정렬</button>
+            <button class="btn-primary" style="background: #fff; color: #1c1c1e; border: 1px solid #e5e5ea;">+ 할 일 추가</button>
+          </div>
+        </div>
+
+        <div class="ai-banner-slim">
+          <div class="ai-banner-text">
+            <span class="badge-purple">AI</span>
+            마감 임박도 · 업무 의존관계 · 담당자 업무량을 반영해 정렬했습니다. (2분 전 갱신)
+          </div>
+          <span style="font-size: 11px; color: #534be8; cursor: pointer; text-decoration: underline;">원래 순서로 되돌리기</span>
+        </div>
+
+        <div class="grid-main">
+          
+          <div class="column-left">
+            <div class="card" style="padding: 12px 18px;">
+              <table class="todo-table">
+                <thead>
+                  <tr>
+                    <th style="width: 42%;">할 일</th>
+                    <th>담당자</th>
+                    <th>마감일</th>
+                    <th>우선순위</th>
+                    <th style="text-align: right;">상태</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr><td colspan="5" class="group-label">오늘 · 2건</td></tr>
+                  <tr>
+                    <td><div style="display:flex; align-items:center;"><span class="todo-check"></span>기능 명세서 최종 검토</div></td>
+                    <td><div class="assignee-box"><img src="profile.png" width="18" height="18" style="border-radius:50%;">박서아</div></td>
+                    <td style="color:#e54242; font-weight:600;">오늘 18:00</td>
+                    <td><span class="badge-red">높음</span></td>
+                    <td style="text-align: right;"><span class="badge-purple">진행 중</span></td>
+                  </tr>
+                  <tr>
+                    <td><div style="display:flex; align-items:center;"><span class="todo-check"></span>Supabase 테이블 스키마 확정</div></td>
+                    <td><div class="assignee-box"><img src="profile.png" width="18" height="18" style="border-radius:50%;">함서희</div></td>
+                    <td style="color:#e54242; font-weight:600;">오늘 22:00</td>
+                    <td><span class="badge-red">높음</span></td>
+                    <td style="text-align: right;"><span class="badge-purple">진행 중</span></td>
+                  </tr>
+
+                  <tr><td colspan="5" class="group-label">이번 주 · 2건</td></tr>
+                  <tr>
+                    <td><div style="display:flex; align-items:center;"><span class="todo-check"></span>대시보드 화면 퍼블리싱</div></td>
+                    <td><div class="assignee-box"><img src="profile.png" width="18" height="18" style="border-radius:50%;">이시윤</div></td>
+                    <td>08/08 (D-2)</td>
+                    <td><span class="badge-gray">보통</span></td>
+                    <td style="text-align: right;"><span class="badge-gray">대기</span></td>
+                  </tr>
+                  <tr>
+                    <td><div style="display:flex; align-items:center;"><span class="todo-check"></span>로그인/회원가입 UI 구현</div></td>
+                    <td><div class="assignee-box"><img src="profile.png" width="18" height="18" style="border-radius:50%;">이시윤</div></td>
+                    <td>08/09 (D-3)</td>
+                    <td><span class="badge-gray">보통</span></td>
+                    <td style="text-align: right;"><span class="badge-gray">대기</span></td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <div class="column-right">
+            
+            <div class="card">
+              <div class="card-title">할 일 추가</div>
+              <div class="input-group">
+                <input type="text" class="form-input-todo" placeholder="할 일을 입력하세요">
+                <div class="form-row">
+                  <select class="select-filter" style="flex:1;"><option>담당자</option></select>
+                  <select class="select-filter" style="flex:1;"><option>마감일</option></select>
+                </div>
+                <button class="btn-primary" style="margin-top: 4px;">추가하기</button>
+              </div>
+            </div>
+
+            <div class="card">
+              <div class="card-title">우선순위 추천 기준 <span class="badge-purple">AI</span></div>
+              <ul style="font-size: 11px; color: #636366; margin-top: 12px; padding-left: 16px; line-height: 2;">
+                <li>마감일까지 남은 시간</li>
+                <li>다른 업무와의 선후 관계</li>
+                <li>담당자의 현재 업무량</li>
+                <li>중요도 태그 (높음/보통/낮음)</li>
+              </ul>
+              <div style="background:#f8f9fa; padding:10px; border-radius:8px; font-size:10px; color:#8e8e93; margin-top:12px; line-height:1.4;">
+                추천 결과는 참고용이며 순서는 직접 변경할 수 있습니다.
+              </div>
+            </div>
+
+            <div class="card">
+              <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+                <span class="card-title">내 완료율 <span style="font-size:11px; color:#8e8e93; font-weight:400; margin-left:4px;">이번 주</span></span>
+                <span style="font-size:11px; color:#8e8e93; cursor:pointer;">할 일 보기</span>
+              </div>
+              <div style="display:flex; align-items:center; gap:10px;">
+                <span style="font-size:18px; font-weight:800;">75%</span>
+                <div class="progress-bar-bg" style="flex:1;"><div class="progress-bar-fill" style="width: 75%;"></div></div>
+                <span style="font-size:11px; color:#8e8e93;">9 / 12</span>
+              </div>
+            </div>
+
+          </div>
+
+        </div>
+
+      </div>
+    </main>
+
+  </div>
+</body>
+</html>
