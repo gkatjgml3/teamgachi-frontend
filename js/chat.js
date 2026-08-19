@@ -219,18 +219,14 @@ function renderFiles() {
   const list = document.querySelector('.file-list');
   const count = document.querySelector('.drive-count');
   const storageText = document.querySelector('.storage-value');
-  const storageBar = document.querySelector('.storage-bar-fill');
   const visibleFiles = files.filter((file) => {
     if (activeDriveKind === 'image') return file.kind === 'image';
     if (activeDriveKind === 'link') return file.kind === 'link';
     return file.kind === 'file' || file.kind === 'evidence' || !file.kind;
   });
   const used = files.filter((file) => file.kind !== 'link').reduce((sum, file) => sum + Number(file.size_bytes || 0), 0);
-  const limit = 1024 * 1024 * 1024;
-  const percent = Math.min((used / limit) * 100, 100);
   if (count) count.textContent = `전체 ${visibleFiles.length}개`;
-  if (storageText) storageText.textContent = `${humanFileSize(used)} / 1GB`;
-  if (storageBar) storageBar.style.width = `${percent}%`;
+  if (storageText) storageText.textContent = `사용 중 ${humanFileSize(used)}`;
   if (!list) return;
   list.innerHTML = visibleFiles.length
     ? visibleFiles.map((file) => `
@@ -320,10 +316,6 @@ async function sendMessage() {
 
 async function uploadFile(file, requestedKind = activeDriveKind) {
   if (!file) return false;
-  if (file.size > 20 * 1024 * 1024) {
-    await showAppAlert(`${file.name}: 파일은 최대 20MB까지 업로드할 수 있습니다.`, { title: '파일 용량 확인' });
-    return false;
-  }
   if (requestedKind === 'image' && !file.type.startsWith('image/')) {
     await showAppAlert(`${file.name}: 이미지 탭에는 이미지 파일만 올릴 수 있습니다.`, { title: '파일 형식 확인' });
     return false;
@@ -475,7 +467,7 @@ function configureActions() {
       setDriveStatus(activeDriveKind === 'link'
         ? 'https:// 또는 http://로 시작하는 링크를 등록할 수 있습니다.'
         : activeDriveKind === 'image'
-          ? 'PNG, JPG, WEBP 이미지를 최대 20MB까지 올릴 수 있습니다.'
+          ? 'PNG, JPG, WEBP 이미지를 올릴 수 있습니다. 실제 최대 용량은 Supabase 프로젝트 설정을 따릅니다.'
           : '문서·이미지·압축 파일을 한 번에 여러 개 선택할 수 있습니다.');
       renderFiles();
     });
