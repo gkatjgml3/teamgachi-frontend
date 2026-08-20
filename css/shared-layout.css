@@ -514,6 +514,10 @@ textarea {
   background: linear-gradient(135deg, #f7f5ff, #efedff);
 }
 
+[data-notice-grid][hidden] {
+  display: none !important;
+}
+
 .app-detail-heading strong {
   color: #272532;
   font-size: 18px;

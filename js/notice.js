@@ -71,6 +71,7 @@ function renderNotices() {
   const grid = document.querySelector('[data-notice-grid]');
   if (!grid) return;
   grid.hidden = false;
+  grid.removeAttribute('aria-busy');
   const visible = filteredNotices();
   const pinned = visible.find((notice) => notice.pinned) ?? null;
   const unread = notices.filter((notice) => !readIds.has(notice.id));
@@ -202,7 +203,11 @@ function subscribeRealtime() {
 
 async function initialize() {
   const grid = document.querySelector('[data-notice-grid]');
-  if (grid) grid.innerHTML = '<div class="empty-state">공지를 불러오는 중입니다.</div>';
+  if (grid) {
+    grid.setAttribute('aria-busy', 'true');
+    grid.innerHTML = '<div class="empty-state">공지를 불러오는 중입니다.</div>';
+    grid.hidden = false;
+  }
   try {
     context = await getAppContext();
     if (!context) return;
