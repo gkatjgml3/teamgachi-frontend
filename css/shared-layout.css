@@ -756,6 +756,51 @@ textarea.form-input-todo {
   gap: 7px;
 }
 
+.notice-writer-settings {
+  margin-top: 14px;
+  padding: 13px;
+  border: 1px solid #eceaf4;
+  border-radius: 11px;
+  background: #faf9ff;
+}
+
+.notice-writer-settings > strong {
+  font-size: 13px;
+}
+
+.notice-writer-list {
+  display: grid;
+  gap: 7px;
+  margin-top: 10px;
+}
+
+.notice-writer-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  min-height: 28px;
+  gap: 12px;
+  color: #34303f;
+  font-size: 12px;
+}
+
+.notice-writer-row small {
+  margin-left: 5px;
+  color: #8e8998;
+  font-size: 10px;
+}
+
+.notice-writer-row input {
+  width: 16px;
+  height: 16px;
+  accent-color: #5b4df5;
+}
+
+.notice-writer-status {
+  min-height: 16px;
+  color: #5b4df5 !important;
+}
+
 .inline-copy-button {
   padding: 3px 7px;
   border: 1px solid #ddd9f5;

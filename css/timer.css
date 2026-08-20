@@ -316,7 +316,7 @@ body {
   position: relative;
   width: 220px;
   height: 220px;
-  margin-bottom: 24px;
+  margin-bottom: 8px;
 }
 
 .timer-svg {
@@ -362,7 +362,12 @@ body {
 .timer-subtext {
   font-size: 11px;
   color: var(--text-muted);
-  margin-top: 4px;
+}
+
+.timer-status-below {
+  min-height: 17px;
+  margin: 0 0 22px;
+  text-align: center;
 }
 
 .dots-wrapper {

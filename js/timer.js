@@ -253,8 +253,6 @@ function renderStatistics() {
   document.querySelector('[data-today-focus]').textContent = formatDuration(todaySeconds);
   document.querySelector('[data-today-percent]').textContent = `${todayPercent}%`;
   document.querySelector('[data-today-bar]').style.width = `${todayPercent}%`;
-  document.querySelector('[data-session-count]').textContent = `오늘 완료 ${ownToday.length}회`;
-
   const start = weekStart();
   const weekRows = completed.filter((timer) => new Date(timer.started_at ?? timer.created_at) >= start);
   const ownWeekSeconds = weekRows.filter((timer) => timer.user_id === context.user.id).reduce((sum, timer) => sum + Number(timer.duration_seconds || 0), 0);

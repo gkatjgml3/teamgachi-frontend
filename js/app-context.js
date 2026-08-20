@@ -86,13 +86,14 @@ export function profileColorStyle(userId = '') {
 async function loadMembers(teamId) {
   const { data, error } = await supabase
     .from('team_members')
-    .select('user_id, role, joined_at, profile:profiles!team_members_user_id_fkey(display_name, avatar_url)')
+    .select('user_id, role, can_manage_notices, joined_at, profile:profiles!team_members_user_id_fkey(display_name, avatar_url)')
     .eq('team_id', teamId)
     .order('joined_at');
   if (error) throw error;
   return (data ?? []).map((member) => ({
     userId: member.user_id,
     role: member.role,
+    canManageNotices: Boolean(member.can_manage_notices),
     name: member.profile?.display_name ?? '팀원',
     avatarUrl: member.profile?.avatar_url ?? null,
   }));
@@ -564,6 +565,7 @@ function configureTeamMenu(context) {
       </div>
       <button type="button" class="modal-button" data-join-team>초대 코드로 팀 참여</button>
       <p class="modal-help team-invite-line">초대 코드: <strong>${escapeHtml(context.team.inviteCode)}</strong> <button type="button" class="inline-copy-button" data-copy-invite>복사</button></p>
+      ${context.team.role === 'owner' ? `<section class="notice-writer-settings"><strong>공지 작성 권한</strong><p class="modal-help">팀장이 허용한 팀원은 공지사항 화면에서 새 공지를 작성할 수 있습니다.</p><div class="notice-writer-list">${context.members.map((member) => `<label class="notice-writer-row"><span>${escapeHtml(member.name)} <small>${roleLabel(member.role)}</small></span><input type="checkbox" data-notice-writer="${member.userId}" ${['owner', 'admin'].includes(member.role) || member.canManageNotices ? 'checked' : ''} ${['owner', 'admin'].includes(member.role) ? 'disabled' : ''}></label>`).join('')}</div><p class="modal-help notice-writer-status" data-notice-writer-status></p></section>` : ''}
       ${['owner', 'admin'].includes(context.team.role) ? '' : '<p class="modal-help">팀 이름은 팀장·관리자만 변경할 수 있습니다.</p>'}`;
     body.querySelector('[data-switch-team]').addEventListener('change', (event) => {
       window.localStorage.setItem('teamgachi.activeTeamId', event.target.value);
@@ -589,6 +591,27 @@ function configureTeamMenu(context) {
       } catch {
         await showAppAlert(`초대 코드: ${context.team.inviteCode}`, { title: '초대 코드' });
       }
+    });
+    body.querySelectorAll('[data-notice-writer]').forEach((input) => {
+      input.addEventListener('change', async () => {
+        const allowed = input.checked;
+        input.disabled = true;
+        const status = body.querySelector('[data-notice-writer-status]');
+        const { error } = await supabase.rpc('set_notice_writer', {
+          p_team_id: context.team.id,
+          p_user_id: input.dataset.noticeWriter,
+          p_allowed: allowed,
+        });
+        if (error) {
+          input.checked = !allowed;
+          if (status) status.textContent = error.message;
+        } else {
+          const member = context.members.find((item) => item.userId === input.dataset.noticeWriter);
+          if (member) member.canManageNotices = allowed;
+          if (status) status.textContent = allowed ? '공지 작성 권한을 허용했습니다.' : '공지 작성 권한을 해제했습니다.';
+        }
+        input.disabled = false;
+      });
     });
     body.querySelector('[data-join-team]').addEventListener('click', async () => {
       const values = await showAppForm({
@@ -754,7 +777,7 @@ const featureGuides = {
     title: '공지사항 기능 안내',
     heading: '중요한 팀 소식을 분류해 공유하고 읽음 여부를 관리합니다.',
     rows: [
-      { label: '공지 작성', value: '팀장·관리자가 화면 오른쪽 위 + 공지 작성 버튼에서 등록합니다.' },
+      { label: '공지 작성', value: '팀장 또는 팀장이 작성 권한을 허용한 팀원이 + 공지 작성 버튼에서 등록합니다.' },
       { label: '분류', value: '필독·일정·일반 탭과 최신순·오래된순 정렬을 사용할 수 있습니다.' },
       { label: '확인', value: '공지를 열면 읽음 처리되며 미확인 공지를 따로 확인할 수 있습니다.' },
     ],

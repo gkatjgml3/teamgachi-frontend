@@ -28,6 +28,11 @@ function authorName(userId) {
   return context.members.find((member) => member.userId === userId)?.name ?? '팀원';
 }
 
+function canWriteNotice() {
+  const membership = context.members.find((member) => member.userId === context.user.id);
+  return ['owner', 'admin'].includes(context.team.role) || Boolean(membership?.canManageNotices);
+}
+
 function categoryBadge(notice) {
   const meta = categoryMeta[notice.category] ?? categoryMeta.general;
   return `<span class="badge ${meta.className}">${meta.label}</span>`;
@@ -119,6 +124,7 @@ async function openNotice(noticeId) {
 }
 
 async function createNotice() {
+  if (!canWriteNotice()) return showAppAlert('팀장에게 공지 작성 권한을 요청해 주세요.', { title: '공지 작성 권한' });
   const values = await showAppForm({
     title: '새 공지 작성',
     description: '팀원에게 전달할 공지 내용을 작성해 주세요.',
@@ -213,15 +219,20 @@ async function initialize() {
     context = await getAppContext();
     if (!context) return;
     setupShell(context);
-    if (!['owner', 'admin'].includes(context.team.role)) {
+    if (!canWriteNotice()) {
       const createButton = document.querySelector('[data-create-notice]');
       if (createButton) {
         createButton.disabled = true;
-        createButton.textContent = '팀장·관리자만 작성';
-        createButton.title = '공지 작성은 팀장 또는 관리자 권한이 필요합니다.';
+        createButton.textContent = '작성 권한 필요';
+        createButton.title = '팀장이 공지 작성 권한을 허용하면 작성할 수 있습니다.';
       }
       const help = document.querySelector('[data-notice-author-help]');
-      if (help) help.textContent = '공지는 팀장·관리자가 작성합니다. 팀원은 공지를 열어 확인하고 읽음 처리할 수 있습니다.';
+      if (help) help.textContent = '팀장이 공지 작성 권한을 허용한 팀원만 새 공지를 작성할 수 있습니다.';
+    } else {
+      const help = document.querySelector('[data-notice-author-help]');
+      if (help) help.textContent = context.team.role === 'owner'
+        ? '팀 관리에서 팀원별 공지 작성 권한을 설정할 수 있습니다.'
+        : '팀장에게 공지 작성 권한을 받아 새 공지를 작성할 수 있습니다.';
     }
     configureActions();
     await loadNotices();
