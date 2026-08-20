@@ -18,6 +18,8 @@ let files = [];
 let summaryText = '요약할 대화가 없습니다.';
 let realtimeChannel;
 let activeDriveKind = 'file';
+let sendingMessage = false;
+let messageReloadTimer = null;
 
 function summaryStorageKey() {
   return `teamgachi-chat-summary:${context.team.id}`;
@@ -303,16 +305,35 @@ async function loadFiles() {
 }
 
 async function sendMessage() {
+  if (sendingMessage) return;
   const input = document.querySelector('.input-msg');
+  const sendButton = document.querySelector('.btn-send');
   const content = input?.value.trim();
   if (!content) return;
-  const { error } = await supabase.from('messages').insert({
-    team_id: context.team.id,
-    author_id: context.user.id,
-    content,
-  });
-  if (error) return showAppAlert(error.message, { title: '메시지 전송 실패' });
-  input.value = '';
+  sendingMessage = true;
+  if (sendButton) sendButton.disabled = true;
+  try {
+    const { error } = await supabase.from('messages').insert({
+      team_id: context.team.id,
+      author_id: context.user.id,
+      content,
+    });
+    if (error) return showAppAlert(error.message, { title: '메시지 전송 실패' });
+    if (input.value.trim() === content) input.value = '';
+    await loadMessages();
+  } finally {
+    sendingMessage = false;
+    if (sendButton) sendButton.disabled = false;
+    input?.focus();
+  }
+}
+
+function scheduleMessageReload() {
+  if (messageReloadTimer) window.clearTimeout(messageReloadTimer);
+  messageReloadTimer = window.setTimeout(() => {
+    messageReloadTimer = null;
+    loadMessages().catch(showPageError);
+  }, 120);
 }
 
 async function uploadFile(file, requestedKind = activeDriveKind) {
@@ -407,7 +428,9 @@ async function addLink() {
 
 function configureActions() {
   const input = document.querySelector('.input-msg');
-  document.querySelector('.btn-send')?.addEventListener('click', sendMessage);
+  const sendButton = document.querySelector('.btn-send');
+  if (sendButton) sendButton.type = 'button';
+  sendButton?.addEventListener('click', sendMessage);
   input?.addEventListener('keydown', (event) => {
     if (event.key === 'Enter' && !event.shiftKey) {
       event.preventDefault();
@@ -511,9 +534,10 @@ function subscribeRealtime() {
       schema: 'public',
       table: 'messages',
       filter: `team_id=eq.${context.team.id}`,
-    }, loadMessages)
+    }, scheduleMessageReload)
     .subscribe();
   window.addEventListener('beforeunload', () => {
+    if (messageReloadTimer) window.clearTimeout(messageReloadTimer);
     if (realtimeChannel) supabase.removeChannel(realtimeChannel);
   });
 }

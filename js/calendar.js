@@ -76,7 +76,7 @@ function renderMonth(byDay) {
       const items = byDay.get(dayKey(date)) ?? [];
       const classes = [date.getMonth() !== month ? 'other-month' : '', dayKey(date) === dayKey(new Date()) ? 'today' : ''].filter(Boolean).join(' ');
       const dateMarkup = dayKey(date) === dayKey(new Date()) ? `<span class="date-num-badge">${date.getDate()}</span>` : date.getDate();
-      cells.push(`<td class="${classes}" data-calendar-date="${dayKey(date)}"><button type="button" class="date-number calendar-date-button" data-open-day="${dayKey(date)}">${dateMarkup}</button>${items.slice(0, 3).map(scheduleButton).join('')}${items.length > 3 ? `<span class="calendar-more">+${items.length - 3}개</span>` : ''}</td>`);
+      cells.push(`<td class="${classes}" data-calendar-date="${dayKey(date)}"><button type="button" class="date-number calendar-date-button" data-open-day="${dayKey(date)}">${dateMarkup}</button><div class="calendar-day-events">${items.slice(0, 3).map(scheduleButton).join('')}${items.length > 3 ? `<span class="calendar-more">+${items.length - 3}개</span>` : ''}</div></td>`);
     }
     rows.push(`<tr>${cells.join('')}</tr>`);
   }

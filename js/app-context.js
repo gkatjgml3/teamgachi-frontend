@@ -15,7 +15,12 @@ const PROFILE_COLORS = [
   '#f3c1b4',
   '#d7dfa9',
   '#c9e6ad',
+  '#f2b8a0',
+  '#a9d8c8',
+  '#c4c9f4',
+  '#edc5a6',
 ];
+let activeProfileColors = new Map();
 
 function wait(milliseconds) {
   return new Promise((resolve) => window.setTimeout(resolve, milliseconds));
@@ -58,12 +63,20 @@ export function roleLabel(role) {
 }
 
 export function profileColor(userId = '') {
+  if (activeProfileColors.has(String(userId))) return activeProfileColors.get(String(userId));
   let hash = 0;
   for (const character of String(userId)) {
     hash = ((hash << 5) - hash) + character.charCodeAt(0);
     hash |= 0;
   }
   return PROFILE_COLORS[Math.abs(hash) % PROFILE_COLORS.length];
+}
+
+function assignUniqueProfileColors(members = []) {
+  activeProfileColors = new Map(members.map((member, index) => {
+    const color = PROFILE_COLORS[index] ?? `hsl(${Math.round((index * 137.508) % 360)} 58% 82%)`;
+    return [String(member.userId), color];
+  }));
 }
 
 export function profileColorStyle(userId = '') {
@@ -757,6 +770,7 @@ function configureFeatureGuide() {
 
 export function setupShell(context) {
   const { profile, team } = context;
+  assignUniqueProfileColors(context.members);
   const ownProfileColor = profileColor(context.user.id);
   document.querySelectorAll('.profile-avatar, .header-profile-avatar, .sidebar-profile .avatar-circle, [data-profile-avatar]').forEach((element) => {
     element.style.setProperty('--profile-color', ownProfileColor);

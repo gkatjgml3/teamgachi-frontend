@@ -334,6 +334,24 @@ body, html {
   font: inherit;
 }
 
+.calendar-day-events {
+  display: flex;
+  width: 100%;
+  min-width: 0;
+  flex-direction: column;
+  align-items: stretch;
+  clear: both;
+  gap: 3px;
+  margin-top: 3px;
+}
+
+.calendar-day-events .event-bar {
+  display: block;
+  width: 100%;
+  margin: 0;
+  text-align: left;
+}
+
 .calendar-more {
   display: block;
   padding: 2px 5px;

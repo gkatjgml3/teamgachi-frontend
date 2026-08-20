@@ -197,7 +197,7 @@ async function initialize() {
     if (chatSummaryResult.error) console.warn('대시보드 채팅 요약을 불러오지 못했습니다.', chatSummaryResult.error);
     renderChatSummary(chatSummaryResult.data?.summary || cachedChatSummary(context.team.id));
     document.querySelector('#add-task-btn')?.addEventListener('click', () => {
-      window.location.href = './todo.html';
+      window.location.href = './todo.html#add-todo';
     });
   } catch (error) {
     showPageError(error);

@@ -375,6 +375,10 @@ async function initialize() {
     configureForm();
     configureFilters();
     await loadTodos();
+    if (window.location.hash === '#add-todo') {
+      document.querySelector('#add-todo')?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      window.setTimeout(() => document.querySelector('[data-todo-title]')?.focus(), 250);
+    }
   } catch (error) {
     showPageError(error);
   }
