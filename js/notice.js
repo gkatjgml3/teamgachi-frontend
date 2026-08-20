@@ -5,7 +5,6 @@ import {
   profileColorStyle,
   setupShell,
   showAppAlert,
-  showAppDetails,
   showAppForm,
   showPageError,
   supabase,
@@ -93,7 +92,7 @@ function renderNotices() {
         <ul class="unread-list">${unread.length ? unread.slice(0, 5).map((notice) => `<li data-notice-id="${escapeHtml(notice.id)}" tabindex="0" role="button">${categoryBadge(notice)}<span class="txt">${escapeHtml(notice.title)}</span><span class="date">${formatDate(notice.created_at)}</span></li>`).join('') : '<li class="empty-state">모든 공지를 확인했습니다.</li>'}</ul>
         <button class="outline-btn" data-mark-all-read ${unread.length ? '' : 'disabled'}>모두 읽음 처리</button>
       </div>
-      <div class="side-card guide-card"><h4>공지 작성 안내</h4><ul class="guide-list"><li>필독·일정·일반 카테고리를 선택합니다.</li><li>공지 클릭 시 상세 내용과 작성 정보를 확인합니다.</li><li>읽음 여부는 사용자별로 자동 기록됩니다.</li></ul></div>
+      <div class="side-card guide-card"><h4>공지 작성 안내</h4><ul class="guide-list"><li>필독·일정·일반 카테고리를 선택합니다.</li><li>공지를 클릭하면 제목과 본문만 크게 확인합니다.</li><li>읽음 여부는 사용자별로 자동 기록됩니다.</li></ul></div>
     </aside>`;
 }
 
@@ -109,18 +108,7 @@ async function openNotice(noticeId) {
   const notice = notices.find((item) => item.id === noticeId);
   if (!notice) return;
   await markRead(noticeId);
-  const meta = categoryMeta[notice.category] ?? categoryMeta.general;
-  await showAppDetails({
-    title: '공지 상세',
-    heading: notice.title,
-    badge: meta.label,
-    rows: [
-      { label: '작성자', value: authorName(notice.author_id) },
-      { label: '작성일', value: formatDate(notice.created_at, { year: 'numeric', month: 'long', day: 'numeric' }) },
-      { label: '구분', value: notice.pinned ? `${meta.label} · 상단 고정` : meta.label },
-      { label: '내용', value: notice.content },
-    ],
-  });
+  await showAppAlert(notice.content, { title: notice.title, buttonText: '닫기' });
 }
 
 async function createNotice() {
