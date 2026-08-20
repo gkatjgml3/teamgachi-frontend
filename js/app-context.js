@@ -395,6 +395,149 @@ function configureSearch(context) {
   });
 }
 
+function notificationSeenKey(context) {
+  return `teamgachi.notifications.seen:${context.team.id}:${context.user.id}`;
+}
+
+function loadSeenNotifications(context) {
+  try {
+    return new Set(JSON.parse(window.localStorage.getItem(notificationSeenKey(context)) || '[]'));
+  } catch {
+    return new Set();
+  }
+}
+
+function saveSeenNotifications(context, keys) {
+  window.localStorage.setItem(notificationSeenKey(context), JSON.stringify([...keys].slice(-200)));
+}
+
+function notificationDday(value) {
+  const days = daysFromToday(value);
+  if (days === 0) return '오늘';
+  return days > 0 ? `D-${days}` : `D+${Math.abs(days)}`;
+}
+
+async function loadNotificationItems(context) {
+  const now = new Date();
+  const cutoff = new Date(now.getTime() + (7 * 86400000));
+  const [noticeResult, readResult, todoResult, scheduleResult] = await Promise.all([
+    supabase.from('notices').select('id, title, content, created_at').eq('team_id', context.team.id).order('created_at', { ascending: false }).limit(8),
+    supabase.from('notice_reads').select('notice_id').eq('user_id', context.user.id),
+    supabase.from('todos').select('id, title, due_at').eq('team_id', context.team.id).eq('assignee_id', context.user.id).not('status', 'in', '(done,canceled)').not('due_at', 'is', null).lte('due_at', cutoff.toISOString()).order('due_at').limit(8),
+    supabase.from('schedules').select('id, title, starts_at').eq('team_id', context.team.id).gte('starts_at', now.toISOString()).lte('starts_at', cutoff.toISOString()).order('starts_at').limit(8),
+  ]);
+  const failed = [noticeResult, readResult, todoResult, scheduleResult].find((result) => result.error);
+  if (failed?.error) throw failed.error;
+  const readIds = new Set((readResult.data ?? []).map((row) => row.notice_id));
+  return [
+    ...(noticeResult.data ?? []).filter((notice) => !readIds.has(notice.id)).map((notice) => ({
+      key: `notice:${notice.id}`,
+      type: '새 공지',
+      title: notice.title,
+      detail: notice.content.slice(0, 80),
+      url: './notice.html',
+      time: notice.created_at,
+    })),
+    ...(todoResult.data ?? []).map((todo) => ({
+      key: `todo:${todo.id}:${todo.due_at}`,
+      type: '할 일 마감',
+      title: todo.title,
+      detail: `${formatDate(todo.due_at, { year: 'numeric' })} · ${notificationDday(todo.due_at)}`,
+      url: './todo.html',
+      time: todo.due_at,
+    })),
+    ...(scheduleResult.data ?? []).map((schedule) => ({
+      key: `schedule:${schedule.id}:${schedule.starts_at}`,
+      type: '다가오는 일정',
+      title: schedule.title,
+      detail: `${formatDate(schedule.starts_at, { year: 'numeric' })} ${formatTime(schedule.starts_at)} · ${notificationDday(schedule.starts_at)}`,
+      url: './calendar.html',
+      time: schedule.starts_at,
+    })),
+  ].sort((a, b) => new Date(a.time) - new Date(b.time));
+}
+
+function configureNotifications(context) {
+  const buttons = [...document.querySelectorAll('[aria-label="알림"], [data-notifications], .header-right-tools > button.header-btn-icon:not([data-team-menu])')];
+  if (!buttons.length) return;
+  let items = [];
+  let seen = loadSeenNotifications(context);
+  let channel;
+
+  const renderBadge = () => {
+    const count = items.filter((item) => !seen.has(item.key)).length;
+    buttons.forEach((button) => {
+      button.classList.add('notification-button');
+      let badge = button.querySelector('.notification-badge');
+      if (!badge) {
+        badge = document.createElement('span');
+        badge.className = 'notification-badge';
+        button.append(badge);
+      }
+      badge.textContent = count > 99 ? '99+' : String(count);
+      badge.hidden = count === 0;
+      button.title = count ? `새 알림 ${count}개` : '새 알림 없음';
+    });
+  };
+
+  const refresh = async () => {
+    items = await loadNotificationItems(context);
+    renderBadge();
+  };
+
+  const enableBrowserNotifications = async () => {
+    if (!('Notification' in window)) return showAppAlert('이 브라우저에서는 시스템 알림을 지원하지 않습니다.', { title: '브라우저 알림' });
+    if (Notification.permission === 'denied') return showAppAlert('브라우저 설정에서 팀가치 알림 권한을 허용해 주세요.', { title: '브라우저 알림' });
+    const permission = await Notification.requestPermission();
+    if (permission === 'granted') await showAppAlert('새 공지가 등록되면 브라우저 알림으로 알려드릴게요.', { title: '브라우저 알림 켜짐' });
+  };
+
+  const openNotifications = async () => {
+    try { await refresh(); }
+    catch (error) { return showAppAlert(error.message, { title: '알림 불러오기 실패' }); }
+    const overlay = createOverlay('notification-overlay', '알림');
+    const body = overlay.querySelector('.app-modal-body');
+    body.innerHTML = `
+      <div class="notification-list">
+        ${items.length ? items.map((item) => `<a class="notification-item ${seen.has(item.key) ? '' : 'unseen'}" href="${item.url}" data-notification-key="${escapeHtml(item.key)}"><span class="notification-type">${escapeHtml(item.type)}</span><strong>${escapeHtml(item.title)}</strong><span>${escapeHtml(item.detail)}</span></a>`).join('') : '<div class="empty-state">새로운 알림이 없습니다.</div>'}
+      </div>
+      <div class="modal-actions">
+        ${'Notification' in window && Notification.permission !== 'granted' ? '<button type="button" class="modal-button" data-enable-browser-notifications>브라우저 알림 켜기</button>' : ''}
+        <button type="button" class="modal-button primary" data-mark-notifications-seen>모두 확인</button>
+      </div>`;
+    body.querySelector('[data-enable-browser-notifications]')?.addEventListener('click', enableBrowserNotifications);
+    body.querySelectorAll('[data-notification-key]').forEach((link) => link.addEventListener('click', () => {
+      seen.add(link.dataset.notificationKey);
+      saveSeenNotifications(context, seen);
+    }));
+    body.querySelector('[data-mark-notifications-seen]').addEventListener('click', () => {
+      items.forEach((item) => seen.add(item.key));
+      saveSeenNotifications(context, seen);
+      renderBadge();
+      overlay.closeModal();
+    });
+  };
+
+  buttons.forEach((button) => {
+    if (button.dataset.notificationReady === 'true') return;
+    button.dataset.notificationReady = 'true';
+    button.type = 'button';
+    button.setAttribute('aria-label', '알림');
+    button.addEventListener('click', openNotifications);
+  });
+
+  refresh().catch(console.warn);
+  channel = supabase.channel(`shell-notifications:${context.team.id}:${context.user.id}`).on('postgres_changes', {
+    event: 'INSERT', schema: 'public', table: 'notices', filter: `team_id=eq.${context.team.id}`,
+  }, async (payload) => {
+    await refresh().catch(console.warn);
+    if ('Notification' in window && Notification.permission === 'granted') {
+      new Notification('팀가치 새 공지', { body: payload.new?.title || '새 공지가 등록되었습니다.', icon: '../logo.png' });
+    }
+  }).subscribe();
+  window.addEventListener('beforeunload', () => channel && supabase.removeChannel(channel), { once: true });
+}
+
 function configureTeamMenu(context) {
   const openTeamMenu = () => {
     const overlay = createOverlay('team-menu-overlay', '팀 관리');
@@ -640,6 +783,7 @@ export function setupShell(context) {
   });
 
   configureSearch(context);
+  configureNotifications(context);
   const openTeamMenu = configureTeamMenu(context);
   const openFeatureGuide = configureFeatureGuide();
   configureProfileMenu(context, { openTeamMenu, openFeatureGuide });

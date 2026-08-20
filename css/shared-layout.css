@@ -305,6 +305,76 @@ body.dashboard-body {
   height: 16px !important;
 }
 
+.notification-button {
+  position: relative !important;
+}
+
+.notification-badge {
+  position: absolute;
+  top: -5px;
+  right: -5px;
+  display: grid;
+  place-items: center;
+  box-sizing: border-box;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 5px;
+  border: 2px solid #fff;
+  border-radius: 999px;
+  background: #ef5350;
+  color: #fff;
+  font-size: 9px;
+  font-weight: 800;
+  line-height: 1;
+}
+
+.notification-badge[hidden] {
+  display: none !important;
+}
+
+.notification-list {
+  display: grid;
+  max-height: min(52vh, 480px);
+  gap: 8px;
+  overflow-y: auto;
+}
+
+.notification-item {
+  display: grid;
+  gap: 4px;
+  padding: 12px 14px;
+  border: 1px solid #eceaf4;
+  border-radius: 10px;
+  background: #fff;
+  color: #24212f;
+  text-decoration: none;
+}
+
+.notification-item.unseen {
+  border-color: #d9d4ff;
+  background: #f7f5ff;
+}
+
+.notification-item:hover {
+  border-color: #bdb5ff;
+}
+
+.notification-item strong {
+  font-size: 13px;
+}
+
+.notification-item > span:last-child {
+  color: #77718e;
+  font-size: 11px;
+  line-height: 1.45;
+}
+
+.notification-type {
+  color: #5b4df5;
+  font-size: 10px;
+  font-weight: 800;
+}
+
 .header-profile-avatar {
   display: inline-grid !important;
   place-items: center !important;
