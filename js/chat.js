@@ -20,6 +20,9 @@ let realtimeChannel;
 let activeDriveKind = 'file';
 let sendingMessage = false;
 let messageReloadTimer = null;
+let messageAttachments = new Map();
+let driveStoragePaths = new Set();
+let pendingChatFile = null;
 
 function summaryStorageKey() {
   return `teamgachi-chat-summary:${context.team.id}`;
@@ -112,6 +115,17 @@ function messageDayKey(value) {
   }).format(new Date(value));
 }
 
+function renderMessageAttachments(messageId) {
+  const attachments = messageAttachments.get(messageId) ?? [];
+  return attachments.map((attachment) => {
+    const inDrive = driveStoragePaths.has(attachment.storage_path);
+    return `<div class="attached-file-card">
+      <div class="file-info"><span class="file-icon-box">${attachment.mime_type.startsWith('image/') ? 'IMG' : 'FILE'}</span><span><span class="file-name">${escapeHtml(attachment.original_name)}</span><span class="file-size">${humanFileSize(Number(attachment.size_bytes || 0))}</span></span></div>
+      <div class="chat-attachment-actions"><a class="file-download-btn" href="${escapeHtml(attachment.signedUrl)}" target="_blank" rel="noopener">열기</a><button type="button" class="attachment-drive-button" data-add-attachment-drive="${attachment.id}" ${inDrive ? 'disabled' : ''}>${inDrive ? '드라이브 추가됨' : '드라이브에 추가'}</button></div>
+    </div>`;
+  }).join('');
+}
+
 function renderMessageList() {
   if (!messages.length) return '<div class="empty-state">첫 메시지를 보내 대화를 시작해 보세요.</div>';
 
@@ -141,6 +155,7 @@ function renderMessageList() {
             </span>` : ''}
           </div>
           <div class="msg-bubble ${isOwnMessage ? 'my-bubble' : ''}">${escapeHtml(message.content)}</div>
+          ${renderMessageAttachments(message.id)}
         </div>
       </div>`;
   }).join('');
@@ -168,6 +183,9 @@ function renderMessages() {
   });
   body.querySelectorAll('[data-delete-message]').forEach((button) => {
     button.addEventListener('click', () => deleteMessage(button.dataset.deleteMessage));
+  });
+  body.querySelectorAll('[data-add-attachment-drive]').forEach((button) => {
+    button.addEventListener('click', () => addAttachmentToDrive(button.dataset.addAttachmentDrive));
   });
   body.scrollTop = body.scrollHeight;
 }
@@ -209,6 +227,13 @@ async function deleteMessage(messageId) {
     .eq('id', messageId)
     .eq('author_id', context.user.id);
   if (error) return showAppAlert(error.message, { title: '메시지 삭제 실패' });
+  const removablePaths = (messageAttachments.get(messageId) ?? [])
+    .map((attachment) => attachment.storage_path)
+    .filter((path) => !driveStoragePaths.has(path));
+  if (removablePaths.length) {
+    const { error: storageError } = await supabase.storage.from('team-files').remove(removablePaths);
+    if (storageError) console.warn('삭제된 채팅 첨부 파일 정리에 실패했습니다.', storageError);
+  }
   await loadMessages();
 }
 
@@ -271,8 +296,15 @@ function renderFiles() {
       const file = files.find((item) => item.id === button.dataset.deleteId);
       if (!file) return;
       if (file.kind !== 'link') {
-        const { error: storageError } = await supabase.storage.from('team-files').remove([file.storage_path]);
-        if (storageError) return showAppAlert(storageError.message, { title: '자료 삭제 실패' });
+        const { count: chatReferenceCount, error: referenceError } = await supabase
+          .from('message_attachments')
+          .select('id', { count: 'exact', head: true })
+          .eq('storage_path', file.storage_path);
+        if (referenceError) return showAppAlert(referenceError.message, { title: '자료 삭제 확인 실패' });
+        if (!chatReferenceCount) {
+          const { error: storageError } = await supabase.storage.from('team-files').remove([file.storage_path]);
+          if (storageError) return showAppAlert(storageError.message, { title: '자료 삭제 실패' });
+        }
       }
       const { error } = await supabase.from('files').delete().eq('id', file.id);
       if (error) return showAppAlert(error.message, { title: '자료 삭제 실패' });
@@ -290,6 +322,26 @@ async function loadMessages() {
     .limit(200);
   if (error) throw error;
   messages = data ?? [];
+  messageAttachments = new Map();
+  const messageIds = messages.map((message) => message.id);
+  if (messageIds.length) {
+    const { data: attachmentRows, error: attachmentError } = await supabase
+      .from('message_attachments')
+      .select('id, message_id, uploaded_by, original_name, storage_path, mime_type, size_bytes, created_at')
+      .in('message_id', messageIds)
+      .order('created_at');
+    if (attachmentError) throw attachmentError;
+    const paths = (attachmentRows ?? []).map((attachment) => attachment.storage_path);
+    const signedUrls = paths.length
+      ? await supabase.storage.from('team-files').createSignedUrls(paths, 3600)
+      : { data: [], error: null };
+    if (signedUrls.error) throw signedUrls.error;
+    (attachmentRows ?? []).forEach((attachment, index) => {
+      const rows = messageAttachments.get(attachment.message_id) ?? [];
+      rows.push({ ...attachment, signedUrl: signedUrls.data?.[index]?.signedUrl ?? '' });
+      messageAttachments.set(attachment.message_id, rows);
+    });
+  }
   renderMessages();
 }
 
@@ -301,7 +353,9 @@ async function loadFiles() {
     .order('created_at', { ascending: false });
   if (error) throw error;
   files = data ?? [];
+  driveStoragePaths = new Set(files.filter((file) => file.kind !== 'link').map((file) => file.storage_path));
   renderFiles();
+  renderMessages();
 }
 
 async function sendMessage() {
@@ -309,23 +363,107 @@ async function sendMessage() {
   const input = document.querySelector('.input-msg');
   const sendButton = document.querySelector('.btn-send');
   const content = input?.value.trim();
-  if (!content) return;
+  const attachment = pendingChatFile;
+  if (!content && !attachment) return;
   sendingMessage = true;
   if (sendButton) sendButton.disabled = true;
+  let storagePath = '';
   try {
-    const { error } = await supabase.from('messages').insert({
+    if (attachment) {
+      const extension = attachment.name.includes('.') ? `.${attachment.name.split('.').pop()}` : '';
+      storagePath = `${context.team.id}/${context.user.id}/chat/${crypto.randomUUID()}${extension}`;
+      const { error: uploadError } = await supabase.storage.from('team-files').upload(storagePath, attachment, {
+        contentType: attachment.type || 'application/octet-stream',
+        upsert: false,
+      });
+      if (uploadError) return showAppAlert(uploadError.message, { title: '채팅 첨부 실패' });
+    }
+    const { data: createdMessage, error } = await supabase.from('messages').insert({
       team_id: context.team.id,
       author_id: context.user.id,
-      content,
-    });
-    if (error) return showAppAlert(error.message, { title: '메시지 전송 실패' });
+      content: content || `📎 ${attachment.name}`,
+    }).select('id').single();
+    if (error) {
+      if (storagePath) await supabase.storage.from('team-files').remove([storagePath]);
+      return showAppAlert(error.message, { title: '메시지 전송 실패' });
+    }
+    if (attachment) {
+      const { error: attachmentError } = await supabase.from('message_attachments').insert({
+        team_id: context.team.id,
+        message_id: createdMessage.id,
+        uploaded_by: context.user.id,
+        original_name: attachment.name,
+        storage_path: storagePath,
+        mime_type: attachment.type || 'application/octet-stream',
+        size_bytes: attachment.size,
+      });
+      if (attachmentError) {
+        await supabase.from('messages').delete().eq('id', createdMessage.id);
+        await supabase.storage.from('team-files').remove([storagePath]);
+        return showAppAlert(attachmentError.message, { title: '채팅 첨부 저장 실패' });
+      }
+    }
     if (input.value.trim() === content) input.value = '';
+    pendingChatFile = null;
+    renderPendingChatAttachment();
     await loadMessages();
   } finally {
     sendingMessage = false;
     if (sendButton) sendButton.disabled = false;
     input?.focus();
   }
+}
+
+function renderPendingChatAttachment() {
+  const slot = document.querySelector('[data-pending-chat-attachment]');
+  if (!slot) return;
+  slot.hidden = !pendingChatFile;
+  slot.innerHTML = pendingChatFile
+    ? `<span><strong>${escapeHtml(pendingChatFile.name)}</strong> · ${humanFileSize(pendingChatFile.size)}</span><button type="button" data-remove-chat-attachment aria-label="채팅 첨부 취소">×</button>`
+    : '';
+  slot.querySelector('[data-remove-chat-attachment]')?.addEventListener('click', () => {
+    pendingChatFile = null;
+    renderPendingChatAttachment();
+  });
+}
+
+function chooseChatAttachment() {
+  const input = document.createElement('input');
+  input.type = 'file';
+  input.accept = '.png,.jpg,.jpeg,.webp,.pdf,.txt,.csv,.zip,.docx,.xlsx,.pptx';
+  input.hidden = true;
+  document.body.append(input);
+  input.addEventListener('change', () => {
+    pendingChatFile = input.files?.[0] ?? null;
+    input.remove();
+    renderPendingChatAttachment();
+  }, { once: true });
+  input.click();
+}
+
+function findMessageAttachment(attachmentId) {
+  return [...messageAttachments.values()].flat().find((attachment) => attachment.id === attachmentId) ?? null;
+}
+
+async function addAttachmentToDrive(attachmentId) {
+  const attachment = findMessageAttachment(attachmentId);
+  if (!attachment || driveStoragePaths.has(attachment.storage_path)) return;
+  const { error } = await supabase.from('files').insert({
+    team_id: context.team.id,
+    uploaded_by: context.user.id,
+    original_name: attachment.original_name,
+    storage_path: attachment.storage_path,
+    mime_type: attachment.mime_type,
+    size_bytes: attachment.size_bytes,
+    kind: attachment.mime_type.startsWith('image/') ? 'image' : 'file',
+  });
+  if (error) {
+    await loadFiles();
+    if (!driveStoragePaths.has(attachment.storage_path)) return showAppAlert(error.message, { title: '드라이브 추가 실패' });
+  } else {
+    await loadFiles();
+  }
+  setDriveStatus(`${attachment.original_name} 파일을 자료 드라이브에 추가했습니다.`, 'success');
 }
 
 function scheduleMessageReload() {
@@ -445,7 +583,7 @@ function configureActions() {
     await uploadFiles(fileInput.files, activeDriveKind);
     fileInput.value = '';
   });
-  document.querySelector('.btn-attach')?.addEventListener('click', () => fileInput.click());
+  document.querySelector('.btn-attach')?.addEventListener('click', chooseChatAttachment);
   document.querySelector('[data-drive-upload]')?.addEventListener('click', () => fileInput.click());
   document.querySelector('[data-drive-link]')?.addEventListener('click', addLink);
   const dropzone = document.querySelector('.upload-dropzone');
@@ -535,6 +673,12 @@ function subscribeRealtime() {
       table: 'messages',
       filter: `team_id=eq.${context.team.id}`,
     }, scheduleMessageReload)
+    .on('postgres_changes', {
+      event: '*',
+      schema: 'public',
+      table: 'message_attachments',
+      filter: `team_id=eq.${context.team.id}`,
+    }, scheduleMessageReload)
     .subscribe();
   window.addEventListener('beforeunload', () => {
     if (messageReloadTimer) window.clearTimeout(messageReloadTimer);
@@ -552,6 +696,7 @@ async function initialize() {
     if (count) count.textContent = `팀원 ${context.members.length}명`;
     if (channelName) channelName.textContent = `# ${context.team.name}`;
     configureActions();
+    renderPendingChatAttachment();
     await Promise.all([loadMessages(), loadFiles(), loadLatestSummary()]);
     subscribeRealtime();
   } catch (error) {

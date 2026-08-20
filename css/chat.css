@@ -472,6 +472,38 @@ body, html {
   gap: 8px;
 }
 
+.file-info > span:last-child {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.chat-attachment-actions {
+  display: flex;
+  flex: 0 0 auto;
+  align-items: center;
+  gap: 8px;
+}
+
+.attachment-drive-button {
+  padding: 5px 8px;
+  border: 1px solid #d9d4ff;
+  border-radius: 6px;
+  background: #f7f5ff;
+  color: #534be8;
+  font-size: 10px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.attachment-drive-button:disabled {
+  border-color: #e5e5ea;
+  background: #f2f2f7;
+  color: #8e8e93;
+  cursor: default;
+}
+
 .file-icon-box {
   width: 28px;
   height: 28px;
@@ -802,6 +834,29 @@ body, html {
 .chat-summary-slot,
 .chat-input-wrapper {
   flex: 0 0 auto;
+}
+
+.pending-chat-attachment {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin: 0 0 6px;
+  padding: 7px 10px;
+  border: 1px solid #d9d4ff;
+  border-radius: 8px;
+  background: #f7f5ff;
+  color: #5b5670;
+  font-size: 10px;
+}
+
+.pending-chat-attachment[hidden] { display: none; }
+
+.pending-chat-attachment button {
+  border: 0;
+  background: transparent;
+  color: #8e8e93;
+  font-size: 16px;
+  cursor: pointer;
 }
 
 .chat-summary-slot:empty {
